@@ -5,9 +5,12 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 async function generateSitemap() {
-    // 1. Pindahkan pemanggilan env ke dalam fungsi agar dipastikan terbaca
+    // 1. Panggil Environment Variables
     const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
     const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_KEY;
+
+    // 👇 INI ADALAH BARIS DETEKTIF UNTUK VERCEL 👇
+    console.log("Detektif Vercel - Variabel Supabase yang terbaca:", Object.keys(process.env).filter(key => key.includes('SUPABASE')));
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -32,8 +35,7 @@ async function generateSitemap() {
     <priority>0.8</priority>
   </url>`;
 
-    // 2. Sistem Proteksi: Jika variabel env kosong saat build di Vercel, 
-    //    jangan dilanjutkan ke Supabase agar tidak crash.
+    // 2. Sistem Proteksi: Jika variabel env kosong saat build di Vercel
     if (!SUPABASE_URL || !SUPABASE_KEY) {
         console.warn("⚠️ Warning: Variabel SUPABASE_URL atau SUPABASE_KEY tidak terbaca.");
         xml += `\n</urlset>`;
@@ -43,7 +45,7 @@ async function generateSitemap() {
     }
 
     try {
-        // 3. Inisialisasi Supabase di sini HANYA jika variabelnya terbukti ada
+        // 3. Inisialisasi Supabase HANYA jika variabelnya terbukti ada
         const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const { data: videos, error } = await supabase
@@ -74,7 +76,7 @@ async function generateSitemap() {
         
     } catch (err) {
         console.error("Terjadi kesalahan sistem:", err);
-        // Fallback darurat jika ada error lain agar build tidak gagal total
+        // Fallback darurat jika ada error lain
         xml += `\n</urlset>`;
         fs.writeFileSync('public/sitemap.xml', xml);
     }
