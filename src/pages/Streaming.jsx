@@ -8,25 +8,13 @@ import {
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomPlayer from '../components/CustomPlayer';
+import Komentar from '../components/Komentar';
 
 const getImageUrl = (imgString) => imgString ? imgString.split(',')[0].trim() : '';
 
 const formatViews = (views) => {
     if (!views) return '0';
     return Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(views);
-};
-
-const getCategoryIcon = (catName) => {
-    const cat = catName?.toLowerCase() || '';
-    if (cat.includes('exclusive')) return <Crown className="w-4 h-4" />;
-    if (cat.includes('live')) return <Radio className="w-4 h-4" />;
-    if (cat.includes('viral')) return <TrendingUp className="w-4 h-4" />;
-    if (cat.includes('random')) return <Shuffle className="w-4 h-4" />;
-    if (cat.includes('telegram')) return <Send className="w-4 h-4" />;
-    if (cat.includes('onlyfans')) return <Heart className="w-4 h-4" />;
-    if (cat.includes('banned')) return <Ban className="w-4 h-4" />;
-    if (cat.includes('deepfake')) return <Wand2 className="w-4 h-4" />;
-    return <FolderOpen className="w-4 h-4" />;
 };
 
 export default function Streaming({ supabase }) {
@@ -184,18 +172,10 @@ export default function Streaming({ supabase }) {
                             <span className="flex items-center gap-1.5"><MonitorPlay className="w-4 h-4 text-[#106EBE]" /> <span className="font-bold text-white">{formatViews(video.views)} Views</span></span>
                             <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-[#106EBE]" /> {new Date(video.created_at).toLocaleDateString('id-ID')}</span>
 
-                            {video.duration && video.duration !== 'EMPTY' && (
-                                <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-[#106EBE]" /> {video.duration}</span>
-                            )}
-                            {video.size && video.size !== 'EMPTY' && (
-                                <span className="flex items-center gap-1.5"><HardDrive className="w-4 h-4 text-[#106EBE]" /> {video.size}</span>
-                            )}
-                            {video.type && video.type !== 'EMPTY' && (
-                                <span className="flex items-center gap-1.5"><FolderArchive className="w-4 h-4 text-[#106EBE]" /> {video.type}</span>
-                            )}
-                            {video.source && video.source !== 'EMPTY' && (
-                                <span className="flex items-center gap-1.5"><Database className="w-4 h-4 text-[#106EBE]" /> {video.source}</span>
-                            )}
+                            {video.duration && video.duration !== 'EMPTY' && <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-[#106EBE]" /> {video.duration}</span>}
+                            {video.size && video.size !== 'EMPTY' && <span className="flex items-center gap-1.5"><HardDrive className="w-4 h-4 text-[#106EBE]" /> {video.size}</span>}
+                            {video.type && video.type !== 'EMPTY' && <span className="flex items-center gap-1.5"><FolderArchive className="w-4 h-4 text-[#106EBE]" /> {video.type}</span>}
+                            {video.source && video.source !== 'EMPTY' && <span className="flex items-center gap-1.5"><Database className="w-4 h-4 text-[#106EBE]" /> {video.source}</span>}
                         </div>
 
                         <div className="flex flex-wrap items-center justify-center gap-3 w-full max-w-xl">
@@ -214,8 +194,13 @@ export default function Streaming({ supabase }) {
                     </div>
                 </div>
 
-                <div className="w-full flex justify-center my-6 overflow-hidden animate-in fade-in duration-700 delay-300 min-h-[90px]">
+                <div className="w-full flex justify-center mt-2 mb-6 overflow-hidden animate-in fade-in duration-700 delay-300 min-h-[90px]">
                     <div ref={hilltopAdRef}></div>
+                </div>
+
+                {/* Komponen Komentar (Tanpa Wrapper Putih) */}
+                <div className="w-full">
+                    <Komentar videoId={video.id} />
                 </div>
 
                 <div className="w-full pt-4">
@@ -228,7 +213,6 @@ export default function Streaming({ supabase }) {
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
                         {relatedVideos.map((item) => (
                             <div key={item.id} onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer">
-
                                 <div className="relative aspect-video rounded-xl overflow-hidden mb-3 bg-zinc-800/30 shadow-lg">
                                     <img src={getImageUrl(item.img)} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -237,19 +221,11 @@ export default function Streaming({ supabase }) {
                                         </div>
                                     </div>
                                 </div>
-
                                 <div className="px-2 text-center">
-                                    <h4 className="font-bold text-sm mb-1.5 text-white group-hover:text-[#0FFCBE] transition-colors truncate" title={item.title}>
-                                        {item.title}
-                                    </h4>
-
+                                    <h4 className="font-bold text-sm mb-1.5 text-white group-hover:text-[#0FFCBE] transition-colors truncate" title={item.title}>{item.title}</h4>
                                     <div className="flex flex-wrap items-center justify-center gap-3 text-[11px]">
-                                        <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-white group-hover:text-[#0FFCBE] transition-colors">
-                                            <FolderOpen className="w-3.5 h-3.5 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors" /> {item.category}
-                                        </span>
-                                        <span className="flex items-center gap-1 font-medium text-white group-hover:text-[#0FFCBE] transition-colors">
-                                            <MonitorPlay className="w-3.5 h-3.5 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors" /> {formatViews(item.views)}x
-                                        </span>
+                                        <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-white group-hover:text-[#0FFCBE] transition-colors"><FolderOpen className="w-3.5 h-3.5 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors" /> {item.category}</span>
+                                        <span className="flex items-center gap-1 font-medium text-white group-hover:text-[#0FFCBE] transition-colors"><MonitorPlay className="w-3.5 h-3.5 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors" /> {formatViews(item.views)}x</span>
                                     </div>
                                 </div>
                             </div>
@@ -270,16 +246,11 @@ export default function Streaming({ supabase }) {
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/95 backdrop-blur-xl animate-in fade-in duration-500">
                     <div className="w-full max-w-xl flex flex-col items-center text-center animate-in slide-in-from-bottom-10 duration-500 relative">
                         <div className="flex items-center justify-center gap-3 sm:gap-4 mb-8 w-full">
-                            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 sm:w-14 sm:h-14 drop-shadow-[0_0_15px_rgba(16,110,190,0.5)]">
-                                <polygon points="20,2 36,10 36,30 20,38 4,30 4,10" stroke="#106EBE" strokeWidth="3.5" strokeLinejoin="round" />
-                                <path d="M16 13L27 20L16 27V13Z" fill="#106EBE" />
-                            </svg>
+                            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 sm:w-14 sm:h-14 drop-shadow-[0_0_15px_rgba(16,110,190,0.5)]"><polygon points="20,2 36,10 36,30 20,38 4,30 4,10" stroke="#106EBE" strokeWidth="3.5" strokeLinejoin="round" /><path d="M16 13L27 20L16 27V13Z" fill="#106EBE" /></svg>
                             <span className="text-2xl sm:text-4xl font-black tracking-tighter text-white">Shadow<span className="text-[#106EBE]">Clips</span></span>
                         </div>
                         <div className="space-y-4 mb-10 w-full px-2">
-                            <p className="text-zinc-300 text-base md:text-lg leading-relaxed md:leading-loose">
-                                ShadowClips tidak pernah menjual atau memungut biaya sepeser pun untuk file ini. Tautan ini kami sediakan 100% gratis untuk tujuan hiburan.<br /><span className="text-zinc-500 text-sm mt-2 block">Harap waspada terhadap segala bentuk penipuan yang mengatasnamakan kami.</span>
-                            </p>
+                            <p className="text-zinc-300 text-base md:text-lg leading-relaxed md:leading-loose">ShadowClips tidak pernah menjual atau memungut biaya sepeser pun untuk file ini. Tautan ini kami sediakan 100% gratis untuk tujuan hiburan.<br /><span className="text-zinc-500 text-sm mt-2 block">Harap waspada terhadap segala bentuk penipuan yang mengatasnamakan kami.</span></p>
                         </div>
                         <div className="w-full max-w-sm mb-10 flex flex-col items-center">
                             <div className="w-full h-1 bg-zinc-800/50 rounded-full overflow-hidden mb-4"><div className="h-full bg-[#106EBE] transition-all duration-75 ease-linear shadow-[0_0_15px_rgba(16,110,190,0.8)]" style={{ width: `${modalProgress}%` }}></div></div>
