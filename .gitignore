@@ -7,9 +7,17 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Build outputs
 dist
 dist-ssr
+
+# Local environment files (SANGAT PENTING)
+.env
+.env.local
+.env.*
 *.local
 
 # Editor directories and files
@@ -23,4 +31,5 @@ dist-ssr
 *.sln
 *.sw?
 
+# Vercel
 .vercel
