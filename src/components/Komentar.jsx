@@ -15,7 +15,7 @@ export default function Komentar({ videoId }) {
             const { data, error } = await supabase
                 .from('comments')
                 .select('*')
-                .eq('video_id', videoId)
+                .eq('video_id', String(videoId)) // Memastikan ID dicari dalam bentuk teks
                 .eq('status', 'approved')
                 .order('created_at', { ascending: false });
 
@@ -59,7 +59,7 @@ export default function Komentar({ videoId }) {
             .from('comments')
             .insert([
                 {
-                    video_id: videoId,
+                    video_id: String(videoId), // PERBAIKAN: Memaksa ID menjadi teks (String)
                     name: formData.name,
                     email: formData.email ? formData.email : null,
                     content: formData.content,
@@ -102,7 +102,6 @@ export default function Komentar({ videoId }) {
                         value={formData.content}
                         onChange={handleInputChange}
                         placeholder="Tambahkan komentar..."
-                        /* style={{ colorScheme: 'dark' }} memaksa browser agar tidak mengubah input jadi putih */
                         style={{ colorScheme: 'dark' }}
                         className="w-full bg-transparent text-[13px] sm:text-[14px] text-white placeholder-zinc-500 border-b border-zinc-700 focus:border-zinc-400 focus:outline-none pb-2 resize-none overflow-hidden transition-colors"
                         rows="1"
