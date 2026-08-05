@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Search, Menu, X, Home, Compass, Flame, FolderOpen } from 'lucide-react';
 
 export default function Navbar({ searchInput, setSearchInput, isScrolled }) {
@@ -58,7 +58,12 @@ export default function Navbar({ searchInput, setSearchInput, isScrolled }) {
                     </div>
                 </div>
 
-                <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden text-zinc-300 z-50">
+                <button
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                    className="md:hidden text-zinc-300 z-50"
+                    aria-label={isMobileMenuOpen ? "Tutup menu navigasi" : "Buka menu navigasi"}
+                    aria-expanded={isMobileMenuOpen}
+                >
                     {isMobileMenuOpen ? <X className="w-6 h-6 hover:text-[#0FFCBE] transition-colors" /> : <Menu className="w-6 h-6 hover:text-[#0FFCBE] transition-colors" />}
                 </button>
             </div>

@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     Play, Download, Clock, MonitorPlay, Share2, Heart,
     HardDrive, FolderArchive, Database, Server, X, ZoomIn,
-    LayoutGrid, Crown, Radio, TrendingUp, Shuffle, Send, Ban, Wand2,
-    Loader2, ExternalLink, FolderOpen
+    LayoutGrid, Loader2, ExternalLink, FolderOpen
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -31,7 +30,6 @@ export default function Streaming({ supabase }) {
     const [modalStatus, setModalStatus] = useState('waiting');
     const [modalProgress, setModalProgress] = useState(0);
 
-    // HANYA WADAH UNTUK IKLAN BANNER
     const hilltopAdRef = useRef(null);
 
     useEffect(() => {
@@ -76,19 +74,20 @@ export default function Streaming({ supabase }) {
         fetchVideoDetails();
     }, [supabase]);
 
-    // INJEKSI IKLAN BANNER (Muncul di UI bawah info video)
     useEffect(() => {
-        if (video && hilltopAdRef.current && !hilltopAdRef.current.querySelector('script')) {
-            const s = document.createElement('script');
-            s.settings = {};
-            s.src = "//winding-hurt.com/b.XwV/s-deGllV0BYEWYct/Senm/9XuBZgUFl/kQPfT/cMyeOITbA/4RNITRMkt/NvzGIu5qMyDHgD1jNCwo";
-            s.async = true;
-            s.referrerPolicy = "no-referrer-when-downgrade";
-            hilltopAdRef.current.appendChild(s);
-        }
-    }, [video]);
+        const timer = setTimeout(() => {
+            if (video && hilltopAdRef.current && !hilltopAdRef.current.querySelector('script')) {
+                const s = document.createElement('script');
+                s.settings = {};
+                s.src = "//winding-hurt.com/b.XwV/s-deGllV0BYEWYct/Senm/9XuBZgUFl/kQPfT/cMyeOITbA/4RNITRMkt/NvzGIu5qMyDHgD1jNCwo";
+                s.async = true;
+                s.referrerPolicy = "no-referrer-when-downgrade";
+                hilltopAdRef.current.appendChild(s);
+            }
+        }, 2500);
 
-    // KODE INJEKSI VAST SUDAH DIHAPUS DARI SINI KARENA PINDAH KE CUSTOMPLAYER.JSX
+        return () => clearTimeout(timer);
+    }, [video]);
 
     useEffect(() => {
         if (selectedImage || isDownloadModalOpen) document.body.style.overflow = 'hidden';
@@ -199,7 +198,6 @@ export default function Streaming({ supabase }) {
                     </div>
                 </div>
 
-                {/* TEMPAT UNTUK IKLAN BANNER */}
                 <div className="w-full flex justify-center mt-2 mb-6 overflow-hidden animate-in fade-in duration-700 delay-300 min-h-[90px]">
                     <div ref={hilltopAdRef}></div>
                 </div>
