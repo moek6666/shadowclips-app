@@ -100,7 +100,7 @@ export default function Streaming({ supabase }) {
         if (isMp4 && !document.getElementById(vastScriptId)) {
             const s = document.createElement('script');
             s.id = vastScriptId;
-            s.src = "https://direct-league.com/dZm/Fezqd.G/NCvjZDG/UO/-e/mr9auhZOUclXkXPwTVcPy/O/Dnc/5vNLTZMStWNZzzIh4cNzzZkd1mNOyVZCs/aPWw1mp/dZDC0Bxy";
+            s.src = "https://direct-league.com/d.mvFRz/dvGWNxv/ZXG_UI/mefmp9juUZMUTllkVPpTbcvyYOsDrc/5tNtTFMvt_N/z/Io4iNozYkL1dNhwv";
             s.async = true;
             s.referrerPolicy = "no-referrer-when-downgrade";
             document.body.appendChild(s);
