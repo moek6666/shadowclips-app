@@ -31,7 +31,7 @@ export default function Streaming({ supabase }) {
     const [modalStatus, setModalStatus] = useState('waiting');
     const [modalProgress, setModalProgress] = useState(0);
 
-    // HANYA WADAH UNTUK BANNER
+    // HANYA WADAH UNTUK IKLAN BANNER
     const hilltopAdRef = useRef(null);
 
     useEffect(() => {
@@ -88,31 +88,7 @@ export default function Streaming({ supabase }) {
         }
     }, [video]);
 
-    // INJEKSI SCRIPT VAST (Dimasukkan ke background agar otomatis mengikat ke .mp4 player)
-    useEffect(() => {
-        if (!video) return;
-        const currentUrl = activeServer === 'main' ? video.trailer_url : video.alternative_server;
-        const isMp4 = currentUrl && (currentUrl.toLowerCase().includes('.mp4') || currentUrl.toLowerCase().includes('.webm') || currentUrl.toLowerCase().includes('.m3u8'));
-
-        const vastScriptId = 'vast-ad-script';
-
-        // Hanya injeksi VAST jika ini pemutar video langsung (bukan iframe/gambar)
-        if (isMp4 && !document.getElementById(vastScriptId)) {
-            const s = document.createElement('script');
-            s.id = vastScriptId;
-            // PERBAIKAN: URL VAST TERBARU ANDA ADA DI SINI
-            s.src = "https://direct-league.com/dWm/FZz.dAGdNqvmZpGKUq/LeDm/9YuBZPUwlMk/PuTacAyZO/DVcw5/NOTuMStpNqzWIG4UN-z/kb1nNbyXZxsbacWY1sp/dwDQ0Kxq";
-            s.async = true;
-            s.referrerPolicy = "no-referrer-when-downgrade";
-            document.body.appendChild(s);
-        }
-
-        // Cleanup saat keluar halaman agar script VAST tidak menumpuk
-        return () => {
-            const existingScript = document.getElementById(vastScriptId);
-            if (existingScript) existingScript.remove();
-        };
-    }, [video, activeServer]);
+    // KODE INJEKSI VAST SUDAH DIHAPUS DARI SINI KARENA PINDAH KE CUSTOMPLAYER.JSX
 
     useEffect(() => {
         if (selectedImage || isDownloadModalOpen) document.body.style.overflow = 'hidden';
@@ -223,7 +199,7 @@ export default function Streaming({ supabase }) {
                     </div>
                 </div>
 
-                {/* TEMPAT UNTUK IKLAN BANNER (Kembali ke asalnya) */}
+                {/* TEMPAT UNTUK IKLAN BANNER */}
                 <div className="w-full flex justify-center mt-2 mb-6 overflow-hidden animate-in fade-in duration-700 delay-300 min-h-[90px]">
                     <div ref={hilltopAdRef}></div>
                 </div>
