@@ -30,7 +30,10 @@ export default function Streaming({ supabase }) {
     const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
     const [modalStatus, setModalStatus] = useState('waiting');
     const [modalProgress, setModalProgress] = useState(0);
+
+    // WADAH UNTUK 2 IKLAN
     const hilltopAdRef = useRef(null);
+    const vastAdRef = useRef(null);
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -74,15 +77,26 @@ export default function Streaming({ supabase }) {
         fetchVideoDetails();
     }, [supabase]);
 
+    // INJEKSI IKLAN 1: BANNER HILLTOPADS
     useEffect(() => {
         if (video && hilltopAdRef.current && !hilltopAdRef.current.querySelector('script')) {
             const s = document.createElement('script');
             s.settings = {};
-            // URL IKLAN BARU DITERAPKAN DI SINI
             s.src = "//winding-hurt.com/b.XwV/s-deGllV0BYEWYct/Senm/9XuBZgUFl/kQPfT/cMyeOITbA/4RNITRMkt/NvzGIu5qMyDHgD1jNCwo";
             s.async = true;
             s.referrerPolicy = "no-referrer-when-downgrade";
             hilltopAdRef.current.appendChild(s);
+        }
+    }, [video]);
+
+    // INJEKSI IKLAN 2: VAST ADS (Link sudah dimasukkan!)
+    useEffect(() => {
+        if (video && vastAdRef.current && !vastAdRef.current.querySelector('script')) {
+            const s = document.createElement('script');
+            s.src = "https://direct-league.com/dZm/Fezqd.G/NCvjZDG/UO/-e/mr9auhZOUclXkXPwTVcPy/O/Dnc/5vNLTZMStWNZzzIh4cNzzZkd1mNOyVZCs/aPWw1mp/dZDC0Bxy";
+            s.async = true;
+            s.referrerPolicy = "no-referrer-when-downgrade";
+            vastAdRef.current.appendChild(s);
         }
     }, [video]);
 
@@ -195,11 +209,12 @@ export default function Streaming({ supabase }) {
                     </div>
                 </div>
 
-                <div className="w-full flex justify-center mt-2 mb-6 overflow-hidden animate-in fade-in duration-700 delay-300 min-h-[90px]">
-                    <div ref={hilltopAdRef}></div>
+                {/* TEMPAT UNTUK DUA IKLAN TAMPIL BERDAMPINGAN */}
+                <div className="w-full flex flex-col items-center mt-2 mb-6 overflow-hidden animate-in fade-in duration-700 delay-300 gap-4">
+                    <div ref={hilltopAdRef} className="w-full max-w-[728px] flex justify-center"></div>
+                    <div ref={vastAdRef} className="w-full max-w-[728px] flex justify-center"></div>
                 </div>
 
-                {/* Komponen Komentar (Tanpa Wrapper Putih) */}
                 <div className="w-full">
                     <Komentar videoId={video.id} />
                 </div>
