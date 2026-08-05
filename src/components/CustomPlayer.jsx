@@ -57,7 +57,8 @@ export default function CustomPlayer({ src, poster }) {
             keyboard: { focused: true, global: true },
             ads: {
                 enabled: true,
-                tagUrl: 'https://direct-league.com/d.mAFQzydnGQNtvdZZGoUu/TeYm-9huiZ/UMl/kCPIT/cyyiOxD/c/5/N-TaMathNkzvIm4oNmzHkH1hNCypZisGasWZ1ipSdwDY0bxS',
+                // PERBAIKAN: Link VAST Terbaru dimasukkan ke dalam konfigurasi bawaan Plyr
+                tagUrl: 'https://direct-league.com/djmJFkzGd.GUNhv/ZYGOUA/ceMmd9/u/ZWUJlBkYPDT/cuypO/DDcG5iNcTGMwtSNpzBIM4/N/z/kD1/NJyzZCsza/W/1ipVdzDS0/xH',
             }
         };
 
