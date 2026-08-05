@@ -100,7 +100,8 @@ export default function Streaming({ supabase }) {
         if (isMp4 && !document.getElementById(vastScriptId)) {
             const s = document.createElement('script');
             s.id = vastScriptId;
-            s.src = "https://direct-league.com/d.mvFRz/dvGWNxv/ZXG_UI/mefmp9juUZMUTllkVPpTbcvyYOsDrc/5tNtTFMvt_N/z/Io4iNozYkL1dNhwv";
+            // PERBAIKAN: URL VAST TERBARU ANDA ADA DI SINI
+            s.src = "https://direct-league.com/dWm/FZz.dAGdNqvmZpGKUq/LeDm/9YuBZPUwlMk/PuTacAyZO/DVcw5/NOTuMStpNqzWIG4UN-z/kb1nNbyXZxsbacWY1sp/dwDQ0Kxq";
             s.async = true;
             s.referrerPolicy = "no-referrer-when-downgrade";
             document.body.appendChild(s);
