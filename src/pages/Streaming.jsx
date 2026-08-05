@@ -78,7 +78,8 @@ export default function Streaming({ supabase }) {
         if (video && hilltopAdRef.current && !hilltopAdRef.current.querySelector('script')) {
             const s = document.createElement('script');
             s.settings = {};
-            s.src = "//winding-hurt.com/b.XkVhsbdCGvly0ZYFWWci/kejmY9_u/Z/UrlKkCPiT/YT4LMrTrM/1/OyTtMctANvjsgNxtMbzzUC5BNWwA";
+            // URL IKLAN BARU DITERAPKAN DI SINI
+            s.src = "//winding-hurt.com/b.XwV/s-deGllV0BYEWYct/Senm/9XuBZgUFl/kQPfT/cMyeOITbA/4RNITRMkt/NvzGIu5qMyDHgD1jNCwo";
             s.async = true;
             s.referrerPolicy = "no-referrer-when-downgrade";
             hilltopAdRef.current.appendChild(s);
