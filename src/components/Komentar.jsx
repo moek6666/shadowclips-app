@@ -15,7 +15,7 @@ export default function Komentar({ videoId }) {
             const { data, error } = await supabase
                 .from('comments')
                 .select('*')
-                .eq('video_id', String(videoId)) // Memastikan ID dicari dalam bentuk teks
+                .eq('video_id', String(videoId))
                 .eq('status', 'approved')
                 .order('created_at', { ascending: false });
 
@@ -54,18 +54,16 @@ export default function Komentar({ videoId }) {
         setIsSubmitting(true);
         setNotification(null);
 
-        // Kirim data ke Supabase (email dikirim null jika kosong agar tidak error)
+        // PERBAIKAN: Menggunakan format Object { } langsung, tanpa kurung siku [ ]
+        // dan menghapus status (dibiarkan default 'pending' dari database)
         const { error } = await supabase
             .from('comments')
-            .insert([
-                {
-                    video_id: String(videoId), // PERBAIKAN: Memaksa ID menjadi teks (String)
-                    name: formData.name,
-                    email: formData.email ? formData.email : null,
-                    content: formData.content,
-                    status: 'pending'
-                }
-            ]);
+            .insert({
+                video_id: String(videoId),
+                name: formData.name,
+                email: formData.email ? formData.email : null,
+                content: formData.content
+            });
 
         setIsSubmitting(false);
 
