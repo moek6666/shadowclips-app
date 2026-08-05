@@ -31,9 +31,8 @@ export default function Streaming({ supabase }) {
     const [modalStatus, setModalStatus] = useState('waiting');
     const [modalProgress, setModalProgress] = useState(0);
 
-    // WADAH UNTUK 2 IKLAN
+    // HANYA WADAH UNTUK BANNER
     const hilltopAdRef = useRef(null);
-    const vastAdRef = useRef(null);
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -77,7 +76,7 @@ export default function Streaming({ supabase }) {
         fetchVideoDetails();
     }, [supabase]);
 
-    // INJEKSI IKLAN 1: BANNER HILLTOPADS
+    // INJEKSI IKLAN BANNER (Muncul di UI bawah info video)
     useEffect(() => {
         if (video && hilltopAdRef.current && !hilltopAdRef.current.querySelector('script')) {
             const s = document.createElement('script');
@@ -89,16 +88,30 @@ export default function Streaming({ supabase }) {
         }
     }, [video]);
 
-    // INJEKSI IKLAN 2: VAST ADS (Link sudah dimasukkan!)
+    // INJEKSI SCRIPT VAST (Dimasukkan ke background agar otomatis mengikat ke .mp4 player)
     useEffect(() => {
-        if (video && vastAdRef.current && !vastAdRef.current.querySelector('script')) {
+        if (!video) return;
+        const currentUrl = activeServer === 'main' ? video.trailer_url : video.alternative_server;
+        const isMp4 = currentUrl && (currentUrl.toLowerCase().includes('.mp4') || currentUrl.toLowerCase().includes('.webm') || currentUrl.toLowerCase().includes('.m3u8'));
+
+        const vastScriptId = 'vast-ad-script';
+
+        // Hanya injeksi VAST jika ini pemutar video langsung (bukan iframe/gambar)
+        if (isMp4 && !document.getElementById(vastScriptId)) {
             const s = document.createElement('script');
+            s.id = vastScriptId;
             s.src = "https://direct-league.com/dZm/Fezqd.G/NCvjZDG/UO/-e/mr9auhZOUclXkXPwTVcPy/O/Dnc/5vNLTZMStWNZzzIh4cNzzZkd1mNOyVZCs/aPWw1mp/dZDC0Bxy";
             s.async = true;
             s.referrerPolicy = "no-referrer-when-downgrade";
-            vastAdRef.current.appendChild(s);
+            document.body.appendChild(s);
         }
-    }, [video]);
+
+        // Cleanup saat keluar halaman agar script VAST tidak menumpuk
+        return () => {
+            const existingScript = document.getElementById(vastScriptId);
+            if (existingScript) existingScript.remove();
+        };
+    }, [video, activeServer]);
 
     useEffect(() => {
         if (selectedImage || isDownloadModalOpen) document.body.style.overflow = 'hidden';
@@ -209,10 +222,9 @@ export default function Streaming({ supabase }) {
                     </div>
                 </div>
 
-                {/* TEMPAT UNTUK DUA IKLAN TAMPIL BERDAMPINGAN */}
-                <div className="w-full flex flex-col items-center mt-2 mb-6 overflow-hidden animate-in fade-in duration-700 delay-300 gap-4">
-                    <div ref={hilltopAdRef} className="w-full max-w-[728px] flex justify-center"></div>
-                    <div ref={vastAdRef} className="w-full max-w-[728px] flex justify-center"></div>
+                {/* TEMPAT UNTUK IKLAN BANNER (Kembali ke asalnya) */}
+                <div className="w-full flex justify-center mt-2 mb-6 overflow-hidden animate-in fade-in duration-700 delay-300 min-h-[90px]">
+                    <div ref={hilltopAdRef}></div>
                 </div>
 
                 <div className="w-full">
