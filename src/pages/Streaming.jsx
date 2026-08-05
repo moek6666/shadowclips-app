@@ -54,7 +54,10 @@ export default function Streaming({ supabase }) {
             if (!error && data) {
                 setVideo(data);
                 document.title = `${data.title} | ShadowClips`;
-                await supabase.from('videos').update({ views: (data.views || 0) + 1 }).eq('id', data.id);
+
+                // PERBAIKAN SECURITY: Memanggil RPC untuk menambah views secara aman
+                await supabase.rpc('increment_views', { vid_id: data.id });
+
                 setLikes(data.likes || 0);
                 if (localStorage.getItem(`shadowclips_liked_${data.id}`)) setHasLiked(true);
 
@@ -113,9 +116,15 @@ export default function Streaming({ supabase }) {
         const newLikesCount = hasLiked ? (likes > 0 ? likes - 1 : 0) : likes + 1;
         setLikes(newLikesCount);
         setHasLiked(!hasLiked);
-        if (hasLiked) localStorage.removeItem(`shadowclips_liked_${video.id}`);
-        else localStorage.setItem(`shadowclips_liked_${video.id}`, 'true');
-        await supabase.from('videos').update({ likes: newLikesCount }).eq('id', video.id);
+
+        if (hasLiked) {
+            localStorage.removeItem(`shadowclips_liked_${video.id}`);
+        } else {
+            localStorage.setItem(`shadowclips_liked_${video.id}`, 'true');
+        }
+
+        // PERBAIKAN SECURITY: Memanggil RPC untuk mengupdate likes secara aman
+        await supabase.rpc('update_likes', { vid_id: video.id, new_likes: newLikesCount });
     };
 
     const handleShare = async () => {
