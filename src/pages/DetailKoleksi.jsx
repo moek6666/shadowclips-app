@@ -9,6 +9,14 @@ const formatViews = (views) => {
     return Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(views);
 };
 
+// FUNGSI PEMBERSIH MUTLAK: Harus 100% sama dengan Koleksi.jsx agar nyambung!
+const extractSingleLabel = (rawLabels) => {
+    if (!rawLabels) return '';
+    let str = typeof rawLabels === 'string' ? rawLabels : JSON.stringify(rawLabels);
+    str = str.replace(/[\[\]{}"']/g, '').trim();
+    return str && str.toUpperCase() !== 'EMPTY' ? str : '';
+};
+
 export default function DetailKoleksi({ supabase }) {
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -28,32 +36,29 @@ export default function DetailKoleksi({ supabase }) {
             setLoading(true);
 
             const pathParts = window.location.pathname.split('/');
-            const currentLabel = decodeURIComponent(pathParts[2] || '');
-            setLabelName(currentLabel);
-            document.title = `${currentLabel} | ShadowClips`;
+            // Ambil "Indo" dari URL
+            const rawUrlLabel = decodeURIComponent(pathParts[2] || '');
 
-            if (!currentLabel) { window.location.href = '/koleksi'; return; }
+            if (!rawUrlLabel) { window.location.href = '/koleksi'; return; }
+
+            // Bersihkan nama URL barangkali ada sisa karakter aneh
+            const cleanUrlLabel = extractSingleLabel(rawUrlLabel);
+
+            // Format ulang untuk UI Judul
+            const displayTitle = cleanUrlLabel.replace(/\b\w/g, c => c.toUpperCase());
+            setLabelName(displayTitle);
+            document.title = `${displayTitle} | ShadowClips`;
+
+            // Ubah ke huruf kecil semua untuk dicocokkan dengan database
+            const targetLabelSearch = cleanUrlLabel.toLowerCase();
 
             const { data, error } = await supabase.from('videos').select('*').order('created_at', { ascending: false });
             if (!error && data) {
                 const filtered = data.filter(video => {
-                    if (!video.labels) return false;
-
-                    let labelsArray = [];
-                    // Logika parsing disamakan persis dengan halaman Koleksi
-                    if (Array.isArray(video.labels)) {
-                        labelsArray = video.labels;
-                    } else if (typeof video.labels === 'string') {
-                        try {
-                            labelsArray = JSON.parse(video.labels);
-                            if (!Array.isArray(labelsArray)) labelsArray = [video.labels];
-                        } catch (e) {
-                            labelsArray = video.labels.split(',');
-                        }
-                    }
-
-                    // Bersihkan spasi dan cek apakah currentLabel ada di dalam array
-                    return labelsArray.map(l => l?.toString().trim()).includes(currentLabel);
+                    // Bersihkan data dari database (mengubah ["Indo"] menjadi "Indo")
+                    const cleanDbLabel = extractSingleLabel(video.labels);
+                    // Bandingkan "indo" dengan "indo"
+                    return cleanDbLabel.toLowerCase() === targetLabelSearch;
                 });
 
                 setVideos(filtered);
@@ -71,7 +76,7 @@ export default function DetailKoleksi({ supabase }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8 flex-grow">
                     {loading ? (
                         Array.from({ length: 8 }).map((_, i) => (
-                            <div key={i} className="animate-pulse">
+                            <div className="animate-pulse" key={i}>
                                 <div className="aspect-video bg-zinc-900 rounded-xl mb-3"></div>
                                 <div className="h-4 bg-zinc-900 rounded w-3/4"></div>
                             </div>
@@ -89,7 +94,6 @@ export default function DetailKoleksi({ supabase }) {
                                     </div>
                                 </div>
 
-                                {/* ALIGN CENTER & TRUNCATE */}
                                 <div className="px-2 text-center">
                                     <h4 className="font-bold text-sm md:text-base mb-1.5 text-white group-hover:text-[#0FFCBE] transition-colors truncate" title={item.title}>
                                         {item.title}

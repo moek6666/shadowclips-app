@@ -5,6 +5,15 @@ import Footer from '../components/Footer';
 
 const getImageUrl = (imgString) => imgString ? imgString.split(',')[0].trim() : '';
 
+// FUNGSI PEMBERSIH MUTLAK (1 LABEL): Membaca ["Indo"] menjadi Indo
+const extractSingleLabel = (rawLabels) => {
+    if (!rawLabels) return '';
+    // Jadikan string lalu libas semua kurung siku dan tanda kutip
+    let str = typeof rawLabels === 'string' ? rawLabels : JSON.stringify(rawLabels);
+    str = str.replace(/[\[\]{}"']/g, '').trim();
+    return str && str.toUpperCase() !== 'EMPTY' ? str : '';
+};
+
 export default function Koleksi({ supabase }) {
     const [isScrolled, setIsScrolled] = useState(false);
     const [collections, setCollections] = useState([]);
@@ -32,33 +41,23 @@ export default function Koleksi({ supabase }) {
                 const grouped = {};
 
                 data.forEach(video => {
-                    if (!video.labels) return;
+                    const cleanLabel = extractSingleLabel(video.labels);
 
-                    let labelsArray = [];
-                    if (Array.isArray(video.labels)) {
-                        labelsArray = video.labels;
-                    } else if (typeof video.labels === 'string') {
-                        try {
-                            labelsArray = JSON.parse(video.labels);
-                            if (!Array.isArray(labelsArray)) labelsArray = [video.labels];
-                        } catch (e) {
-                            labelsArray = video.labels.split(',').map(l => l.trim());
-                        }
-                    }
+                    if (cleanLabel) {
+                        const existingKey = Object.keys(grouped).find(k => k.toLowerCase() === cleanLabel.toLowerCase());
 
-                    labelsArray.forEach(label => {
-                        const labelName = label?.toString().trim();
-                        if (!labelName || labelName.toUpperCase() === 'EMPTY') return;
-
-                        if (!grouped[labelName]) {
-                            grouped[labelName] = {
-                                name: labelName,
-                                count: 0,
+                        if (existingKey) {
+                            grouped[existingKey].count += 1;
+                        } else {
+                            // Rapikan huruf kapital untuk judul folder
+                            const displayLabel = cleanLabel.replace(/\b\w/g, c => c.toUpperCase());
+                            grouped[displayLabel] = {
+                                name: displayLabel,
+                                count: 1,
                                 coverImage: getImageUrl(video.img),
                             };
                         }
-                        grouped[labelName].count += 1;
-                    });
+                    }
                 });
 
                 const sortedCollections = Object.values(grouped).sort((a, b) => b.count - a.count);
@@ -78,7 +77,6 @@ export default function Koleksi({ supabase }) {
         <>
             <Navbar searchInput={searchInput} setSearchInput={setSearchInput} isScrolled={isScrolled} />
 
-            {/* HAPUS bg-zinc-950 di sini agar transparan dan menyatu dengan background global */}
             <main className="min-h-screen pb-20 relative overflow-hidden">
                 <div className="max-w-[1440px] mx-auto px-4 sm:px-8 pt-32 relative z-10">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
@@ -102,7 +100,6 @@ export default function Koleksi({ supabase }) {
                                         loading="lazy"
                                     />
 
-                                    {/* Gradasi Normal Tanpa Selimut Biru */}
                                     <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent opacity-90 transition-opacity duration-500"></div>
 
                                     <div className="absolute inset-0 p-6 flex flex-col justify-end">
