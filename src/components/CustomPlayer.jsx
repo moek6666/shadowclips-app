@@ -47,11 +47,14 @@ export default function CustomPlayer({ src, poster }) {
 
         const videoElement = videoRef.current;
 
-        // 1. MEMECAH URL BERDASARKAN KOMA & MEMBERSIHKAN SPASI
-        const urls = src.split(',').map(s => s.trim()).filter(Boolean);
-        if (urls.length === 0) return;
+        // 1. PECAH LINK TAPI JANGAN DIBUANG YANG KOSONG DULU AGAR POSISI BANGKU TIDAK BERGESER
+        const rawUrls = src.split(',').map(s => s.trim());
 
-        const isHLS = urls[0].toLowerCase().includes('.m3u8');
+        // Cari link pertama yang benar-benar ada isinya (untuk cek apakah ini m3u8 / HLS)
+        const validUrls = rawUrls.filter(url => url && url !== 'EMPTY');
+        if (validUrls.length === 0) return;
+
+        const isHLS = validUrls[0].toLowerCase().includes('.m3u8');
 
         const plyrOptions = {
             controls: [
@@ -71,30 +74,39 @@ export default function CustomPlayer({ src, poster }) {
             const hls = new window.Hls();
             hlsRef.current = hls;
 
-            hls.loadSource(urls[0]);
+            hls.loadSource(validUrls[0]);
             hls.attachMedia(videoElement);
 
             hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
                 playerRef.current = new Plyr(videoElement, plyrOptions);
             });
         } else {
-            // 2. LOGIKA PINTAR PEMINDAI JUMLAH LINK
-            const labels = [1080, 720, 480, 360]; // Urutan kualitas yang akan dipasang
+            // 2. LOGIKA PINTAR PEMINDAI JUMLAH LINK & POSISI KOSONG
+            // Urutan Baku (Nomor Bangku): Index 0 = 1080p, Index 1 = 720p, Index 2 = 480p, Index 3 = 360p
+            const labels = [1080, 720, 480, 360];
 
-            // Petakan link yang tersedia menjadi daftar sources untuk Plyr
-            const videoSources = urls.map((url, index) => ({
-                src: url,
-                type: 'video/mp4',
-                size: labels[index] || 360 // Jika link 1: 1080, link 2: 720, dst.
-            }));
+            const videoSources = [];
 
-            // Ambil daftar ukuran yang benar-benar ada (Misal cuman 1 link, hasilnya [1080])
-            const availableSizes = videoSources.map(s => s.size);
+            // Periksa setiap bangku satu per satu
+            rawUrls.forEach((url, index) => {
+                // Jika di bangku tersebut ada link (bukan sekadar enter/spasi), daftarkan ke Plyr
+                if (url && url !== 'EMPTY') {
+                    videoSources.push({
+                        src: url,
+                        type: 'video/mp4',
+                        size: labels[index] || 360 // Beri label sesuai nomor bangkunya
+                    });
+                }
+            });
 
-            // Injeksi pengaturan kualitas agar hanya menampilkan ukuran yang tersedia
+            // Kumpulkan resolusi apa saja yang berhasil didaftarkan (Misal: cuma 720 dan 480)
+            // Lalu urutkan dari yang terbesar ke terkecil agar defaultnya selalu yang paling jernih
+            const availableSizes = videoSources.map(s => s.size).sort((a, b) => b - a);
+
+            // Injeksi pengaturan kualitas agar HANYA menampilkan ukuran yang tersedia
             plyrOptions.quality = {
-                default: availableSizes[0], // Otomatis putar di kualitas tertinggi (1080p)
-                options: availableSizes,    // Sembunyikan opsi yang tidak ada linknya
+                default: availableSizes[0], // Otomatis putar kualitas tertinggi yang tersedia
+                options: availableSizes,    // Sembunyikan label (misal 1080p) jika linknya tidak ada
                 forced: true
             };
 
