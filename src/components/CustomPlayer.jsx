@@ -46,18 +46,24 @@ export default function CustomPlayer({ src, poster }) {
         if (!isReady || !videoRef.current || !src) return;
 
         const videoElement = videoRef.current;
-        const isHLS = src.toLowerCase().includes('.m3u8');
+
+        // MEMECAH URL BERDASARKAN KOMA
+        const urls = src.split(',').map(s => s.trim()).filter(Boolean);
+        if (urls.length === 0) return;
+
+        // Cek apakah video adalah format HLS (m3u8)
+        const isHLS = urls[0].toLowerCase().includes('.m3u8');
 
         const plyrOptions = {
             controls: [
                 'play-large', 'play', 'progress', 'current-time',
                 'duration', 'mute', 'volume', 'settings', 'fullscreen'
             ],
-            settings: ['quality', 'speed'],
+            settings: ['quality', 'speed'], // Kualitas akan muncul di sini sebagai dropdown
             keyboard: { focused: true, global: true },
             ads: {
                 enabled: true,
-                // PERBAIKAN: Link VAST Terbaru dimasukkan ke dalam konfigurasi bawaan Plyr
+                // Kode VAST Iklan Anda Tetap Berjalan Aman
                 tagUrl: 'https://direct-league.com/djmJFkzGd.GUNhv/ZYGOUA/ceMmd9/u/ZWUJlBkYPDT/cuypO/DDcG5iNcTGMwtSNpzBIM4/N/z/kD1/NJyzZCsza/W/1ipVdzDS0/xH',
             }
         };
@@ -66,15 +72,32 @@ export default function CustomPlayer({ src, poster }) {
             const hls = new window.Hls();
             hlsRef.current = hls;
 
-            hls.loadSource(src);
+            hls.loadSource(urls[0]); // HLS otomatis mengatur kualitas sendiri via manifest
             hls.attachMedia(videoElement);
 
             hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
                 playerRef.current = new Plyr(videoElement, plyrOptions);
             });
         } else {
-            videoElement.src = src;
+            // LOGIKA MULTI-RESOLUSI UNTUK MP4 (SHADOWCLIPS SERVER)
             playerRef.current = new Plyr(videoElement, plyrOptions);
+
+            // Label resolusi yang berurutan sesuai data Anda (1080p, 720p, 480p)
+            const qualityLabels = [1080, 720, 480, 360, 240];
+
+            // Mapping URL menjadi format yang dibaca oleh Plyr Quality Settings
+            const videoSources = urls.map((url, index) => ({
+                src: url,
+                type: 'video/mp4',
+                size: qualityLabels[index] || 720 // Memberikan label angka ke Plyr
+            }));
+
+            // Menginjeksi source langsung ke API Plyr agar dropdown Quality aktif
+            playerRef.current.source = {
+                type: 'video',
+                sources: videoSources,
+                poster: poster
+            };
         }
 
         return () => {
@@ -87,7 +110,7 @@ export default function CustomPlayer({ src, poster }) {
                 playerRef.current = null;
             }
         };
-    }, [isReady, src]);
+    }, [isReady, src, poster]);
 
     if (!src) {
         return (
@@ -133,7 +156,6 @@ export default function CustomPlayer({ src, poster }) {
                 ref={videoRef}
                 className="w-full h-full"
                 playsInline
-                poster={poster}
             ></video>
         </div>
     );
