@@ -38,10 +38,24 @@ export default function DetailKoleksi({ supabase }) {
             if (!error && data) {
                 const filtered = data.filter(video => {
                     if (!video.labels) return false;
-                    if (Array.isArray(video.labels)) return video.labels.includes(currentLabel);
-                    else if (typeof video.labels === 'string') return video.labels.split(',').map(l => l.trim()).includes(currentLabel);
-                    return false;
+
+                    let labelsArray = [];
+                    // Logika parsing disamakan persis dengan halaman Koleksi
+                    if (Array.isArray(video.labels)) {
+                        labelsArray = video.labels;
+                    } else if (typeof video.labels === 'string') {
+                        try {
+                            labelsArray = JSON.parse(video.labels);
+                            if (!Array.isArray(labelsArray)) labelsArray = [video.labels];
+                        } catch (e) {
+                            labelsArray = video.labels.split(',');
+                        }
+                    }
+
+                    // Bersihkan spasi dan cek apakah currentLabel ada di dalam array
+                    return labelsArray.map(l => l?.toString().trim()).includes(currentLabel);
                 });
+
                 setVideos(filtered);
             }
             setLoading(false);
