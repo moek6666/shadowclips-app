@@ -47,11 +47,10 @@ export default function CustomPlayer({ src, poster }) {
 
         const videoElement = videoRef.current;
 
-        // MEMECAH URL BERDASARKAN KOMA
+        // 1. MEMECAH URL BERDASARKAN KOMA & MEMBERSIHKAN SPASI
         const urls = src.split(',').map(s => s.trim()).filter(Boolean);
         if (urls.length === 0) return;
 
-        // Cek apakah video adalah format HLS (m3u8)
         const isHLS = urls[0].toLowerCase().includes('.m3u8');
 
         const plyrOptions = {
@@ -59,7 +58,7 @@ export default function CustomPlayer({ src, poster }) {
                 'play-large', 'play', 'progress', 'current-time',
                 'duration', 'mute', 'volume', 'settings', 'fullscreen'
             ],
-            settings: ['quality', 'speed'], // Kualitas akan muncul di sini sebagai dropdown
+            settings: ['quality', 'speed'],
             keyboard: { focused: true, global: true },
             ads: {
                 enabled: true,
@@ -72,27 +71,35 @@ export default function CustomPlayer({ src, poster }) {
             const hls = new window.Hls();
             hlsRef.current = hls;
 
-            hls.loadSource(urls[0]); // HLS otomatis mengatur kualitas sendiri via manifest
+            hls.loadSource(urls[0]);
             hls.attachMedia(videoElement);
 
             hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
                 playerRef.current = new Plyr(videoElement, plyrOptions);
             });
         } else {
-            // LOGIKA MULTI-RESOLUSI UNTUK MP4 (SHADOWCLIPS SERVER)
-            playerRef.current = new Plyr(videoElement, plyrOptions);
+            // 2. LOGIKA PINTAR PEMINDAI JUMLAH LINK
+            const labels = [1080, 720, 480, 360]; // Urutan kualitas yang akan dipasang
 
-            // Label resolusi yang berurutan sesuai data Anda (1080p, 720p, 480p)
-            const qualityLabels = [1080, 720, 480, 360, 240];
-
-            // Mapping URL menjadi format yang dibaca oleh Plyr Quality Settings
+            // Petakan link yang tersedia menjadi daftar sources untuk Plyr
             const videoSources = urls.map((url, index) => ({
                 src: url,
                 type: 'video/mp4',
-                size: qualityLabels[index] || 720 // Memberikan label angka ke Plyr
+                size: labels[index] || 360 // Jika link 1: 1080, link 2: 720, dst.
             }));
 
-            // Menginjeksi source langsung ke API Plyr agar dropdown Quality aktif
+            // Ambil daftar ukuran yang benar-benar ada (Misal cuman 1 link, hasilnya [1080])
+            const availableSizes = videoSources.map(s => s.size);
+
+            // Injeksi pengaturan kualitas agar hanya menampilkan ukuran yang tersedia
+            plyrOptions.quality = {
+                default: availableSizes[0], // Otomatis putar di kualitas tertinggi (1080p)
+                options: availableSizes,    // Sembunyikan opsi yang tidak ada linknya
+                forced: true
+            };
+
+            playerRef.current = new Plyr(videoElement, plyrOptions);
+
             playerRef.current.source = {
                 type: 'video',
                 sources: videoSources,
