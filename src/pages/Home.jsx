@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import useSWR from 'swr'; // IMPORT SWR
+import useSWR from 'swr';
 import { Play, MonitorPlay, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 
 import { SiOnlyfans, SiTelegram } from 'react-icons/si';
@@ -13,7 +13,6 @@ import Footer from '../components/Footer';
 
 const ITEMS_PER_PAGE = 24;
 
-// DIKEMBALIKAN KE ASLI: Mengambil URL asli karena gambar sudah WebP.
 const getImageUrl = (imgString) => imgString ? imgString.split(',')[0].trim() : '';
 
 const formatViews = (views) => {
@@ -61,12 +60,23 @@ const getCategoryIcon = (category) => {
 
 export default function Home({ supabase }) {
     const [isScrolled, setIsScrolled] = useState(false);
-    const [currentPage, setCurrentPage] = useState(1);
+
+    // JURUS ANTI-REFRESH: Baca halaman dari URL (Misal: /?page=2)
+    const [currentPage, setCurrentPage] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const pageParam = parseInt(params.get('page'));
+            return pageParam > 0 ? pageParam : 1;
+        }
+        return 1;
+    });
+
     const [searchInput, setSearchInput] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
 
     const hilltopMiddleAdRef = useRef(null);
     const hilltopBottomAdRef = useRef(null);
+    const isFirstMount = useRef(true); // Pelindung agar pencarian tidak mereset halaman saat baru dibuka
 
     useEffect(() => {
         document.title = "ShadowClips | Streaming Video Premium";
@@ -74,6 +84,15 @@ export default function Home({ supabase }) {
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    // FUNGSI MENGGANTI HALAMAN (Sekaligus update URL tanpa reload)
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set('page', page);
+        window.history.pushState({}, '', newUrl); // Mengubah URL secara ajaib
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     const fetchVideos = async ([key, page, search]) => {
         if (!supabase) throw new Error("Supabase not initialized");
@@ -106,10 +125,8 @@ export default function Home({ supabase }) {
     const videos = swrData?.data || [];
     const totalPages = swrData?.totalPages || 0;
 
-    // FUNGSI IKLAN (Tetap menggunakan Cleanup agar memori aman)
     useEffect(() => {
         const currentAdRef = hilltopMiddleAdRef.current;
-
         if (videos.length > 0 && currentAdRef && !currentAdRef.querySelector('script')) {
             const s = document.createElement('script');
             s.settings = {};
@@ -118,15 +135,11 @@ export default function Home({ supabase }) {
             s.referrerPolicy = "no-referrer-when-downgrade";
             currentAdRef.appendChild(s);
         }
-
-        return () => {
-            if (currentAdRef) currentAdRef.innerHTML = '';
-        };
+        return () => { if (currentAdRef) currentAdRef.innerHTML = ''; };
     }, [videos]);
 
     useEffect(() => {
         const currentAdRef = hilltopBottomAdRef.current;
-
         if (currentAdRef && !currentAdRef.querySelector('script')) {
             const s = document.createElement('script');
             s.settings = {};
@@ -135,14 +148,23 @@ export default function Home({ supabase }) {
             s.referrerPolicy = "no-referrer-when-downgrade";
             currentAdRef.appendChild(s);
         }
-
-        return () => {
-            if (currentAdRef) currentAdRef.innerHTML = '';
-        };
+        return () => { if (currentAdRef) currentAdRef.innerHTML = ''; };
     }, []);
 
     useEffect(() => {
-        const timer = setTimeout(() => { setDebouncedSearch(searchInput); setCurrentPage(1); }, 500);
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchInput);
+
+            // Hanya reset halaman ke 1 jika user BENAR-BENAR mengetik di kolom pencarian
+            if (isFirstMount.current) {
+                isFirstMount.current = false;
+            } else {
+                setCurrentPage(1);
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.delete('page'); // Hapus ?page= dari URL karena kembali ke hal 1
+                window.history.pushState({}, '', newUrl);
+            }
+        }, 500);
         return () => clearTimeout(timer);
     }, [searchInput]);
 
@@ -173,7 +195,7 @@ export default function Home({ supabase }) {
                         </h1>
                     ) : (
                         <h1 className="text-zinc-400 text-sm md:text-base leading-relaxed">
-                            <strong className="text-white font-black text-lg md:text-xl tracking-tight mr-2">Shadow<span className="text-[#106EBE]">Clips</span></strong> Page {currentPage}
+                            <strong className="text-white font-black text-lg md:text-xl tracking-tight mr-2">Shadow<span className="text-[#106EBE]">Clips</span></strong> Halaman {currentPage}
                         </h1>
                     )}
                 </div>
@@ -197,7 +219,6 @@ export default function Home({ supabase }) {
                                 <div onClick={() => window.location.href = `/streaming/${video.slug || video.id}`} className="group cursor-pointer">
 
                                     <div className="relative aspect-video rounded-xl overflow-hidden mb-3 bg-zinc-800/30 border border-zinc-800/80 shadow-lg">
-                                        {/* KEMBALI KE ASLI: Menggunakan object-cover dan URL asli Anda */}
                                         <img src={getImageUrl(video.img)} alt={video.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
                                             <div className="w-14 h-14 bg-[#106EBE] rounded-full flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_30px_rgba(16,110,190,0.6)]">
@@ -234,17 +255,17 @@ export default function Home({ supabase }) {
                 {!isLoading && totalPages > 1 && (
                     <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mt-20">
                         {currentPage > 1 && (
-                            <button onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setCurrentPage(currentPage - 1); }} className="px-4 h-10 flex items-center justify-center gap-1 rounded-full font-bold text-sm transition-all border border-zinc-800 text-white hover:bg-zinc-800 hover:text-[#0FFCBE]">
+                            <button onClick={() => handlePageChange(currentPage - 1)} className="px-4 h-10 flex items-center justify-center gap-1 rounded-full font-bold text-sm transition-all border border-zinc-800 text-white hover:bg-zinc-800 hover:text-[#0FFCBE]">
                                 <ChevronLeft className="w-4 h-4" /> Prev
                             </button>
                         )}
                         {getPageNumbers().map((num) => (
-                            <button key={num} onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setCurrentPage(num); }} className={`w-10 h-10 flex items-center justify-center rounded-full font-bold text-sm transition-all ${currentPage === num ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.5)] border-transparent' : 'border border-zinc-800 text-white hover:bg-zinc-800 hover:text-[#0FFCBE]'}`}>
+                            <button key={num} onClick={() => handlePageChange(num)} className={`w-10 h-10 flex items-center justify-center rounded-full font-bold text-sm transition-all ${currentPage === num ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.5)] border-transparent' : 'border border-zinc-800 text-white hover:bg-zinc-800 hover:text-[#0FFCBE]'}`}>
                                 {num}
                             </button>
                         ))}
                         {currentPage < totalPages && (
-                            <button onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setCurrentPage(currentPage + 1); }} className="px-4 h-10 flex items-center justify-center gap-1 rounded-full font-bold text-sm transition-all border border-zinc-800 text-white hover:bg-zinc-800 hover:text-[#0FFCBE]">
+                            <button onClick={() => handlePageChange(currentPage + 1)} className="px-4 h-10 flex items-center justify-center gap-1 rounded-full font-bold text-sm transition-all border border-zinc-800 text-white hover:bg-zinc-800 hover:text-[#0FFCBE]">
                                 Next <ChevronRight className="w-4 h-4" />
                             </button>
                         )}
