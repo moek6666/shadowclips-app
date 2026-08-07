@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import useSWR from 'swr'; // IMPORT SWR
 import { Play, MonitorPlay, ChevronRight, FolderOpen } from 'lucide-react';
 
 import { SiOnlyfans, SiTelegram } from 'react-icons/si';
-// TAMBAHAN ICON UNTUK DEEPFAKE: FaMask (Topeng)
 import { FaCrown, FaVideo, FaFire, FaBan, FaRandom, FaFilm, FaMask } from 'react-icons/fa';
 import { FaClapperboard } from 'react-icons/fa6';
 import { BiSolidCategory } from 'react-icons/bi';
@@ -21,20 +21,12 @@ const getCategoryIcon = (categoryName) => {
     const name = categoryName.toLowerCase();
     const iconClasses = "w-7 h-7 md:w-8 md:h-8 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors drop-shadow-md shrink-0";
 
-    // 1. BRAND ASLI
     if (name.includes('onlyfans')) return <SiOnlyfans className={iconClasses} />;
     if (name.includes('telegram')) return <SiTelegram className={iconClasses} />;
-
-    // 2. MOVIE SCENE
     if (name.includes('movie') || name.includes('scene')) return <FaClapperboard className={iconClasses} />;
-
-    // 3. KATEGORI LIVE
     if (name.includes('live')) return <MdLiveTv className={iconClasses} />;
-
-    // 4. DEEPFAKE (Icon Topeng / Face Swap)
     if (name.includes('deepfake')) return <FaMask className={iconClasses} />;
 
-    // 5. KOMBINASI ICON + BADGE FLAG MINI (KHUSUS KBJ / KOREAN)
     if (name.includes('kbj') || name.includes('korean')) {
         return (
             <div className="relative shrink-0 flex items-center justify-center">
@@ -46,7 +38,6 @@ const getCategoryIcon = (categoryName) => {
         );
     }
 
-    // 6. KOMBINASI ICON + BADGE FLAG MINI (KHUSUS JAV / JEPANG)
     if (name.includes('jav') || name.includes('jepang') || name.includes('film')) {
         return (
             <div className="relative shrink-0 flex items-center justify-center">
@@ -58,52 +49,58 @@ const getCategoryIcon = (categoryName) => {
         );
     }
 
-    // 7. KATEGORI LAINNYA
     if (name.includes('exclusive') || name.includes('eksklusif')) return <FaCrown className={iconClasses} />;
     if (name.includes('viral')) return <FaFire className={iconClasses} />;
     if (name.includes('random') || name.includes('acak')) return <FaRandom className={iconClasses} />;
     if (name.includes('banned') || name.includes('banned')) return <FaBan className={iconClasses} />;
 
-    // FALLBACK
     return <BiSolidCategory className={iconClasses} />;
 };
 
 export default function Jelajahi({ supabase }) {
-    const [kategoriData, setKategoriData] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [searchInput, setSearchInput] = useState('');
 
     useEffect(() => {
         document.title = "Jelajahi Kategori | ShadowClips";
+    }, []);
 
-        const fetchSemuaKategori = async () => {
-            if (!supabase) return;
-            setLoading(true);
+    // FUNGSI FETCHER UNTUK SWR
+    const fetchSemuaKategori = async () => {
+        if (!supabase) throw new Error("Supabase not initialized");
+        const { data, error } = await supabase.from('videos').select('*').order('created_at', { ascending: false }).limit(300);
 
-            const { data, error } = await supabase.from('videos').select('*').order('created_at', { ascending: false }).limit(300);
+        if (error) throw new Error(error.message);
 
-            if (!error && data) {
-                const grouped = {};
-                data.forEach(video => {
-                    let cats = [];
-                    if (!video.category) cats = ['Lainnya'];
-                    else if (Array.isArray(video.category)) cats = video.category;
-                    else if (typeof video.category === 'string') cats = video.category.split(',').map(c => c.trim());
+        if (data) {
+            const grouped = {};
+            data.forEach(video => {
+                let cats = [];
+                if (!video.category) cats = ['Lainnya'];
+                else if (Array.isArray(video.category)) cats = video.category;
+                else if (typeof video.category === 'string') cats = video.category.split(',').map(c => c.trim());
 
-                    cats.forEach(cat => {
-                        if (!cat) return;
-                        const formattedCat = cat.charAt(0).toUpperCase() + cat.slice(1);
-                        if (!grouped[formattedCat]) grouped[formattedCat] = [];
-                        grouped[formattedCat].push(video);
-                    });
+                cats.forEach(cat => {
+                    if (!cat) return;
+                    const formattedCat = cat.charAt(0).toUpperCase() + cat.slice(1);
+                    if (!grouped[formattedCat]) grouped[formattedCat] = [];
+                    grouped[formattedCat].push(video);
                 });
-                const sortedKategori = Object.entries(grouped).sort((a, b) => b[1].length - a[1].length);
-                setKategoriData(sortedKategori);
-            }
-            setLoading(false);
-        };
-        fetchSemuaKategori();
-    }, [supabase]);
+            });
+            return Object.entries(grouped).sort((a, b) => b[1].length - a[1].length);
+        }
+        return [];
+    };
+
+    // IMPLEMENTASI SWR UNTUK CACHING
+    const { data: kategoriData = [], isLoading: loading } = useSWR(
+        supabase ? 'jelajahi_kategori' : null,
+        fetchSemuaKategori,
+        {
+            revalidateOnFocus: false,
+            dedupingInterval: 300000, // Cache 5 menit
+            keepPreviousData: true,
+        }
+    );
 
     return (
         <div className="bg-zinc-950 min-h-screen font-sans">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import useSWR from 'swr'; // IMPORT SWR
 import { Play, MonitorPlay } from 'lucide-react';
 
-// IMPORT ICON KATEGORI PROFESIONAL
 import { SiOnlyfans, SiTelegram } from 'react-icons/si';
 import { FaCrown, FaVideo, FaFire, FaBan, FaRandom, FaFilm, FaMask } from 'react-icons/fa';
 import { FaClapperboard } from 'react-icons/fa6';
@@ -17,7 +17,6 @@ const formatViews = (views) => {
     return Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(views);
 };
 
-// LOGIKA ICON DINAMIS
 const getCategoryIcon = (category) => {
     if (!category) return <BiSolidCategory className="w-3.5 h-3.5 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors shrink-0" />;
 
@@ -58,8 +57,6 @@ const getCategoryIcon = (category) => {
 
 export default function Populer({ supabase }) {
     const [isScrolled, setIsScrolled] = useState(false);
-    const [videos, setVideos] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [searchInput, setSearchInput] = useState('');
 
     useEffect(() => {
@@ -69,17 +66,25 @@ export default function Populer({ supabase }) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    useEffect(() => {
-        const fetchPopularVideos = async () => {
-            if (!supabase) return;
-            setLoading(true);
+    // FUNGSI FETCHER UNTUK SWR
+    const fetchPopularVideos = async () => {
+        if (!supabase) throw new Error("Supabase not initialized");
+        const { data, error } = await supabase.from('videos').select('*').order('views', { ascending: false, nullsFirst: false }).limit(16);
 
-            const { data, error } = await supabase.from('videos').select('*').order('views', { ascending: false, nullsFirst: false }).limit(16);
-            if (!error && data) setVideos(data);
-            setLoading(false);
-        };
-        fetchPopularVideos();
-    }, [supabase]);
+        if (error) throw new Error(error.message);
+        return data || [];
+    };
+
+    // IMPLEMENTASI SWR UNTUK CACHING
+    const { data: videos = [], isLoading: loading } = useSWR(
+        supabase ? 'populer_videos' : null,
+        fetchPopularVideos,
+        {
+            revalidateOnFocus: false,
+            dedupingInterval: 300000,
+            keepPreviousData: true,
+        }
+    );
 
     return (
         <>

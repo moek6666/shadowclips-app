@@ -1,15 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import Home from './pages/Home';
-import Streaming from './pages/Streaming';
-import Populer from './pages/Populer';
-import LegalPages from './pages/LegalPages';
-import Koleksi from './pages/Koleksi';
-import DetailKoleksi from './pages/DetailKoleksi';
-import DetailCategory from './pages/DetailCategory';
-import Jelajahi from './pages/Jelajahi';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
+
+// 1. IMPORT KOMPONEN GLOBAL (Tetap biasa karena selalu muncul di semua halaman)
 import AgeVerification from './components/AgeVerification';
 import AntiAdBlock from './components/AntiAdBlock';
 import SliderAd from './components/SliderAd';
+
+// 2. CODE SPLITTING / LAZY LOADING HALAMAN
+// Halaman ini hanya akan di-download jika URL-nya cocok
+const Home = lazy(() => import('./pages/Home'));
+const Streaming = lazy(() => import('./pages/Streaming'));
+const Populer = lazy(() => import('./pages/Populer'));
+const LegalPages = lazy(() => import('./pages/LegalPages'));
+const Koleksi = lazy(() => import('./pages/Koleksi'));
+const DetailKoleksi = lazy(() => import('./pages/DetailKoleksi'));
+const DetailCategory = lazy(() => import('./pages/DetailCategory'));
+const Jelajahi = lazy(() => import('./pages/Jelajahi'));
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -51,23 +56,30 @@ export default function App() {
             <AntiAdBlock />
             <SliderAd />
 
-            {pathname.startsWith('/streaming/') ? (
-                <Streaming supabase={supabase} />
-            ) : pathname.startsWith('/page/') ? (
-                <LegalPages />
-            ) : pathname === '/populer' ? (
-                <Populer supabase={supabase} />
-            ) : pathname === '/koleksi' ? (
-                <Koleksi supabase={supabase} />
-            ) : pathname.startsWith('/koleksi/') ? (
-                <DetailKoleksi supabase={supabase} />
-            ) : pathname.startsWith('/kategori/') ? (
-                <DetailCategory supabase={supabase} />
-            ) : pathname === '/jelajahi' ? (
-                <Jelajahi supabase={supabase} />
-            ) : (
-                <Home supabase={supabase} />
-            )}
+            {/* 3. BUNGKUS DENGAN SUSPENSE UNTUK MENCEGAH CRASH SAAT FILE JS SEDANG DI-DOWNLOAD */}
+            <Suspense fallback={
+                <div className="min-h-screen bg-[#121212] flex items-center justify-center">
+                    <div className="w-14 h-14 border-4 border-zinc-800 border-t-[#106EBE] rounded-full animate-spin shadow-[0_0_20px_rgba(16,110,190,0.5)]"></div>
+                </div>
+            }>
+                {pathname.startsWith('/streaming/') ? (
+                    <Streaming supabase={supabase} />
+                ) : pathname.startsWith('/page/') ? (
+                    <LegalPages />
+                ) : pathname === '/populer' ? (
+                    <Populer supabase={supabase} />
+                ) : pathname === '/koleksi' ? (
+                    <Koleksi supabase={supabase} />
+                ) : pathname.startsWith('/koleksi/') ? (
+                    <DetailKoleksi supabase={supabase} />
+                ) : pathname.startsWith('/kategori/') ? (
+                    <DetailCategory supabase={supabase} />
+                ) : pathname === '/jelajahi' ? (
+                    <Jelajahi supabase={supabase} />
+                ) : (
+                    <Home supabase={supabase} />
+                )}
+            </Suspense>
         </div>
     );
 }

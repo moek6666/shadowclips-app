@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import useSWR from 'swr'; // IMPORT SWR
 import { Play, MonitorPlay, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 
-// IMPORT ICON KATEGORI PROFESIONAL
 import { SiOnlyfans, SiTelegram } from 'react-icons/si';
 import { FaCrown, FaVideo, FaFire, FaBan, FaRandom, FaFilm, FaMask } from 'react-icons/fa';
 import { FaClapperboard } from 'react-icons/fa6';
@@ -12,17 +12,18 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 const ITEMS_PER_PAGE = 24;
+
+// DIKEMBALIKAN KE ASLI: Mengambil URL asli karena gambar sudah WebP.
 const getImageUrl = (imgString) => imgString ? imgString.split(',')[0].trim() : '';
+
 const formatViews = (views) => {
     if (!views) return '0';
     return Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(views);
 };
 
-// LOGIKA ICON KATEGORI UNTUK KARTU KECIL DI HOMEPAGE
 const getCategoryIcon = (category) => {
     if (!category) return <BiSolidCategory className="w-3.5 h-3.5 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors shrink-0" />;
 
-    // Ubah jadi string agar aman jika data berupa array
     const name = category.toString().toLowerCase();
     const iconClasses = "w-3.5 h-3.5 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors shrink-0";
 
@@ -36,9 +37,7 @@ const getCategoryIcon = (category) => {
         return (
             <div className="relative shrink-0 flex items-center justify-center">
                 <FaVideo className={iconClasses} />
-                <span className="absolute -bottom-1 -right-1 bg-zinc-800 border border-zinc-600 text-white text-[5px] font-black px-[2px] rounded-[1px] shadow-sm group-hover:border-[#0FFCBE] group-hover:text-[#0FFCBE] transition-colors leading-none">
-                    KR
-                </span>
+                <span className="absolute -bottom-1 -right-1 bg-zinc-800 border border-zinc-600 text-white text-[5px] font-black px-[2px] rounded-[1px] shadow-sm group-hover:border-[#0FFCBE] group-hover:text-[#0FFCBE] transition-colors leading-none">KR</span>
             </div>
         );
     }
@@ -47,9 +46,7 @@ const getCategoryIcon = (category) => {
         return (
             <div className="relative shrink-0 flex items-center justify-center">
                 <FaFilm className={iconClasses} />
-                <span className="absolute -bottom-1 -right-1 bg-zinc-800 border border-zinc-600 text-white text-[5px] font-black px-[2px] rounded-[1px] shadow-sm group-hover:border-[#0FFCBE] group-hover:text-[#0FFCBE] transition-colors leading-none">
-                    JP
-                </span>
+                <span className="absolute -bottom-1 -right-1 bg-zinc-800 border border-zinc-600 text-white text-[5px] font-black px-[2px] rounded-[1px] shadow-sm group-hover:border-[#0FFCBE] group-hover:text-[#0FFCBE] transition-colors leading-none">JP</span>
             </div>
         );
     }
@@ -64,10 +61,7 @@ const getCategoryIcon = (category) => {
 
 export default function Home({ supabase }) {
     const [isScrolled, setIsScrolled] = useState(false);
-    const [videos, setVideos] = useState([]);
-    const [loadingGrid, setLoadingGrid] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(0);
     const [searchInput, setSearchInput] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
 
@@ -81,53 +75,76 @@ export default function Home({ supabase }) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // SCRIPT IKLAN AMAN TIDAK DISENTUH
+    const fetchVideos = async ([key, page, search]) => {
+        if (!supabase) throw new Error("Supabase not initialized");
+        const from = (page - 1) * ITEMS_PER_PAGE;
+        const to = from + ITEMS_PER_PAGE - 1;
+
+        let query = supabase.from('videos').select('*', { count: 'exact' }).order('created_at', { ascending: false });
+        if (search) query = query.or(`title.ilike.%${search}%,category.ilike.%${search}%`);
+
+        query = query.range(from, to);
+        const { data, count, error } = await query;
+
+        if (error) throw new Error(error.message);
+        return {
+            data: data || [],
+            totalPages: Math.ceil((count || 0) / ITEMS_PER_PAGE)
+        };
+    };
+
+    const { data: swrData, isLoading } = useSWR(
+        supabase ? ['home_videos', currentPage, debouncedSearch] : null,
+        fetchVideos,
+        {
+            revalidateOnFocus: false,
+            dedupingInterval: 300000,
+            keepPreviousData: true,
+        }
+    );
+
+    const videos = swrData?.data || [];
+    const totalPages = swrData?.totalPages || 0;
+
+    // FUNGSI IKLAN (Tetap menggunakan Cleanup agar memori aman)
     useEffect(() => {
-        if (hilltopMiddleAdRef.current && !hilltopMiddleAdRef.current.querySelector('script')) {
+        const currentAdRef = hilltopMiddleAdRef.current;
+
+        if (videos.length > 0 && currentAdRef && !currentAdRef.querySelector('script')) {
             const s = document.createElement('script');
             s.settings = {};
             s.src = "//winding-hurt.com/b/XCVrsQd.Gkl/0OYTWFcb/hevma9Pu/ZNUrlOkVPuTSYB4KMNT/MV1UOQTzMDtwNQj/gzxhM/zBUn5BNswG";
             s.async = true;
             s.referrerPolicy = "no-referrer-when-downgrade";
-            hilltopMiddleAdRef.current.appendChild(s);
+            currentAdRef.appendChild(s);
         }
+
+        return () => {
+            if (currentAdRef) currentAdRef.innerHTML = '';
+        };
     }, [videos]);
 
     useEffect(() => {
-        if (hilltopBottomAdRef.current && !hilltopBottomAdRef.current.querySelector('script')) {
+        const currentAdRef = hilltopBottomAdRef.current;
+
+        if (currentAdRef && !currentAdRef.querySelector('script')) {
             const s = document.createElement('script');
             s.settings = {};
             s.src = "//winding-hurt.com/b/XKVzsJd.G/lP0bY/WYcS/zexm/9cuhZhU-lskGPNTDcZyQOVDkg/x/MFjmUJtaNnz/IY4HOTD_E/y/OKQL";
             s.async = true;
             s.referrerPolicy = "no-referrer-when-downgrade";
-            hilltopBottomAdRef.current.appendChild(s);
+            currentAdRef.appendChild(s);
         }
+
+        return () => {
+            if (currentAdRef) currentAdRef.innerHTML = '';
+        };
     }, []);
 
     useEffect(() => {
         const timer = setTimeout(() => { setDebouncedSearch(searchInput); setCurrentPage(1); }, 500);
         return () => clearTimeout(timer);
     }, [searchInput]);
-
-    useEffect(() => {
-        const fetchVideos = async () => {
-            if (!supabase) return;
-            setLoadingGrid(true);
-            const from = (currentPage - 1) * ITEMS_PER_PAGE;
-            const to = from + ITEMS_PER_PAGE - 1;
-
-            let query = supabase.from('videos').select('*', { count: 'exact' }).order('created_at', { ascending: false });
-            if (debouncedSearch) query = query.or(`title.ilike.%${debouncedSearch}%,category.ilike.%${debouncedSearch}%`);
-
-            query = query.range(from, to);
-            const { data, count, error } = await query;
-
-            if (!error && data) { setVideos(data); setTotalPages(Math.ceil((count || 0) / ITEMS_PER_PAGE)); }
-            else { setVideos([]); setTotalPages(0); }
-            setLoadingGrid(false);
-        };
-        fetchVideos();
-    }, [currentPage, debouncedSearch, supabase]);
 
     const getPageNumbers = () => {
         const maxVisiblePages = 5;
@@ -141,7 +158,7 @@ export default function Home({ supabase }) {
         <>
             <Navbar searchInput={searchInput} setSearchInput={setSearchInput} isScrolled={isScrolled} />
 
-            <main className="max-w-[1440px] mx-auto px-4 sm:px-8 relative z-20 pb-10 pt-32 min-h-screen">
+            <main className="max-w-[1440px] mx-auto px-4 sm:px-8 relative z-20 pb-10 pt-32 min-h-screen animate-in fade-in zoom-in-95 slide-in-from-bottom-8 duration-700 ease-out">
 
                 <div className="mb-10 text-center md:text-left animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-4xl">
                     {debouncedSearch ? (
@@ -162,7 +179,7 @@ export default function Home({ supabase }) {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-                    {loadingGrid ? (
+                    {isLoading ? (
                         Array.from({ length: 12 }).map((_, i) => (
                             <div key={i} className="animate-pulse">
                                 <div className="aspect-video bg-zinc-800/50 rounded-xl mb-3"></div>
@@ -180,6 +197,7 @@ export default function Home({ supabase }) {
                                 <div onClick={() => window.location.href = `/streaming/${video.slug || video.id}`} className="group cursor-pointer">
 
                                     <div className="relative aspect-video rounded-xl overflow-hidden mb-3 bg-zinc-800/30 border border-zinc-800/80 shadow-lg">
+                                        {/* KEMBALI KE ASLI: Menggunakan object-cover dan URL asli Anda */}
                                         <img src={getImageUrl(video.img)} alt={video.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
                                             <div className="w-14 h-14 bg-[#106EBE] rounded-full flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_30px_rgba(16,110,190,0.6)]">
@@ -194,7 +212,6 @@ export default function Home({ supabase }) {
                                         </h3>
 
                                         <div className="flex flex-wrap items-center justify-center gap-3 text-[11px]">
-                                            {/* GANTI FOLDER DENGAN ICON DINAMIS */}
                                             <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-white group-hover:text-[#0FFCBE] transition-colors">
                                                 {getCategoryIcon(video.category)} {video.category}
                                             </span>
@@ -214,7 +231,7 @@ export default function Home({ supabase }) {
                     )}
                 </div>
 
-                {!loadingGrid && totalPages > 1 && (
+                {!isLoading && totalPages > 1 && (
                     <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mt-20">
                         {currentPage > 1 && (
                             <button onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setCurrentPage(currentPage - 1); }} className="px-4 h-10 flex items-center justify-center gap-1 rounded-full font-bold text-sm transition-all border border-zinc-800 text-white hover:bg-zinc-800 hover:text-[#0FFCBE]">
