@@ -1,22 +1,49 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'; // Menghapus import React
 import { AlertTriangle, LogIn } from 'lucide-react';
 import { Turnstile } from '@marsidev/react-turnstile';
 
 export default function AgeVerification() {
     const [isVisible, setIsVisible] = useState(false);
-    const [isHuman, setIsHuman] = useState(false); // State untuk melacak status CAPTCHA
+    const [isHuman, setIsHuman] = useState(false);
 
     useEffect(() => {
-        const isVerified = localStorage.getItem('shadowclips_age_verified');
-        if (!isVerified) {
+        const storedData = localStorage.getItem('shadowclips_age_verified');
+        let needsVerification = true;
+
+        if (storedData) {
+            try {
+                const parsedData = JSON.parse(storedData);
+                const currentTime = new Date().getTime();
+
+                if (parsedData.verified && currentTime < parsedData.expiry) {
+                    needsVerification = false;
+                } else {
+                    localStorage.removeItem('shadowclips_age_verified');
+                }
+            } catch { // Menghapus tulisan (error) yang tidak terpakai
+                localStorage.removeItem('shadowclips_age_verified');
+            }
+        }
+
+        if (needsVerification) {
             setIsVisible(true);
             document.body.style.overflow = 'hidden';
         }
     }, []);
 
     const handleAccept = () => {
-        if (!isHuman) return; // Mencegah bypass paksa jika belum lolos CAPTCHA
-        localStorage.setItem('shadowclips_age_verified', 'true');
+        if (!isHuman) return;
+
+        const daysToKeep = 3;
+        const expiryDate = new Date().getTime() + (daysToKeep * 24 * 60 * 60 * 1000);
+
+        const dataToStore = {
+            verified: true,
+            expiry: expiryDate
+        };
+
+        localStorage.setItem('shadowclips_age_verified', JSON.stringify(dataToStore));
+
         document.body.style.overflow = 'unset';
         setIsVisible(false);
     };
@@ -30,7 +57,6 @@ export default function AgeVerification() {
     return (
         <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-500">
 
-            {/* BORDER DIHAPUS: Diganti dengan Gradien Halus dan Inner Shadow agar menyatu tapi tetap menonjol */}
             <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 rounded-3xl p-8 sm:p-10 max-w-md w-full relative overflow-hidden shadow-[0_15px_50px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.05)] text-center">
 
                 {/* Ambient Glow Biru Halus */}
@@ -62,29 +88,24 @@ export default function AgeVerification() {
                         Situs ini berisi konten eksklusif yang dibatasi usia. Verifikasi bahwa Anda adalah manusia dan berusia <strong>18 tahun atau lebih</strong>.
                     </p>
 
-                    
                     <div className="flex justify-center mb-6 min-h-[65px]">
                         <Turnstile
                             siteKey="0x4AAAAAAEI8owBAGHjSd7E5"
-                            onSuccess={(token) => setIsHuman(true)}
+                            onSuccess={() => setIsHuman(true)} 
                             onError={() => setIsHuman(false)}
                             onExpire={() => setIsHuman(false)}
-                            options={{
-                                theme: 'dark', // Memaksa widget menggunakan tema gelap agar serasi
-                            }}
+                            options={{ theme: 'dark' }}
                         />
                     </div>
 
                     <div className="flex flex-col gap-3">
-                        {/* TOMBOL PINTAR: Bereaksi terhadap status CAPTCHA */}
                         <button
                             onClick={handleAccept}
                             disabled={!isHuman}
-                            className={`w-full font-bold py-3.5 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${
-                                isHuman 
-                                ? 'bg-[#106EBE] text-white shadow-[0_0_20px_rgba(16,110,190,0.4)] hover:shadow-[0_0_30px_rgba(16,110,190,0.6)] hover:bg-[#0e5c9f] hover:scale-[1.02] cursor-pointer' 
-                                : 'bg-zinc-800/50 text-zinc-600 shadow-none cursor-not-allowed'
-                            }`}
+                            className={`w-full font-bold py-3.5 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${isHuman
+                                    ? 'bg-[#106EBE] text-white shadow-[0_0_20px_rgba(16,110,190,0.4)] hover:shadow-[0_0_30px_rgba(16,110,190,0.6)] hover:bg-[#0e5c9f] hover:scale-[1.02] cursor-pointer'
+                                    : 'bg-zinc-800/50 text-zinc-600 shadow-none cursor-not-allowed'
+                                }`}
                         >
                             {isHuman && <LogIn className="w-5 h-5" />}
                             Saya Berusia 18+ (Masuk)
