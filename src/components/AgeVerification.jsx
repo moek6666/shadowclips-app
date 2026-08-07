@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, LogIn } from 'lucide-react';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 export default function AgeVerification() {
     const [isVisible, setIsVisible] = useState(false);
+    const [isHuman, setIsHuman] = useState(false); // State untuk melacak status CAPTCHA
 
     useEffect(() => {
         const isVerified = localStorage.getItem('shadowclips_age_verified');
@@ -13,6 +15,7 @@ export default function AgeVerification() {
     }, []);
 
     const handleAccept = () => {
+        if (!isHuman) return; // Mencegah bypass paksa jika belum lolos CAPTCHA
         localStorage.setItem('shadowclips_age_verified', 'true');
         document.body.style.overflow = 'unset';
         setIsVisible(false);
@@ -27,7 +30,8 @@ export default function AgeVerification() {
     return (
         <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-500">
 
-            <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl p-8 sm:p-10 max-w-md w-full relative overflow-hidden shadow-[0_15px_50px_rgba(0,0,0,0.8)] text-center">
+            {/* BORDER DIHAPUS: Diganti dengan Gradien Halus dan Inner Shadow agar menyatu tapi tetap menonjol */}
+            <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 rounded-3xl p-8 sm:p-10 max-w-md w-full relative overflow-hidden shadow-[0_15px_50px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.05)] text-center">
 
                 {/* Ambient Glow Biru Halus */}
                 <div className="absolute -top-32 -left-32 w-64 h-64 bg-[#106EBE]/20 blur-[100px] pointer-events-none"></div>
@@ -35,7 +39,6 @@ export default function AgeVerification() {
 
                 <div className="relative z-10">
 
-                    {/* --- LOGO BARU (SVG + TEKS) IDENTIK NAVBAR --- */}
                     <div className="flex items-center justify-center gap-3 sm:gap-4 mb-8 w-full">
                         <svg
                             viewBox="0 0 40 40"
@@ -55,21 +58,41 @@ export default function AgeVerification() {
                         Verifikasi Umur
                     </h2>
 
-                    <p className="text-zinc-400 mb-8 text-sm sm:text-base leading-relaxed">
-                        Situs web ini berisi konten eksklusif yang dibatasi usia. Dengan masuk, Anda mengonfirmasi bahwa Anda berusia <strong>18 tahun atau lebih</strong>.
+                    <p className="text-zinc-400 mb-6 text-sm sm:text-base leading-relaxed">
+                        Situs ini berisi konten eksklusif yang dibatasi usia. Verifikasi bahwa Anda adalah manusia dan berusia <strong>18 tahun atau lebih</strong>.
                     </p>
 
+                    
+                    <div className="flex justify-center mb-6 min-h-[65px]">
+                        <Turnstile
+                            siteKey="0x4AAAAAAEI8owBAGHjSd7E5"
+                            onSuccess={(token) => setIsHuman(true)}
+                            onError={() => setIsHuman(false)}
+                            onExpire={() => setIsHuman(false)}
+                            options={{
+                                theme: 'dark', // Memaksa widget menggunakan tema gelap agar serasi
+                            }}
+                        />
+                    </div>
+
                     <div className="flex flex-col gap-3">
+                        {/* TOMBOL PINTAR: Bereaksi terhadap status CAPTCHA */}
                         <button
                             onClick={handleAccept}
-                            className="w-full bg-[#106EBE] text-white font-bold py-3.5 px-6 rounded-xl transition-all shadow-[0_0_20px_rgba(16,110,190,0.4)] hover:shadow-[0_0_30px_rgba(16,110,190,0.6)] hover:bg-[#0e5c9f]"
+                            disabled={!isHuman}
+                            className={`w-full font-bold py-3.5 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${
+                                isHuman 
+                                ? 'bg-[#106EBE] text-white shadow-[0_0_20px_rgba(16,110,190,0.4)] hover:shadow-[0_0_30px_rgba(16,110,190,0.6)] hover:bg-[#0e5c9f] hover:scale-[1.02] cursor-pointer' 
+                                : 'bg-zinc-800/50 text-zinc-600 shadow-none cursor-not-allowed'
+                            }`}
                         >
+                            {isHuman && <LogIn className="w-5 h-5" />}
                             Saya Berusia 18+ (Masuk)
                         </button>
 
                         <button
                             onClick={handleDecline}
-                            className="w-full bg-zinc-900/50 hover:bg-zinc-800 text-zinc-400 hover:text-[#0FFCBE] font-bold py-3.5 px-6 rounded-xl transition-colors border border-transparent hover:border-zinc-700"
+                            className="w-full bg-zinc-900/40 hover:bg-zinc-800 text-zinc-400 hover:text-[#0FFCBE] font-bold py-3.5 px-6 rounded-xl transition-colors"
                         >
                             Saya di Bawah 18 Tahun (Keluar)
                         </button>
