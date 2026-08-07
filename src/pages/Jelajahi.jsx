@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Play, MonitorPlay, ChevronRight, LayoutGrid, Crown, Radio, TrendingUp, Shuffle, Send, Heart, Ban, Wand2, FolderOpen } from 'lucide-react';
+import { Play, MonitorPlay, ChevronRight, FolderOpen } from 'lucide-react';
+
+import { SiOnlyfans, SiTelegram } from 'react-icons/si';
+// TAMBAHAN ICON UNTUK DEEPFAKE: FaMask (Topeng)
+import { FaCrown, FaVideo, FaFire, FaBan, FaRandom, FaFilm, FaMask } from 'react-icons/fa';
+import { FaClapperboard } from 'react-icons/fa6';
+import { BiSolidCategory } from 'react-icons/bi';
+import { MdLiveTv } from 'react-icons/md';
+
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -11,18 +19,53 @@ const formatViews = (views) => {
 
 const getCategoryIcon = (categoryName) => {
     const name = categoryName.toLowerCase();
-    // Ukuran ikon disesuaikan agar dinamis (w-6 di HP, w-8 di PC) agar presisi
-    const iconClasses = "w-7 h-7 md:w-8 md:h-8 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors drop-shadow-md";
+    const iconClasses = "w-7 h-7 md:w-8 md:h-8 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors drop-shadow-md shrink-0";
 
-    if (name.includes('exclusive')) return <Crown className={iconClasses} />;
-    if (name.includes('live')) return <Radio className={iconClasses} />;
-    if (name.includes('viral')) return <TrendingUp className={iconClasses} />;
-    if (name.includes('random')) return <Shuffle className={iconClasses} />;
-    if (name.includes('telegram')) return <Send className={iconClasses} />;
-    if (name.includes('onlyfans')) return <Heart className={iconClasses} />;
-    if (name.includes('banned')) return <Ban className={iconClasses} />;
-    if (name.includes('deepfake')) return <Wand2 className={iconClasses} />;
-    return <LayoutGrid className={iconClasses} />;
+    // 1. BRAND ASLI
+    if (name.includes('onlyfans')) return <SiOnlyfans className={iconClasses} />;
+    if (name.includes('telegram')) return <SiTelegram className={iconClasses} />;
+
+    // 2. MOVIE SCENE
+    if (name.includes('movie') || name.includes('scene')) return <FaClapperboard className={iconClasses} />;
+
+    // 3. KATEGORI LIVE
+    if (name.includes('live')) return <MdLiveTv className={iconClasses} />;
+
+    // 4. DEEPFAKE (Icon Topeng / Face Swap)
+    if (name.includes('deepfake')) return <FaMask className={iconClasses} />;
+
+    // 5. KOMBINASI ICON + BADGE FLAG MINI (KHUSUS KBJ / KOREAN)
+    if (name.includes('kbj') || name.includes('korean')) {
+        return (
+            <div className="relative shrink-0 flex items-center justify-center">
+                <FaVideo className={iconClasses} />
+                <span className="absolute -bottom-1 -right-2 bg-zinc-800 border border-zinc-600 text-white text-[8px] md:text-[9px] font-black px-1 rounded-sm shadow-md group-hover:border-[#0FFCBE] group-hover:text-[#0FFCBE] transition-colors">
+                    KR
+                </span>
+            </div>
+        );
+    }
+
+    // 6. KOMBINASI ICON + BADGE FLAG MINI (KHUSUS JAV / JEPANG)
+    if (name.includes('jav') || name.includes('jepang') || name.includes('film')) {
+        return (
+            <div className="relative shrink-0 flex items-center justify-center">
+                <FaFilm className={iconClasses} />
+                <span className="absolute -bottom-1 -right-2 bg-zinc-800 border border-zinc-600 text-white text-[8px] md:text-[9px] font-black px-1 rounded-sm shadow-md group-hover:border-[#0FFCBE] group-hover:text-[#0FFCBE] transition-colors">
+                    JP
+                </span>
+            </div>
+        );
+    }
+
+    // 7. KATEGORI LAINNYA
+    if (name.includes('exclusive') || name.includes('eksklusif')) return <FaCrown className={iconClasses} />;
+    if (name.includes('viral')) return <FaFire className={iconClasses} />;
+    if (name.includes('random') || name.includes('acak')) return <FaRandom className={iconClasses} />;
+    if (name.includes('banned') || name.includes('banned')) return <FaBan className={iconClasses} />;
+
+    // FALLBACK
+    return <BiSolidCategory className={iconClasses} />;
 };
 
 export default function Jelajahi({ supabase }) {
@@ -84,7 +127,6 @@ export default function Jelajahi({ supabase }) {
                                         onClick={() => window.location.href = `/kategori/${encodeURIComponent(kategori)}`}
                                         className="flex items-center justify-between mb-5 md:mb-6 group cursor-pointer"
                                     >
-                                        {/* BORDER DAN BACKGROUND ICON DIHAPUS, GAP DISESUAIKAN UNTUK MOBILE */}
                                         <div className="flex items-center gap-2 md:gap-3">
                                             {getCategoryIcon(kategori)}
                                             <h2 className="text-2xl md:text-3xl font-black text-white group-hover:text-[#0FFCBE] transition-colors">{kategori}</h2>
@@ -98,7 +140,6 @@ export default function Jelajahi({ supabase }) {
 
                                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
 
-                                        {/* BAGIAN KIRI: SOROTAN UTAMA */}
                                         {heroVideo && (
                                             <div
                                                 onClick={() => window.location.href = `/streaming/${heroVideo.slug || heroVideo.id}`}
@@ -134,7 +175,6 @@ export default function Jelajahi({ supabase }) {
                                             </div>
                                         )}
 
-                                        {/* BAGIAN KANAN: GRID KECIL */}
                                         {subVideos.length > 0 && (
                                             <div className="lg:col-span-5 grid grid-cols-2 gap-3 md:gap-6">
                                                 {subVideos.map((video) => (
