@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import useSWR from 'swr';
 import { FolderOpen, Search } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 const getImageUrl = (imgString) => imgString ? imgString.split(',')[0].trim() : '';
 
-// FUNGSI PEMBERSIH MUTLAK (1 LABEL): Membaca ["Indo"] menjadi Indo
 const extractSingleLabel = (rawLabels) => {
     if (!rawLabels) return '';
-    // Jadikan string lalu libas semua kurung siku dan tanda kutip
     let str = typeof rawLabels === 'string' ? rawLabels : JSON.stringify(rawLabels);
     str = str.replace(/[\[\]{}"']/g, '').trim();
     return str && str.toUpperCase() !== 'EMPTY' ? str : '';
@@ -16,8 +15,6 @@ const extractSingleLabel = (rawLabels) => {
 
 export default function Koleksi({ supabase }) {
     const [isScrolled, setIsScrolled] = useState(false);
-    const [collections, setCollections] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [searchInput, setSearchInput] = useState('');
 
     useEffect(() => {
@@ -27,47 +24,46 @@ export default function Koleksi({ supabase }) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    useEffect(() => {
-        const fetchCollections = async () => {
-            if (!supabase) return;
-            setLoading(true);
+    const fetchCollections = async () => {
+        if (!supabase) throw new Error("Supabase belum diinisialisasi");
 
-            const { data, error } = await supabase
-                .from('videos')
-                .select('labels, img')
-                .order('created_at', { ascending: false });
+        const { data, error } = await supabase
+            .from('videos')
+            .select('labels, img')
+            .order('created_at', { ascending: false });
 
-            if (!error && data) {
-                const grouped = {};
+        if (error) throw new Error(error.message);
 
-                data.forEach(video => {
-                    const cleanLabel = extractSingleLabel(video.labels);
-
-                    if (cleanLabel) {
-                        const existingKey = Object.keys(grouped).find(k => k.toLowerCase() === cleanLabel.toLowerCase());
-
-                        if (existingKey) {
-                            grouped[existingKey].count += 1;
-                        } else {
-                            // Rapikan huruf kapital untuk judul folder
-                            const displayLabel = cleanLabel.replace(/\b\w/g, c => c.toUpperCase());
-                            grouped[displayLabel] = {
-                                name: displayLabel,
-                                count: 1,
-                                coverImage: getImageUrl(video.img),
-                            };
-                        }
-                    }
-                });
-
-                const sortedCollections = Object.values(grouped).sort((a, b) => b.count - a.count);
-                setCollections(sortedCollections);
+        const grouped = {};
+        (data || []).forEach(video => {
+            const cleanLabel = extractSingleLabel(video.labels);
+            if (cleanLabel) {
+                const existingKey = Object.keys(grouped).find(k => k.toLowerCase() === cleanLabel.toLowerCase());
+                if (existingKey) {
+                    grouped[existingKey].count += 1;
+                } else {
+                    const displayLabel = cleanLabel.replace(/\b\w/g, c => c.toUpperCase());
+                    grouped[displayLabel] = {
+                        name: displayLabel,
+                        count: 1,
+                        coverImage: getImageUrl(video.img),
+                    };
+                }
             }
-            setLoading(false);
-        };
+        });
 
-        fetchCollections();
-    }, [supabase]);
+        return Object.values(grouped).sort((a, b) => b.count - a.count);
+    };
+
+    // IMPLEMENTASI SWR CACHING
+    const { data: collections = [], isLoading } = useSWR(
+        supabase ? 'koleksi_videos' : null,
+        fetchCollections,
+        {
+            revalidateOnFocus: false,
+            dedupingInterval: 300000, // Cache bertahan 5 menit
+        }
+    );
 
     const filteredCollections = collections.filter(c =>
         c.name.toLowerCase().includes(searchInput.toLowerCase())
@@ -77,10 +73,10 @@ export default function Koleksi({ supabase }) {
         <>
             <Navbar searchInput={searchInput} setSearchInput={setSearchInput} isScrolled={isScrolled} />
 
-            <main className="min-h-screen pb-20 relative overflow-hidden">
+            <main className="min-h-screen pb-20 relative overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-8 duration-700 ease-out">
                 <div className="max-w-[1440px] mx-auto px-4 sm:px-8 pt-32 relative z-10">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-                        {loading ? (
+                        {isLoading ? (
                             Array.from({ length: 8 }).map((_, i) => (
                                 <div key={i} className="aspect-[4/3] bg-zinc-900 border border-zinc-800 rounded-2xl animate-pulse"></div>
                             ))

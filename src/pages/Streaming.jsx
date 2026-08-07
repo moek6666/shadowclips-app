@@ -137,11 +137,17 @@ export default function Streaming({ supabase }) {
     if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-12 h-12 border-4 border-zinc-800 border-t-[#106EBE] rounded-full animate-spin"></div></div>;
     if (!video) return null;
 
-    const currentVideoUrl = activeServer === 'main' ? video.trailer_url : video.alternative_server;
-    const isDirectVideo = currentVideoUrl && (currentVideoUrl.toLowerCase().includes('.mp4') || currentVideoUrl.toLowerCase().includes('.webm') || currentVideoUrl.toLowerCase().includes('.m3u8'));
-    const hasAlternativeServer = video.alternative_server && video.alternative_server !== 'EMPTY' && video.alternative_server !== null;
-    const isDeepFake = video.category && video.category.toLowerCase() === 'deepfake';
-    const imageList = video.img ? video.img.split(',').map(img => img.trim()) : [];
+    // LOGIKA MULTI-SERVER SUPER AMAN
+    const hasAlternativeServer = video.alternative_server && video.alternative_server !== 'EMPTY' && String(video.alternative_server).trim() !== '';
+    const hasAlternativeServer2 = video.alternative_server2 && video.alternative_server2 !== 'EMPTY' && String(video.alternative_server2).trim() !== '';
+
+    let currentVideoUrl = video.trailer_url;
+    if (activeServer === 'alt' && hasAlternativeServer) currentVideoUrl = video.alternative_server;
+    if (activeServer === 'alt2' && hasAlternativeServer2) currentVideoUrl = video.alternative_server2;
+
+    const isDirectVideo = currentVideoUrl && typeof currentVideoUrl === 'string' && (currentVideoUrl.toLowerCase().includes('.mp4') || currentVideoUrl.toLowerCase().includes('.webm') || currentVideoUrl.toLowerCase().includes('.m3u8'));
+    const isDeepFake = video.category && typeof video.category === 'string' && video.category.toLowerCase() === 'deepfake';
+    const imageList = video.img ? String(video.img).split(',').map(img => img.trim()) : [];
     const hasDownloadLink = video.embed_url && video.embed_url.trim() !== '' && video.embed_url !== 'EMPTY';
 
     return (
@@ -169,11 +175,19 @@ export default function Streaming({ supabase }) {
                         )}
                     </div>
 
-                    {hasAlternativeServer && (
+                    {/* TOMBOL SERVER DINAMIS (HANYA MUNCUL JIKA ADA LINK) */}
+                    {(hasAlternativeServer || hasAlternativeServer2) && (
                         <div className="flex justify-center w-full mb-6">
-                            <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
                                 <button onClick={() => setActiveServer('main')} className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all ${activeServer === 'main' ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.4)]' : 'bg-zinc-800/40 text-zinc-400 hover:text-[#0FFCBE]'}`}><Server className="w-4 h-4" /> Shadowclips</button>
-                                <button onClick={() => setActiveServer('alt')} className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all ${activeServer === 'alt' ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.4)]' : 'bg-zinc-800/40 text-zinc-400 hover:text-[#0FFCBE]'}`}><Server className="w-4 h-4" /> Hydrax</button>
+
+                                {hasAlternativeServer && (
+                                    <button onClick={() => setActiveServer('alt')} className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all ${activeServer === 'alt' ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.4)]' : 'bg-zinc-800/40 text-zinc-400 hover:text-[#0FFCBE]'}`}><Server className="w-4 h-4" /> Hydrax</button>
+                                )}
+
+                                {hasAlternativeServer2 && (
+                                    <button onClick={() => setActiveServer('alt2')} className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all ${activeServer === 'alt2' ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.4)]' : 'bg-zinc-800/40 text-zinc-400 hover:text-[#0FFCBE]'}`}><Server className="w-4 h-4" /> Vidara</button>
+                                )}
                             </div>
                         </div>
                     )}
@@ -207,7 +221,7 @@ export default function Streaming({ supabase }) {
                     </div>
                 </div>
 
-                <div className="w-full flex justify-center mt-2 mb-6 overflow-hidden animate-in fade-in duration-700 delay-300 min-h-[90px]">
+                <div className="w-full flex justify-center mt-2 mb-6 overflow-hidden min-h-[90px]">
                     <div ref={hilltopAdRef}></div>
                 </div>
 
