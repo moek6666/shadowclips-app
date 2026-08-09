@@ -70,14 +70,14 @@ export default function AntiAdBlock() {
                     </div>
 
                     <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-                        Dukung ShadowClips
+                        Support ShadowClips
                     </h2>
 
                     <p className="text-zinc-400 text-sm sm:text-base leading-relaxed mb-8">
-                        Kami berusaha menyajikan tayangan gratis dan berkualitas untuk Anda.
-                        Namun, biaya <span className="text-[#106EBE] font-bold">server dan pemeliharaan</span> kami sangat bergantung pada dukungan iklan.
+                        We strive to provide you with free, high-quality streams.
+                        However, our <span className="text-[#106EBE] font-bold">server and maintenance costs</span> rely heavily on ad support.
                         <br /><br />
-                        Mohon <strong className="text-zinc-200">matikan AdBlocker</strong> khusus untuk situs kami agar Anda bisa lanjut menonton. Terima kasih atas pengertiannya!
+                        Please <strong className="text-zinc-200">disable your AdBlocker</strong> specifically for our site so you can continue watching. Thank you for your understanding!
                     </p>
 
                     <button
@@ -86,13 +86,13 @@ export default function AntiAdBlock() {
                     >
                         <span className="relative z-10 flex items-center gap-2">
                             <RefreshCw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
-                            Saya Sudah Mematikannya
+                            I Have Disabled It
                         </span>
                     </button>
 
                     <div className="mt-6 flex items-center justify-center gap-1.5 text-[11px] text-zinc-500 uppercase tracking-widest font-bold">
                         <Info className="w-3.5 h-3.5" />
-                        Membantu menjaga server tetap hidup
+                        Help keep the servers running
                     </div>
                 </div>
             </div>

@@ -18,14 +18,14 @@ export default function Koleksi({ supabase }) {
     const [searchInput, setSearchInput] = useState('');
 
     useEffect(() => {
-        document.title = "Koleksi Video | ShadowClips";
+        document.title = "Video Library | ShadowClips";
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
     const fetchCollections = async () => {
-        if (!supabase) throw new Error("Supabase belum diinisialisasi");
+        if (!supabase) throw new Error("Supabase not initialized");
 
         const { data, error } = await supabase
             .from('videos')
@@ -55,13 +55,12 @@ export default function Koleksi({ supabase }) {
         return Object.values(grouped).sort((a, b) => b.count - a.count);
     };
 
-    // IMPLEMENTASI SWR CACHING
     const { data: collections = [], isLoading } = useSWR(
         supabase ? 'koleksi_videos' : null,
         fetchCollections,
         {
             revalidateOnFocus: false,
-            dedupingInterval: 300000, // Cache bertahan 5 menit
+            dedupingInterval: 300000,
         }
     );
 
@@ -102,7 +101,7 @@ export default function Koleksi({ supabase }) {
                                         <div className="flex items-center gap-2 mb-2">
                                             <span className="bg-[#106EBE] text-white px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-[0_0_10px_rgba(16,110,190,0.4)]">
                                                 <FolderOpen className="w-3 h-3" />
-                                                {col.count} Konten
+                                                {col.count} Videos
                                             </span>
                                         </div>
 
@@ -115,7 +114,7 @@ export default function Koleksi({ supabase }) {
                         ) : (
                             <div className="col-span-full py-20 flex flex-col items-center justify-center text-zinc-500">
                                 <Search className="w-12 h-12 mb-4 opacity-20" />
-                                <p className="text-lg font-medium">Koleksi tidak ditemukan.</p>
+                                <p className="text-lg font-medium">No collections found.</p>
                             </div>
                         )}
                     </div>

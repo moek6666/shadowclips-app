@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'; // Menghapus import React
+import { useState, useEffect } from 'react';
 import { AlertTriangle, LogIn } from 'lucide-react';
 import { Turnstile } from '@marsidev/react-turnstile';
 
@@ -20,7 +20,7 @@ export default function AgeVerification() {
                 } else {
                     localStorage.removeItem('shadowclips_age_verified');
                 }
-            } catch { // Menghapus tulisan (error) yang tidak terpakai
+            } catch {
                 localStorage.removeItem('shadowclips_age_verified');
             }
         }
@@ -59,7 +59,6 @@ export default function AgeVerification() {
 
             <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 rounded-3xl p-8 sm:p-10 max-w-md w-full relative overflow-hidden shadow-[0_15px_50px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.05)] text-center">
 
-                {/* Ambient Glow Biru Halus */}
                 <div className="absolute -top-32 -left-32 w-64 h-64 bg-[#106EBE]/20 blur-[100px] pointer-events-none"></div>
                 <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-[#106EBE]/10 blur-[100px] pointer-events-none"></div>
 
@@ -81,17 +80,17 @@ export default function AgeVerification() {
                     </div>
 
                     <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2 flex items-center justify-center gap-2">
-                        Verifikasi Umur
+                        Age Verification
                     </h2>
 
                     <p className="text-zinc-400 mb-6 text-sm sm:text-base leading-relaxed">
-                        Situs ini berisi konten eksklusif yang dibatasi usia. Verifikasi bahwa Anda adalah manusia dan berusia <strong>18 tahun atau lebih</strong>.
+                        This site contains exclusive age-restricted content. Please verify that you are human and <strong>18 years of age or older</strong>.
                     </p>
 
                     <div className="flex justify-center mb-6 min-h-[65px]">
                         <Turnstile
                             siteKey="0x4AAAAAAEI8owBAGHjSd7E5"
-                            onSuccess={() => setIsHuman(true)} 
+                            onSuccess={() => setIsHuman(true)}
                             onError={() => setIsHuman(false)}
                             onExpire={() => setIsHuman(false)}
                             options={{ theme: 'dark' }}
@@ -103,19 +102,19 @@ export default function AgeVerification() {
                             onClick={handleAccept}
                             disabled={!isHuman}
                             className={`w-full font-bold py-3.5 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${isHuman
-                                    ? 'bg-[#106EBE] text-white shadow-[0_0_20px_rgba(16,110,190,0.4)] hover:shadow-[0_0_30px_rgba(16,110,190,0.6)] hover:bg-[#0e5c9f] hover:scale-[1.02] cursor-pointer'
-                                    : 'bg-zinc-800/50 text-zinc-600 shadow-none cursor-not-allowed'
+                                ? 'bg-[#106EBE] text-white shadow-[0_0_20px_rgba(16,110,190,0.4)] hover:shadow-[0_0_30px_rgba(16,110,190,0.6)] hover:bg-[#0e5c9f] hover:scale-[1.02] cursor-pointer'
+                                : 'bg-zinc-800/50 text-zinc-600 shadow-none cursor-not-allowed'
                                 }`}
                         >
                             {isHuman && <LogIn className="w-5 h-5" />}
-                            Saya Berusia 18+ (Masuk)
+                            I am 18+ (Enter)
                         </button>
 
                         <button
                             onClick={handleDecline}
                             className="w-full bg-zinc-900/40 hover:bg-zinc-800 text-zinc-400 hover:text-[#0FFCBE] font-bold py-3.5 px-6 rounded-xl transition-colors"
                         >
-                            Saya di Bawah 18 Tahun (Keluar)
+                            I am under 18 (Exit)
                         </button>
                     </div>
 

@@ -43,7 +43,7 @@ export default function LegalPages() {
 
                 <div className="mb-8">
                     <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">Legal & Policies</h1>
-                    <p className="text-zinc-400">Informasi hukum, privasi, dan ketentuan layanan ShadowClips.</p>
+                    <p className="text-zinc-400">Legal information, privacy, and terms of service for ShadowClips.</p>
                 </div>
 
                 <div className="w-full h-px bg-gradient-to-r from-zinc-800 to-transparent mb-8"></div>
@@ -79,10 +79,10 @@ export default function LegalPages() {
                                     <AlertTriangle className="w-6 h-6 text-[#106EBE]" /> DMCA Copyright Notice
                                 </h2>
                                 <div className="space-y-6 text-sm sm:text-base">
-                                    <p>ShadowClips menghormati kekayaan intelektual orang lain dan kami mengharapkan pengguna kami juga melakukan hal yang sama. Sesuai dengan Digital Millennium Copyright Act (DMCA), kami akan merespons pemberitahuan dugaan pelanggaran hak cipta secara cepat dan tegas.</p>
+                                    <p>ShadowClips respects the intellectual property of others and expects our users to do the same. In accordance with the Digital Millennium Copyright Act (DMCA), we will respond to notices of alleged copyright infringement promptly and decisively.</p>
 
-                                    <h3 className="text-lg font-bold text-white mt-8 mb-3">Prosedur Laporan</h3>
-                                    <p>Jika Anda yakin bahwa konten apa pun di ShadowClips melanggar hak cipta Anda, silakan kirimkan pemberitahuan yang mencakup: identifikasi materi, URL spesifik, dan informasi kontak Anda melalui email ke:</p>
+                                    <h3 className="text-lg font-bold text-white mt-8 mb-3">Reporting Procedure</h3>
+                                    <p>If you believe that any content on ShadowClips violates your copyright, please send a notice including: material identification, specific URL, and your contact information via email to:</p>
 
                                     <div className="inline-block mt-2">
                                         <a
@@ -95,7 +95,7 @@ export default function LegalPages() {
                                     </div>
 
                                     <div className="bg-[#106EBE]/10 border border-[#106EBE]/30 rounded-xl p-5 mt-6">
-                                        <p className="text-[#106EBE] font-medium">Harap dicatat bahwa semua konten video di ShadowClips tidak di-host di server kami sendiri. Kami hanya menyediakan tautan (embed) dari sumber pihak ketiga.</p>
+                                        <p className="text-[#106EBE] font-medium">Please note that all video content on ShadowClips is not hosted on our servers. We only provide links (embeds) from third-party sources.</p>
                                     </div>
                                 </div>
                             </div>
@@ -107,9 +107,9 @@ export default function LegalPages() {
                                     <Shield className="w-6 h-6 text-[#106EBE]" /> Privacy Policy
                                 </h2>
                                 <div className="space-y-6 text-sm sm:text-base">
-                                    <p>Kebijakan Privasi ini menjelaskan bagaimana ShadowClips mengumpulkan, menggunakan, dan melindungi informasi Anda.</p>
-                                    <h3 className="text-lg font-bold text-white mt-8 mb-3">Pengumpulan Data</h3>
-                                    <p>ShadowClips tidak mewajibkan pengguna untuk mendaftar. Namun, sistem kami mungkin mencatat informasi dasar seperti Alamat IP dan jenis browser untuk keperluan analitik standar.</p>
+                                    <p>This Privacy Policy explains how ShadowClips collects, uses, and protects your information.</p>
+                                    <h3 className="text-lg font-bold text-white mt-8 mb-3">Data Collection</h3>
+                                    <p>ShadowClips does not require users to register. However, our system may log basic information such as IP Addresses and browser types for standard analytics purposes.</p>
                                 </div>
                             </div>
                         )}
@@ -120,9 +120,9 @@ export default function LegalPages() {
                                     <FileText className="w-6 h-6 text-[#106EBE]" /> Terms of Service
                                 </h2>
                                 <div className="space-y-6 text-sm sm:text-base">
-                                    <p>Dengan mengakses situs web ShadowClips, Anda setuju untuk terikat oleh Ketentuan Layanan ini.</p>
-                                    <h3 className="text-lg font-bold text-white mt-8 mb-3">Penggunaan Layanan</h3>
-                                    <p>Layanan kami disediakan "sebagaimana adanya". Anda dilarang menggunakan situs ini untuk tujuan ilegal. Sebagian besar tautan video diindeks dari penyedia eksternal, dan kami tidak bertanggung jawab atas isi konten pihak ketiga tersebut.</p>
+                                    <p>By accessing the ShadowClips website, you agree to be bound by these Terms of Service.</p>
+                                    <h3 className="text-lg font-bold text-white mt-8 mb-3">Use of Service</h3>
+                                    <p>Our services are provided "as is". You are prohibited from using this site for illegal purposes. Most video links are indexed from external providers, and we are not responsible for the content of such third parties.</p>
                                 </div>
                             </div>
                         )}
@@ -133,10 +133,10 @@ export default function LegalPages() {
                                     <Scale className="w-6 h-6 md:w-8 md:h-8 text-[#106EBE]" /> 18 U.S.C. 2257 Compliance Statement
                                 </h2>
                                 <div className="space-y-6 text-sm sm:text-base">
-                                    <p>Semua model, aktor, aktris, dan persona lain yang muncul dalam konten visual apa pun di ShadowClips setidaknya berusia 18 (delapan belas) tahun pada saat pembuatan gambar atau video tersebut.</p>
-                                    <p>Sesuai dengan <strong>18 U.S.C. § 2257</strong> dan peraturan terkait (Record-Keeping Requirements), ShadowClips menyatakan bahwa kami <strong>bukan produsen utama (primary producer)</strong> dari konten yang ada di platform ini. Konten yang disajikan bersumber sepenuhnya dari tautan pihak ketiga (embed) atau kreator independen yang diunggah di luar server kami.</p>
+                                    <p>All models, actors, actresses, and other personas appearing in any visual content on ShadowClips were at least 18 (eighteen) years of age at the time the images or videos were produced.</p>
+                                    <p>In compliance with <strong>18 U.S.C. § 2257</strong> and related regulations (Record-Keeping Requirements), ShadowClips declares that we are <strong>not the primary producer</strong> of the content on this platform. The content presented is sourced entirely from third-party links (embeds) or independent creators uploaded outside our servers.</p>
 
-                                    <p>Meskipun demikian, kami berkomitmen penuh untuk mematuhi hukum yang berlaku. Kami memiliki kebijakan tanpa toleransi terhadap konten ilegal. Jika Anda menemukan konten yang melanggar ketentuan hukum, silakan hubungi kami di <a href="mailto:shadowclips666@outlook.com" className="text-[#106EBE] hover:text-[#0FFCBE] font-bold hover:underline transition-all">shadowclips666@outlook.com</a> agar dapat segera kami hapus dari indeks pencarian kami.</p>
+                                    <p>Nevertheless, we are fully committed to complying with applicable laws. We have a zero-tolerance policy for illegal content. If you find content that violates legal provisions, please contact us at <a href="mailto:shadowclips666@outlook.com" className="text-[#106EBE] hover:text-[#0FFCBE] font-bold hover:underline transition-all">shadowclips666@outlook.com</a> so we can immediately remove it from our search index.</p>
                                 </div>
                             </div>
                         )}

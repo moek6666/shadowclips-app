@@ -5,7 +5,6 @@ import {
     LayoutGrid, Loader2, ExternalLink
 } from 'lucide-react';
 
-// IMPORT ICON KATEGORI DINAMIS
 import { SiOnlyfans, SiTelegram } from 'react-icons/si';
 import { FaCrown, FaVideo, FaFire, FaBan, FaRandom, FaFilm, FaMask } from 'react-icons/fa';
 import { FaClapperboard } from 'react-icons/fa6';
@@ -24,7 +23,6 @@ const formatViews = (views) => {
     return Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(views);
 };
 
-// LOGIKA ICON DINAMIS UNTUK RELATED VIDEOS
 const getCategoryIcon = (category) => {
     if (!category) return <BiSolidCategory className="w-3.5 h-3.5 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors shrink-0" />;
 
@@ -175,7 +173,7 @@ export default function Streaming({ supabase }) {
     const handleShare = async () => {
         try {
             if (navigator.share) await navigator.share({ title: video?.title || 'ShadowClips', url: window.location.href });
-            else { await navigator.clipboard.writeText(window.location.href); alert('Tautan disalin!'); }
+            else { await navigator.clipboard.writeText(window.location.href); alert('Link copied!'); }
         } catch (err) { console.log('Share error:', err); }
     };
 
@@ -215,14 +213,14 @@ export default function Streaming({ supabase }) {
                                 </div>
                             </div>
                         ) : (
-                            <div className="text-zinc-500 flex flex-col items-center p-12"><Play className="w-12 h-12 mb-2 opacity-50" /><p>Video tidak tersedia</p></div>
+                            <div className="text-zinc-500 flex flex-col items-center p-12"><Play className="w-12 h-12 mb-2 opacity-50" /><p>Video unavailable</p></div>
                         )}
                     </div>
 
                     {(hasAlternativeServer || hasAlternativeServer2) && (
                         <div className="flex justify-center w-full mb-6">
                             <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-                                <button onClick={() => setActiveServer('main')} className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all ${activeServer === 'main' ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.4)]' : 'bg-zinc-800/40 text-zinc-400 hover:text-[#0FFCBE]'}`}><Server className="w-4 h-4" /> Shadowclips</button>
+                                <button onClick={() => setActiveServer('main')} className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all ${activeServer === 'main' ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.4)]' : 'bg-zinc-800/40 text-zinc-400 hover:text-[#0FFCBE]'}`}><Server className="w-4 h-4" /> Main</button>
 
                                 {hasAlternativeServer && (
                                     <button onClick={() => setActiveServer('alt')} className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all ${activeServer === 'alt' ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.4)]' : 'bg-zinc-800/40 text-zinc-400 hover:text-[#0FFCBE]'}`}><Server className="w-4 h-4" /> Hydrax</button>
@@ -240,7 +238,7 @@ export default function Streaming({ supabase }) {
 
                         <div className="flex flex-wrap items-center justify-center gap-5 text-sm text-zinc-300 font-medium mb-6">
                             <span className="flex items-center gap-1.5"><MonitorPlay className="w-4 h-4 text-[#106EBE]" /> <span className="font-bold text-white">{formatViews(video.views)} Views</span></span>
-                            <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-[#106EBE]" /> {new Date(video.created_at).toLocaleDateString('id-ID')}</span>
+                            <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-[#106EBE]" /> {new Date(video.created_at).toLocaleDateString('en-US')}</span>
 
                             {video.duration && video.duration !== 'EMPTY' && <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-[#106EBE]" /> {video.duration}</span>}
                             {video.size && video.size !== 'EMPTY' && <span className="flex items-center gap-1.5"><HardDrive className="w-4 h-4 text-[#106EBE]" /> {video.size}</span>}
@@ -250,14 +248,14 @@ export default function Streaming({ supabase }) {
 
                         <div className="flex flex-wrap items-center justify-center gap-3 w-full max-w-xl">
                             <button onClick={handleLike} className={`flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all text-sm ${hasLiked ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.4)]' : 'bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800 hover:text-[#0FFCBE]'}`}>
-                                <Heart className={`w-4 h-4 transition-all duration-300 ${hasLiked ? 'fill-current scale-110' : ''}`} /> <span>{likes > 0 ? formatViews(likes) : 'Suka'}</span>
+                                <Heart className={`w-4 h-4 transition-all duration-300 ${hasLiked ? 'fill-current scale-110' : ''}`} /> <span>{likes > 0 ? formatViews(likes) : 'Like'}</span>
                             </button>
                             <button onClick={handleShare} className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all text-sm bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800 hover:text-[#0FFCBE]">
-                                <Share2 className="w-4 h-4" /> <span>Bagikan</span>
+                                <Share2 className="w-4 h-4" /> <span>Share</span>
                             </button>
                             {hasDownloadLink && (
                                 <button onClick={() => { setIsDownloadModalOpen(true); setModalStatus('waiting'); setModalProgress(0); }} className="flex-1 flex items-center justify-center gap-2 bg-[#106EBE] hover:bg-[#0e5c9f] text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(16,110,190,0.4)] hover:scale-105">
-                                    <Download className="w-4 h-4 shrink-0" /> <span className="text-sm whitespace-nowrap">Unduh</span>
+                                    <Download className="w-4 h-4 shrink-0" /> <span className="text-sm whitespace-nowrap">Download</span>
                                 </button>
                             )}
                         </div>
@@ -294,11 +292,10 @@ export default function Streaming({ supabase }) {
                                     <h4 className="font-bold text-sm mb-1.5 text-white group-hover:text-[#0FFCBE] transition-colors truncate" title={item.title}>{item.title}</h4>
                                     <div className="flex flex-wrap items-center justify-center gap-3 text-[11px]">
                                         <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-white group-hover:text-[#0FFCBE] transition-colors">
-                                            {/* IKON KATEGORI SUDAH DINAMIS DI SINI */}
                                             {getCategoryIcon(item.category)} {item.category}
                                         </span>
                                         <span className="flex items-center gap-1 font-medium text-white group-hover:text-[#0FFCBE] transition-colors">
-                                            <MonitorPlay className="w-3.5 h-3.5 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors" /> {formatViews(item.views)}x
+                                            <MonitorPlay className="w-3.5 h-3.5 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors" /> {formatViews(item.views)} views
                                         </span>
                                     </div>
                                 </div>
@@ -312,7 +309,7 @@ export default function Streaming({ supabase }) {
             {selectedImage && (
                 <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300" onClick={() => setSelectedImage(null)} onContextMenu={(e) => e.preventDefault()}>
                     <button className="absolute top-4 right-4 sm:top-8 sm:right-8 bg-zinc-900/80 hover:bg-[#106EBE] text-white p-2.5 rounded-full transition-colors z-50 group" onClick={(e) => { e.stopPropagation(); setSelectedImage(null); }}><X className="w-6 h-6 group-hover:scale-110 transition-transform" /></button>
-                    <img src={selectedImage} alt="Tampilan Penuh" className="max-w-full max-h-full object-contain rounded-lg select-none" draggable="false" onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} />
+                    <img src={selectedImage} alt="Fullscreen View" className="max-w-full max-h-full object-contain rounded-lg select-none" draggable="false" onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} />
                 </div>
             )}
 
@@ -324,17 +321,17 @@ export default function Streaming({ supabase }) {
                             <span className="text-2xl sm:text-4xl font-black tracking-tighter text-white">Shadow<span className="text-[#106EBE]">Clips</span></span>
                         </div>
                         <div className="space-y-4 mb-10 w-full px-2">
-                            <p className="text-zinc-300 text-base md:text-lg leading-relaxed md:leading-loose">ShadowClips tidak pernah menjual atau memungut biaya sepeser pun untuk file ini. Tautan ini kami sediakan 100% gratis untuk tujuan hiburan.<br /><span className="text-zinc-500 text-sm mt-2 block">Harap waspada terhadap segala bentuk penipuan yang mengatasnamakan kami.</span></p>
+                            <p className="text-zinc-300 text-base md:text-lg leading-relaxed md:leading-loose">ShadowClips never sells or charges a single penny for this file. We provide this link 100% free for entertainment purposes.<br /><span className="text-zinc-500 text-sm mt-2 block">Please be aware of any scams claiming to represent us.</span></p>
                         </div>
                         <div className="w-full max-w-sm mb-10 flex flex-col items-center">
                             <div className="w-full h-1 bg-zinc-800/50 rounded-full overflow-hidden mb-4"><div className="h-full bg-[#106EBE] transition-all duration-75 ease-linear shadow-[0_0_15px_rgba(16,110,190,0.8)]" style={{ width: `${modalProgress}%` }}></div></div>
-                            <span className="text-[10px] md:text-xs text-zinc-500 tracking-wide h-4">{modalStatus === 'waiting' && `Menyiapkan tautan aman... ${Math.ceil(4 - (modalProgress / 25))}s`}</span>
+                            <span className="text-[10px] md:text-xs text-zinc-500 tracking-wide h-4">{modalStatus === 'waiting' && `Preparing secure link... ${Math.ceil(4 - (modalProgress / 25))}s`}</span>
                         </div>
                         <div className="w-full max-w-sm">
                             {modalStatus === 'waiting' ? (
-                                <button disabled className="w-full flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-zinc-900/40 text-zinc-600 cursor-wait transition-all"><Loader2 className="w-5 h-5 animate-spin shrink-0" /><span>Mohon tunggu...</span></button>
+                                <button disabled className="w-full flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-zinc-900/40 text-zinc-600 cursor-wait transition-all"><Loader2 className="w-5 h-5 animate-spin shrink-0" /><span>Please wait...</span></button>
                             ) : (
-                                <button onClick={() => { const targetUrl = video.embed_url || video.url_download; if (targetUrl) window.open(targetUrl, '_blank'); else alert("Link download tidak tersedia untuk video ini."); setIsDownloadModalOpen(false); }} className="w-full flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-[#106EBE] text-white hover:bg-[#0e5c9f] transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(16,110,190,0.4)] animate-in zoom-in duration-300"><ExternalLink className="w-5 h-5 shrink-0" /><span>Lanjutkan ke halaman unduh</span></button>
+                                <button onClick={() => { const targetUrl = video.embed_url || video.url_download; if (targetUrl) window.open(targetUrl, '_blank'); else alert("Download link is not available for this video."); setIsDownloadModalOpen(false); }} className="w-full flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-[#106EBE] text-white hover:bg-[#0e5c9f] transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(16,110,190,0.4)] animate-in zoom-in duration-300"><ExternalLink className="w-5 h-5 shrink-0" /><span>Continue to download page</span></button>
                             )}
                         </div>
                     </div>

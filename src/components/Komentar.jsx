@@ -32,10 +32,10 @@ export default function Komentar({ videoId }) {
         const now = new Date();
         const diffInSeconds = Math.floor((now - date) / 1000);
 
-        if (diffInSeconds < 60) return 'Baru saja';
-        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}mnt`;
-        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}j`;
-        return `${Math.floor(diffInSeconds / 86400)}h`;
+        if (diffInSeconds < 60) return 'Just now';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
+        return `${Math.floor(diffInSeconds / 86400)}d`;
     };
 
     const handleInputChange = (e) => {
@@ -64,7 +64,6 @@ export default function Komentar({ videoId }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // PERBAIKAN: Memastikan form tidak akan terkirim jika email kosong
         if (!formData.name || !formData.email || !formData.content) return;
 
         setIsSubmitting(true);
@@ -77,7 +76,7 @@ export default function Komentar({ videoId }) {
             .insert({
                 video_id: String(videoId),
                 name: formData.name,
-                email: formData.email, // PERBAIKAN: Email dipastikan ikut terkirim
+                email: formData.email,
                 content: formData.content,
                 parent_id: targetParentId
             });
@@ -86,7 +85,7 @@ export default function Komentar({ videoId }) {
 
         if (error) {
             console.error("Supabase Error:", error.message);
-            setNotification({ type: 'error', message: 'Gagal mengirim. Coba lagi.' });
+            setNotification({ type: 'error', message: 'Failed to send. Try again.' });
         } else {
             const newPendingComment = {
                 id: `temp-${Date.now()}`,
@@ -98,7 +97,7 @@ export default function Komentar({ videoId }) {
             };
 
             setComments(prev => [newPendingComment, ...prev]);
-            setNotification({ type: 'success', message: 'Terkirim! Menunggu moderasi.' });
+            setNotification({ type: 'success', message: 'Sent! Awaiting moderation.' });
             setFormData({ name: '', email: '', content: '' });
             setReplyTo(null);
 
@@ -116,7 +115,6 @@ export default function Komentar({ videoId }) {
             .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
     };
 
-    // FUNGSI KOMPONEN FORM
     const renderForm = (isInline = false) => (
         <form onSubmit={handleSubmit} className={`flex gap-3 sm:gap-4 relative ${isInline ? 'mt-3 mb-2' : 'mb-10'}`}>
             <div className={`rounded-full bg-zinc-800 flex items-center justify-center shrink-0 mt-0.5 ${isInline ? 'w-6 h-6 sm:w-7 sm:h-7' : 'w-8 h-8 sm:w-9 sm:h-9'}`}>
@@ -127,7 +125,7 @@ export default function Komentar({ videoId }) {
 
                 {replyTo && (
                     <div className="flex items-center justify-between bg-[#106EBE]/10 text-[#106EBE] px-3 py-1.5 rounded-md text-[12px] font-bold mb-3">
-                        <span>Membalas @{replyTo.name}</span>
+                        <span>Replying to @{replyTo.name}</span>
                         <button type="button" onClick={cancelReply} className="hover:bg-[#106EBE]/20 p-1 rounded-full transition-colors">
                             <X className="w-3.5 h-3.5" />
                         </button>
@@ -139,7 +137,7 @@ export default function Komentar({ videoId }) {
                     name="content"
                     value={formData.content}
                     onChange={handleInputChange}
-                    placeholder={replyTo ? `Tulis balasan untuk ${replyTo.name}...` : "Tambahkan komentar..."}
+                    placeholder={replyTo ? `Write a reply to ${replyTo.name}...` : "Add a comment..."}
                     style={{ colorScheme: 'dark' }}
                     className="w-full bg-transparent text-[13px] sm:text-[14px] text-white placeholder-zinc-500 focus:outline-none resize-none overflow-hidden transition-colors"
                     rows="1"
@@ -154,18 +152,17 @@ export default function Komentar({ videoId }) {
                                 name="name"
                                 value={formData.name}
                                 onChange={handleInputChange}
-                                placeholder="Nama Anda"
+                                placeholder="Your Name"
                                 style={{ colorScheme: 'dark' }}
                                 className="w-full bg-zinc-950/50 border border-zinc-700 rounded-lg px-3 py-1.5 text-[13px] text-white placeholder-zinc-500 focus:border-zinc-500 focus:outline-none transition-colors"
                                 required
                             />
-                            {/* PERBAIKAN: Email sekarang required dan placeholder diubah */}
                             <input
                                 type="email"
                                 name="email"
                                 value={formData.email}
                                 onChange={handleInputChange}
-                                placeholder="Email (Wajib)"
+                                placeholder="Email (Required)"
                                 style={{ colorScheme: 'dark' }}
                                 className="w-full bg-zinc-950/50 border border-zinc-700 rounded-lg px-3 py-1.5 text-[13px] text-white placeholder-zinc-500 focus:border-zinc-500 focus:outline-none transition-colors"
                                 required
@@ -178,13 +175,12 @@ export default function Komentar({ videoId }) {
                                     {notification.message}
                                 </span>
                             )}
-                            {/* PERBAIKAN: Tombol kirim mati jika email belum diisi */}
                             <button
                                 type="submit"
                                 disabled={isSubmitting || !formData.name || !formData.email}
                                 className="bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-800 text-white text-[12px] sm:text-[13px] font-bold py-2 px-5 rounded-lg transition-all flex items-center justify-center min-w-[70px]"
                             >
-                                {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Kirim'}
+                                {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Submit'}
                             </button>
                         </div>
                     </div>
@@ -197,7 +193,7 @@ export default function Komentar({ videoId }) {
         <div className="w-full mt-4 mb-10 px-2 sm:px-0">
 
             <h3 className="text-[14px] font-bold text-white mb-5">
-                {comments.length} Komentar
+                {comments.length} Comments
             </h3>
 
             {!replyTo && renderForm(false)}
@@ -206,7 +202,6 @@ export default function Komentar({ videoId }) {
                 {mainComments.length > 0 && mainComments.map((comment) => (
                     <div key={comment.id} className="flex flex-col gap-3">
 
-                        {/* KOMENTAR UTAMA */}
                         <div className={`flex gap-3 sm:gap-4 group ${comment.status === 'pending' ? 'opacity-70' : ''}`}>
                             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-zinc-800 flex items-center justify-center shrink-0 mt-0.5">
                                 <span className="text-zinc-200 font-bold text-[12px] sm:text-[13px]">{getInitial(comment.name)}</span>
@@ -227,7 +222,7 @@ export default function Komentar({ videoId }) {
 
                                 <div className="flex items-center gap-4 mt-1.5">
                                     <button onClick={() => handleReplyClick(comment)} className="text-[11px] sm:text-[12px] text-zinc-500 font-bold hover:text-white transition-colors">
-                                        Balas
+                                        Reply
                                     </button>
                                 </div>
                             </div>
@@ -243,7 +238,6 @@ export default function Komentar({ videoId }) {
                             </div>
                         )}
 
-                        {/* RENDER BALASAN (THREAD) */}
                         {getReplies(comment.id).length > 0 && (
                             <div className="flex flex-col gap-4 mt-1 ml-11 sm:ml-13 border-l-2 border-zinc-800 pl-4 sm:pl-5">
                                 {getReplies(comment.id).map(reply => (
@@ -269,7 +263,7 @@ export default function Komentar({ videoId }) {
 
                                                 <div className="flex items-center gap-4 mt-1.5">
                                                     <button onClick={() => handleReplyClick(reply)} className="text-[10px] sm:text-[11px] text-zinc-500 font-bold hover:text-white transition-colors">
-                                                        Balas
+                                                        Reply
                                                     </button>
                                                 </div>
                                             </div>

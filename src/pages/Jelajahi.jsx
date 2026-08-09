@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import useSWR from 'swr'; // IMPORT SWR
-import { Play, MonitorPlay, ChevronRight, FolderOpen } from 'lucide-react';
+import useSWR from 'swr';
+import { Play, MonitorPlay, FolderOpen } from 'lucide-react'; // ChevronRight dihapus
 
 import { SiOnlyfans, SiTelegram } from 'react-icons/si';
 import { FaCrown, FaVideo, FaFire, FaBan, FaRandom, FaFilm, FaMask } from 'react-icons/fa';
@@ -61,10 +61,9 @@ export default function Jelajahi({ supabase }) {
     const [searchInput, setSearchInput] = useState('');
 
     useEffect(() => {
-        document.title = "Jelajahi Kategori | ShadowClips";
+        document.title = "Explore Categories | ShadowClips";
     }, []);
 
-    // FUNGSI FETCHER UNTUK SWR
     const fetchSemuaKategori = async () => {
         if (!supabase) throw new Error("Supabase not initialized");
         const { data, error } = await supabase.from('videos').select('*').order('created_at', { ascending: false }).limit(300);
@@ -75,7 +74,7 @@ export default function Jelajahi({ supabase }) {
             const grouped = {};
             data.forEach(video => {
                 let cats = [];
-                if (!video.category) cats = ['Lainnya'];
+                if (!video.category) cats = ['Others'];
                 else if (Array.isArray(video.category)) cats = video.category;
                 else if (typeof video.category === 'string') cats = video.category.split(',').map(c => c.trim());
 
@@ -91,13 +90,12 @@ export default function Jelajahi({ supabase }) {
         return [];
     };
 
-    // IMPLEMENTASI SWR UNTUK CACHING
     const { data: kategoriData = [], isLoading: loading } = useSWR(
         supabase ? 'jelajahi_kategori' : null,
         fetchSemuaKategori,
         {
             revalidateOnFocus: false,
-            dedupingInterval: 300000, // Cache 5 menit
+            dedupingInterval: 300000,
             keepPreviousData: true,
         }
     );
@@ -130,8 +128,8 @@ export default function Jelajahi({ supabase }) {
                                         </div>
 
                                         <div className="flex items-center gap-1 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors">
-                                            <span className="text-sm font-bold uppercase tracking-wider hidden sm:block">Lihat Semua ({videos.length})</span>
-                                            <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+                                            <span className="text-sm font-bold uppercase tracking-wider hidden sm:block">View All ({videos.length})</span>
+                                            {/* TANDA ">" (ChevronRight) TELAH DIHAPUS SEPENUHNYA DI SINI */}
                                         </div>
                                     </div>
 
@@ -159,10 +157,10 @@ export default function Jelajahi({ supabase }) {
                                                 <div className="absolute bottom-0 left-0 right-0 p-5 md:p-8 z-30 transform transition-transform duration-300 group-hover:-translate-y-2">
                                                     <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2 md:mb-3 text-[10px] md:text-xs font-bold">
                                                         <span className="bg-[#106EBE] text-white px-2.5 py-1.5 rounded-lg uppercase tracking-widest shadow-[0_0_15px_rgba(16,110,190,0.5)]">
-                                                            KONTEN TERBARU
+                                                            LATEST CONTENT
                                                         </span>
                                                         <span className="flex items-center gap-1 text-zinc-300 bg-black/50 backdrop-blur-md px-2.5 py-1.5 rounded-lg">
-                                                            <MonitorPlay className="w-3.5 h-3.5 text-[#0FFCBE]" /> {formatViews(heroVideo.views)}x Ditonton
+                                                            <MonitorPlay className="w-3.5 h-3.5 text-[#0FFCBE]" /> {formatViews(heroVideo.views)} Views
                                                         </span>
                                                     </div>
                                                     <h3 className="text-xl md:text-3xl lg:text-4xl font-bold text-white group-hover:text-[#0FFCBE] transition-colors line-clamp-2 drop-shadow-lg leading-tight md:leading-tight">
@@ -199,7 +197,7 @@ export default function Jelajahi({ supabase }) {
                                                                 {video.title}
                                                             </h4>
                                                             <div className="flex items-center justify-center gap-1.5 text-[10px] md:text-[11px] font-medium text-zinc-400">
-                                                                <MonitorPlay className="w-3 h-3 md:w-3.5 md:h-3.5 text-[#106EBE]" /> {formatViews(video.views)}x views
+                                                                <MonitorPlay className="w-3 h-3 md:w-3.5 md:h-3.5 text-[#106EBE]" /> {formatViews(video.views)} views
                                                             </div>
                                                         </div>
                                                     </div>
@@ -215,7 +213,7 @@ export default function Jelajahi({ supabase }) {
                 ) : (
                     <div className="text-center text-zinc-500 py-32 bg-zinc-900/30 rounded-3xl border border-zinc-800/50 mx-4">
                         <FolderOpen className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                        <p className="text-lg md:text-xl font-medium">Belum ada kategori yang tersedia.</p>
+                        <p className="text-lg md:text-xl font-medium">No categories available yet.</p>
                     </div>
                 )}
             </main>

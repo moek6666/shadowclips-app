@@ -61,7 +61,6 @@ const getCategoryIcon = (category) => {
 export default function Home({ supabase }) {
     const [isScrolled, setIsScrolled] = useState(false);
 
-    // JURUS ANTI-REFRESH: Baca halaman dari URL (Misal: /?page=2)
     const [currentPage, setCurrentPage] = useState(() => {
         if (typeof window !== 'undefined') {
             const params = new URLSearchParams(window.location.search);
@@ -76,21 +75,20 @@ export default function Home({ supabase }) {
 
     const hilltopMiddleAdRef = useRef(null);
     const hilltopBottomAdRef = useRef(null);
-    const isFirstMount = useRef(true); // Pelindung agar pencarian tidak mereset halaman saat baru dibuka
+    const isFirstMount = useRef(true);
 
     useEffect(() => {
-        document.title = "ShadowClips | Streaming Video Premium";
+        document.title = "ShadowClips | Premium Video Streaming";
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // FUNGSI MENGGANTI HALAMAN (Sekaligus update URL tanpa reload)
     const handlePageChange = (page) => {
         setCurrentPage(page);
         const newUrl = new URL(window.location);
         newUrl.searchParams.set('page', page);
-        window.history.pushState({}, '', newUrl); // Mengubah URL secara ajaib
+        window.history.pushState({}, '', newUrl);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -155,13 +153,12 @@ export default function Home({ supabase }) {
         const timer = setTimeout(() => {
             setDebouncedSearch(searchInput);
 
-            // Hanya reset halaman ke 1 jika user BENAR-BENAR mengetik di kolom pencarian
             if (isFirstMount.current) {
                 isFirstMount.current = false;
             } else {
                 setCurrentPage(1);
                 const newUrl = new URL(window.location);
-                newUrl.searchParams.delete('page'); // Hapus ?page= dari URL karena kembali ke hal 1
+                newUrl.searchParams.delete('page');
                 window.history.pushState({}, '', newUrl);
             }
         }, 500);
@@ -185,17 +182,17 @@ export default function Home({ supabase }) {
                 <div className="mb-10 text-center md:text-left animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-4xl">
                     {debouncedSearch ? (
                         <h1 className="text-zinc-400 text-sm md:text-base leading-relaxed">
-                            <strong className="text-white font-black text-lg md:text-xl tracking-tight mr-2">Hasil Pencarian: <span className="text-[#106EBE]">"{debouncedSearch}"</span></strong>
-                            Menampilkan seluruh tayangan yang relevan dengan kata kunci pencarian Anda.
+                            <strong className="text-white font-black text-lg md:text-xl tracking-tight mr-2">Search Results: <span className="text-[#106EBE]">"{debouncedSearch}"</span></strong>
+                            Displaying all content relevant to your search keywords.
                         </h1>
                     ) : currentPage === 1 ? (
                         <h1 className="text-zinc-400 text-sm md:text-base leading-relaxed">
                             <strong className="text-white font-black text-lg md:text-xl tracking-tight mr-2">Shadow<span className="text-[#106EBE]">Clips</span></strong>
-                            adalah pusat streaming video eksklusif, viral, terlengkap, dan terupdate. Nikmati koleksi hiburan premium tanpa batas dengan kualitas tayangan terbaik setiap harinya.
+                            is an exclusive, viral, comprehensive, and updated video streaming hub. Enjoy unlimited premium entertainment collections with the best viewing quality every day.
                         </h1>
                     ) : (
                         <h1 className="text-zinc-400 text-sm md:text-base leading-relaxed">
-                            <strong className="text-white font-black text-lg md:text-xl tracking-tight mr-2">Shadow<span className="text-[#106EBE]">Clips</span></strong> Halaman {currentPage}
+                            <strong className="text-white font-black text-lg md:text-xl tracking-tight mr-2">Shadow<span className="text-[#106EBE]">Clips</span></strong> Page {currentPage}
                         </h1>
                     )}
                 </div>
@@ -237,7 +234,7 @@ export default function Home({ supabase }) {
                                                 {getCategoryIcon(video.category)} {video.category}
                                             </span>
                                             <span className="flex items-center gap-1 font-medium text-white group-hover:text-[#0FFCBE] transition-colors">
-                                                <MonitorPlay className="w-3.5 h-3.5 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors" /> {formatViews(video.views)}x diputar
+                                                <MonitorPlay className="w-3.5 h-3.5 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors" /> {formatViews(video.views)} views
                                             </span>
                                         </div>
                                     </div>
@@ -247,7 +244,7 @@ export default function Home({ supabase }) {
                     ) : (
                         <div className="col-span-full py-20 flex flex-col items-center text-center text-zinc-500">
                             <Search className="w-12 h-12 mb-4 opacity-20" />
-                            <p>Pencarian tidak ditemukan.</p>
+                            <p>No results found.</p>
                         </div>
                     )}
                 </div>

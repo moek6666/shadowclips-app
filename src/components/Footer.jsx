@@ -7,7 +7,7 @@ export default function Footer() {
             <div className="max-w-[1440px] mx-auto px-4 sm:px-8 flex flex-col lg:flex-row items-center justify-between gap-6 text-zinc-500 text-sm">
                 <div className="text-center lg:text-left">
                     <p>&copy; {new Date().getFullYear()} ShadowClips. All rights reserved.</p>
-                    <p className="mt-1">Platform streaming video eksklusif dengan kualitas terbaik.</p>
+                    <p className="mt-1">Exclusive video streaming platform with the highest quality.</p>
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center lg:justify-end gap-5 sm:gap-6 font-medium">
