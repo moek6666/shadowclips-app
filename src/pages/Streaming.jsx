@@ -5,6 +5,7 @@ import {
     LayoutGrid, Loader2, ExternalLink
 } from 'lucide-react';
 
+// IMPORT ICON KATEGORI DINAMIS
 import { SiOnlyfans, SiTelegram } from 'react-icons/si';
 import { FaCrown, FaVideo, FaFire, FaBan, FaRandom, FaFilm, FaMask } from 'react-icons/fa';
 import { FaClapperboard } from 'react-icons/fa6';
@@ -23,6 +24,7 @@ const formatViews = (views) => {
     return Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(views);
 };
 
+// LOGIKA ICON DINAMIS UNTUK RELATED VIDEOS
 const getCategoryIcon = (category) => {
     if (!category) return <BiSolidCategory className="w-3.5 h-3.5 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors shrink-0" />;
 
@@ -180,12 +182,27 @@ export default function Streaming({ supabase }) {
     if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-12 h-12 border-4 border-zinc-800 border-t-[#106EBE] rounded-full animate-spin"></div></div>;
     if (!video) return null;
 
+    // LOGIKA AUTO-FALLBACK & VALIDASI SERVER
+    const hasMain = video.trailer_url && video.trailer_url !== 'EMPTY' && String(video.trailer_url).trim() !== '';
     const hasAlternativeServer = video.alternative_server && video.alternative_server !== 'EMPTY' && String(video.alternative_server).trim() !== '';
     const hasAlternativeServer2 = video.alternative_server2 && video.alternative_server2 !== 'EMPTY' && String(video.alternative_server2).trim() !== '';
 
-    let currentVideoUrl = video.trailer_url;
-    if (activeServer === 'alt' && hasAlternativeServer) currentVideoUrl = video.alternative_server;
-    if (activeServer === 'alt2' && hasAlternativeServer2) currentVideoUrl = video.alternative_server2;
+    let effectiveServer = activeServer;
+    if (effectiveServer === 'main' && !hasMain) {
+        if (hasAlternativeServer2) effectiveServer = 'alt2';
+        else if (hasAlternativeServer) effectiveServer = 'alt';
+    } else if (effectiveServer === 'alt' && !hasAlternativeServer) {
+        if (hasAlternativeServer2) effectiveServer = 'alt2';
+        else if (hasMain) effectiveServer = 'main';
+    } else if (effectiveServer === 'alt2' && !hasAlternativeServer2) {
+        if (hasAlternativeServer) effectiveServer = 'alt';
+        else if (hasMain) effectiveServer = 'main';
+    }
+
+    let currentVideoUrl = '';
+    if (effectiveServer === 'main' && hasMain) currentVideoUrl = video.trailer_url;
+    if (effectiveServer === 'alt' && hasAlternativeServer) currentVideoUrl = video.alternative_server;
+    if (effectiveServer === 'alt2' && hasAlternativeServer2) currentVideoUrl = video.alternative_server2;
 
     const isDirectVideo = currentVideoUrl && typeof currentVideoUrl === 'string' && (currentVideoUrl.toLowerCase().includes('.mp4') || currentVideoUrl.toLowerCase().includes('.webm') || currentVideoUrl.toLowerCase().includes('.m3u8'));
     const isDeepFake = video.category && typeof video.category === 'string' && video.category.toLowerCase() === 'deepfake';
@@ -217,17 +234,20 @@ export default function Streaming({ supabase }) {
                         )}
                     </div>
 
-                    {(hasAlternativeServer || hasAlternativeServer2) && (
+                    {/* HANYA MUNCULKAN TOMBOL JIKA LINKNYA BENAR-BENAR ADA */}
+                    {(hasMain || hasAlternativeServer || hasAlternativeServer2) && (
                         <div className="flex justify-center w-full mb-6">
                             <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-                                <button onClick={() => setActiveServer('main')} className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all ${activeServer === 'main' ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.4)]' : 'bg-zinc-800/40 text-zinc-400 hover:text-[#0FFCBE]'}`}><Server className="w-4 h-4" /> Main</button>
+                                {hasMain && (
+                                    <button onClick={() => setActiveServer('main')} className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all ${effectiveServer === 'main' ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.4)]' : 'bg-zinc-800/40 text-zinc-400 hover:text-[#0FFCBE]'}`}><Server className="w-4 h-4" /> Main</button>
+                                )}
 
                                 {hasAlternativeServer && (
-                                    <button onClick={() => setActiveServer('alt')} className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all ${activeServer === 'alt' ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.4)]' : 'bg-zinc-800/40 text-zinc-400 hover:text-[#0FFCBE]'}`}><Server className="w-4 h-4" /> Hydrax</button>
+                                    <button onClick={() => setActiveServer('alt')} className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all ${effectiveServer === 'alt' ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.4)]' : 'bg-zinc-800/40 text-zinc-400 hover:text-[#0FFCBE]'}`}><Server className="w-4 h-4" /> Hydrax</button>
                                 )}
 
                                 {hasAlternativeServer2 && (
-                                    <button onClick={() => setActiveServer('alt2')} className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all ${activeServer === 'alt2' ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.4)]' : 'bg-zinc-800/40 text-zinc-400 hover:text-[#0FFCBE]'}`}><Server className="w-4 h-4" /> Vidara</button>
+                                    <button onClick={() => setActiveServer('alt2')} className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all ${effectiveServer === 'alt2' ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.4)]' : 'bg-zinc-800/40 text-zinc-400 hover:text-[#0FFCBE]'}`}><Server className="w-4 h-4" /> Vidara</button>
                                 )}
                             </div>
                         </div>
@@ -316,10 +336,24 @@ export default function Streaming({ supabase }) {
             {isDownloadModalOpen && (
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/95 backdrop-blur-xl animate-in fade-in duration-500">
                     <div className="w-full max-w-xl flex flex-col items-center text-center animate-in slide-in-from-bottom-10 duration-500 relative">
+
+                        {/* UPDATE LOGO MODAL SESUAI DENGAN VERSI NAVBAR TERBARU */}
                         <div className="flex items-center justify-center gap-3 sm:gap-4 mb-8 w-full">
-                            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 sm:w-14 sm:h-14 drop-shadow-[0_0_15px_rgba(16,110,190,0.5)]"><polygon points="20,2 36,10 36,30 20,38 4,30 4,10" stroke="#106EBE" strokeWidth="3.5" strokeLinejoin="round" /><path d="M16 13L27 20L16 27V13Z" fill="#106EBE" /></svg>
-                            <span className="text-2xl sm:text-4xl font-black tracking-tighter text-white">Shadow<span className="text-[#106EBE]">Clips</span></span>
+                            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 sm:w-16 sm:h-16 drop-shadow-[0_0_12px_rgba(16,110,190,0.8)] shrink-0">
+                                <polygon points="50,5 89,27.5 89,72.5 50,95 11,72.5 11,27.5" stroke="#106EBE" strokeWidth="8" strokeLinejoin="round" />
+                                <polygon points="50,18 78,34 78,66 50,82 22,66 22,34" stroke="#106EBE" strokeWidth="3.5" strokeLinejoin="round" opacity="0.9" />
+                                <polygon points="43,36 64,50 43,64" stroke="#106EBE" strokeWidth="3" strokeLinejoin="round" fill="rgba(16, 110, 190, 0.3)" />
+                            </svg>
+                            <div className="flex flex-col justify-center text-left">
+                                <span className="text-2xl sm:text-4xl font-black tracking-tighter text-white leading-none mb-1">
+                                    Shadow<span className="text-[#106EBE]">Clips</span>
+                                </span>
+                                <span className="text-[10px] sm:text-[12px] font-bold tracking-[0.22em] text-[#A0B3C6] uppercase ml-[1px] leading-none">
+                                    www.shadowclips.asia
+                                </span>
+                            </div>
                         </div>
+
                         <div className="space-y-4 mb-10 w-full px-2">
                             <p className="text-zinc-300 text-base md:text-lg leading-relaxed md:leading-loose">ShadowClips never sells or charges a single penny for this file. We provide this link 100% free for entertainment purposes.<br /><span className="text-zinc-500 text-sm mt-2 block">Please be aware of any scams claiming to represent us.</span></p>
                         </div>
