@@ -16,6 +16,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomPlayer from '../components/CustomPlayer';
 import Komentar from '../components/Komentar';
+import SynopsisTooltip from '../components/SynopsisTooltip'; // IMPORT KOMPONEN BARU KITA
 
 const getImageUrl = (imgString) => imgString ? imgString.split(',')[0].trim() : '';
 
@@ -24,7 +25,6 @@ const formatViews = (views) => {
     return Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(views);
 };
 
-// LOGIKA ICON DINAMIS UNTUK RELATED VIDEOS
 const getCategoryIcon = (category) => {
     if (!category) return <BiSolidCategory className="w-3.5 h-3.5 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors shrink-0" />;
 
@@ -234,7 +234,6 @@ export default function Streaming({ supabase }) {
                         )}
                     </div>
 
-                    {/* HANYA MUNCULKAN TOMBOL JIKA LINKNYA BENAR-BENAR ADA */}
                     {(hasMain || hasAlternativeServer || hasAlternativeServer2) && (
                         <div className="flex justify-center w-full mb-6">
                             <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
@@ -264,6 +263,9 @@ export default function Streaming({ supabase }) {
                             {video.size && video.size !== 'EMPTY' && <span className="flex items-center gap-1.5"><HardDrive className="w-4 h-4 text-[#106EBE]" /> {video.size}</span>}
                             {video.type && video.type !== 'EMPTY' && <span className="flex items-center gap-1.5"><FolderArchive className="w-4 h-4 text-[#106EBE]" /> {video.type}</span>}
                             {video.source && video.source !== 'EMPTY' && <span className="flex items-center gap-1.5"><Database className="w-4 h-4 text-[#106EBE]" /> {video.source}</span>}
+
+                            {/* KOMPONEN TOOLTIP SINOPSIS DITEMPATKAN DI SINI */}
+                            <SynopsisTooltip text={video.sinopsis} />
                         </div>
 
                         <div className="flex flex-wrap items-center justify-center gap-3 w-full max-w-xl">
@@ -337,7 +339,6 @@ export default function Streaming({ supabase }) {
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/95 backdrop-blur-xl animate-in fade-in duration-500">
                     <div className="w-full max-w-xl flex flex-col items-center text-center animate-in slide-in-from-bottom-10 duration-500 relative">
 
-                        {/* UPDATE LOGO MODAL SESUAI DENGAN VERSI NAVBAR TERBARU */}
                         <div className="flex items-center justify-center gap-3 sm:gap-4 mb-8 w-full">
                             <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 sm:w-16 sm:h-16 drop-shadow-[0_0_12px_rgba(16,110,190,0.8)] shrink-0">
                                 <polygon points="50,5 89,27.5 89,72.5 50,95 11,72.5 11,27.5" stroke="#106EBE" strokeWidth="8" strokeLinejoin="round" />
