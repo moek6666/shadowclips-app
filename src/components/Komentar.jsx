@@ -4,7 +4,16 @@ import { Loader2, Heart, User, X } from 'lucide-react';
 
 export default function Komentar({ videoId, onCommentSuccess }) {
     const [comments, setComments] = useState([]);
-    const [formData, setFormData] = useState({ name: '', email: '', content: '' });
+
+    // LOGIKA AUTO-FILL: Mengambil data dari memori browser saat komponen dimuat
+    const [formData, setFormData] = useState(() => {
+        return {
+            name: typeof window !== 'undefined' ? localStorage.getItem('shadowclips_user_name') || '' : '',
+            email: typeof window !== 'undefined' ? localStorage.getItem('shadowclips_user_email') || '' : '',
+            content: ''
+        };
+    });
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [notification, setNotification] = useState(null);
     const [replyTo, setReplyTo] = useState(null);
@@ -59,7 +68,7 @@ export default function Komentar({ videoId, onCommentSuccess }) {
 
     const cancelReply = () => {
         setReplyTo(null);
-        setFormData({ ...formData, content: '' });
+        setFormData(prev => ({ ...prev, content: '' }));
     };
 
     const handleSubmit = async (e) => {
@@ -98,13 +107,17 @@ export default function Komentar({ videoId, onCommentSuccess }) {
 
             setComments(prev => [newPendingComment, ...prev]);
             setNotification({ type: 'success', message: 'Sent! Awaiting moderation.' });
-            setFormData({ name: '', email: '', content: '' });
+
+            // SIMPAN NAMA & EMAIL KE MEMORI BROWSER
+            localStorage.setItem('shadowclips_user_name', formData.name);
+            localStorage.setItem('shadowclips_user_email', formData.email);
+
+            // HANYA KOSONGKAN ISI KOMENTAR, BIARKAN NAMA & EMAIL TERISI
+            setFormData(prev => ({ ...prev, content: '' }));
             setReplyTo(null);
 
-            // --- INI LOGIKA PENGUNCINYA (MEMORI BROWSER) ---
             localStorage.setItem(`shadowclips_commented_${videoId}`, 'true');
             if (onCommentSuccess) onCommentSuccess();
-            // -----------------------------------------------
 
             if (textareaRef.current) textareaRef.current.style.height = 'auto';
             setTimeout(() => setNotification(null), 5000);
