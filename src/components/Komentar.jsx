@@ -5,7 +5,6 @@ import { Loader2, Heart, User, X } from 'lucide-react';
 export default function Komentar({ videoId, onCommentSuccess }) {
     const [comments, setComments] = useState([]);
 
-    // LOGIKA AUTO-FILL: Mengambil data dari memori browser saat komponen dimuat
     const [formData, setFormData] = useState(() => {
         return {
             name: typeof window !== 'undefined' ? localStorage.getItem('shadowclips_user_name') || '' : '',
@@ -22,6 +21,7 @@ export default function Komentar({ videoId, onCommentSuccess }) {
     useEffect(() => {
         const fetchComments = async () => {
             if (!videoId) return;
+
             const { data, error } = await supabase
                 .from('comments')
                 .select('*')
@@ -30,7 +30,15 @@ export default function Komentar({ videoId, onCommentSuccess }) {
                 .order('created_at', { ascending: false });
 
             if (!error && data) {
-                setComments(data);
+                const localPending = JSON.parse(localStorage.getItem(`shadowclips_pending_${videoId}`) || '[]');
+
+                const validPending = localPending.filter(
+                    pending => !data.some(approved => approved.content === pending.content && approved.name === pending.name)
+                );
+
+                localStorage.setItem(`shadowclips_pending_${videoId}`, JSON.stringify(validPending));
+
+                setComments([...validPending, ...data]);
             }
         };
         fetchComments();
@@ -75,6 +83,15 @@ export default function Komentar({ videoId, onCommentSuccess }) {
         e.preventDefault();
         if (!formData.name || !formData.email || !formData.content) return;
 
+        // ==========================================
+        // VALIDASI GMAIL KETAT (ANTI SPAM)
+        // ==========================================
+        if (!formData.email.toLowerCase().endsWith('@gmail.com')) {
+            setNotification({ type: 'error', message: 'Please use a valid Gmail address.' });
+            setTimeout(() => setNotification(null), 4000);
+            return;
+        }
+
         setIsSubmitting(true);
         setNotification(null);
 
@@ -108,11 +125,12 @@ export default function Komentar({ videoId, onCommentSuccess }) {
             setComments(prev => [newPendingComment, ...prev]);
             setNotification({ type: 'success', message: 'Sent! Awaiting moderation.' });
 
-            // SIMPAN NAMA & EMAIL KE MEMORI BROWSER
             localStorage.setItem('shadowclips_user_name', formData.name);
             localStorage.setItem('shadowclips_user_email', formData.email);
 
-            // HANYA KOSONGKAN ISI KOMENTAR, BIARKAN NAMA & EMAIL TERISI
+            const existingPending = JSON.parse(localStorage.getItem(`shadowclips_pending_${videoId}`) || '[]');
+            localStorage.setItem(`shadowclips_pending_${videoId}`, JSON.stringify([newPendingComment, ...existingPending]));
+
             setFormData(prev => ({ ...prev, content: '' }));
             setReplyTo(null);
 
