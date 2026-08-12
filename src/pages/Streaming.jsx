@@ -78,6 +78,7 @@ export default function Streaming({ supabase }) {
     const [modalStatus, setModalStatus] = useState('waiting');
     const [modalProgress, setModalProgress] = useState(0);
 
+    // STATE UNTUK SISTEM VIP LOCKER
     const [isVipUnlocked, setIsVipUnlocked] = useState(true);
     const [hasCommented, setHasCommented] = useState(false);
 
@@ -110,20 +111,19 @@ export default function Streaming({ supabase }) {
 
                 setLikes(data.likes || 0);
 
+                // CEK STATUS LIKE DARI MEMORI
                 const userLiked = localStorage.getItem(`shadowclips_liked_${data.id}`);
                 if (userLiked) setHasLiked(true);
 
+                // CEK STATUS KOMENTAR DARI MEMORI
                 const userCommented = localStorage.getItem(`shadowclips_commented_${data.id}`);
                 if (userCommented) setHasCommented(true);
 
+                // LOGIKA VIP LOCKER
                 const isVipContent = String(data.category).toLowerCase().includes('exclusive') || String(data.category).toLowerCase().includes('vip');
-
                 if (isVipContent) {
-                    if (userLiked && userCommented) {
-                        setIsVipUnlocked(true);
-                    } else {
-                        setIsVipUnlocked(false);
-                    }
+                    if (userLiked && userCommented) setIsVipUnlocked(true);
+                    else setIsVipUnlocked(false);
                 } else {
                     setIsVipUnlocked(true);
                 }
@@ -193,6 +193,7 @@ export default function Streaming({ supabase }) {
         return () => clearInterval(timer);
     }, [isDownloadModalOpen, modalStatus]);
 
+    // FUNGSI SAAT TOMBOL LIKE DIKLIK
     const handleLike = async () => {
         if (!supabase || !video) return;
         const newLikesCount = hasLiked ? (likes > 0 ? likes - 1 : 0) : likes + 1;
@@ -204,6 +205,7 @@ export default function Streaming({ supabase }) {
         } else {
             localStorage.setItem(`shadowclips_liked_${video.id}`, 'true');
 
+            // CEK APAKAH BISA BUKA GEMBOK VIP (Jika sudah komen juga)
             const isVipContent = String(video.category).toLowerCase().includes('exclusive') || String(video.category).toLowerCase().includes('vip');
             if (isVipContent && hasCommented) {
                 setIsVipUnlocked(true);
@@ -311,12 +313,10 @@ export default function Streaming({ supabase }) {
                                                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ml-1 ${isServerDropdownOpen ? 'rotate-180' : ''}`} />
                                             </button>
 
-                                            {/* INVISIBLE BACKDROP UNTUK KLIK EKSTERNAL */}
                                             {isServerDropdownOpen && (
                                                 <div className="fixed inset-0 z-[90]" onClick={() => setIsServerDropdownOpen(false)}></div>
                                             )}
 
-                                            {/* DROPDOWN MENU */}
                                             <div className={`absolute top-full left-0 mt-2 w-36 bg-zinc-900/95 backdrop-blur-xl rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden z-[100] flex flex-col py-1.5 transition-all duration-300 origin-top border-none ${isServerDropdownOpen ? 'opacity-100 scale-y-100 visible' : 'opacity-0 scale-y-95 invisible'}`}>
                                                 {serverOptions.map(option => (
                                                     <button
@@ -369,8 +369,18 @@ export default function Streaming({ supabase }) {
                             </div>
                         </div>
 
+                        {/* WADAH KOMENTAR DENGAN PROP onCommentSuccess */}
                         <div className="bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] w-full">
-                            <Komentar videoId={video.id} />
+                            <Komentar
+                                videoId={video.id}
+                                onCommentSuccess={() => {
+                                    setHasCommented(true);
+                                    const isVipContent = String(video?.category).toLowerCase().includes('exclusive') || String(video?.category).toLowerCase().includes('vip');
+                                    if (isVipContent && hasLiked) {
+                                        setIsVipUnlocked(true);
+                                    }
+                                }}
+                            />
                         </div>
                     </div>
 
@@ -394,7 +404,6 @@ export default function Streaming({ supabase }) {
                                             </div>
                                         </div>
 
-                                        {/* JUDUL DIBATASI 1 BARIS (TRUNCATE) */}
                                         <div className="px-0.5 flex flex-col flex-1 overflow-hidden">
                                             <h4 className="font-bold text-[11px] sm:text-xs mb-1.5 text-zinc-100 group-hover:text-[#0FFCBE] transition-colors truncate" title={item.title}>{item.title}</h4>
                                             <div className="flex flex-wrap items-center justify-between gap-1 mt-auto">
