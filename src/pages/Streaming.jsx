@@ -159,7 +159,7 @@ export default function Streaming({ supabase }) {
             if (video && hilltopAdRef.current && !hilltopAdRef.current.querySelector('script')) {
                 const s = document.createElement('script');
                 s.settings = {};
-                s.src = "//winding-hurt.com/b.XwV/s-deGllV0BYEWYct/Senm/9XuBZgUFl/kQPfT/cMyeOITbA/4RNITRMkt/NvzGIu5qMyDHgD1jNCwo";
+                s.src = "https://direct-league.com/dTm.F/zadLGTNPvZZLGFUt/gefm_9/u/ZlUClvkbPFTUcdy/OmDRcT5/N/ToMutoN/zNIw4qNnzyk/1LNLyKZIsIadWO1/psdbDb0IxV";
                 s.async = true;
                 s.referrerPolicy = "no-referrer-when-downgrade";
                 hilltopAdRef.current.appendChild(s);
