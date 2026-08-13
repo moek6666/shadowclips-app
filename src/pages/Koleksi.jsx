@@ -77,7 +77,7 @@ export default function Koleksi({ supabase }) {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
                         {isLoading ? (
                             Array.from({ length: 8 }).map((_, i) => (
-                                <div key={i} className="aspect-[4/3] bg-zinc-800/50 border-none rounded-2xl animate-pulse"></div>
+                                <div key={i} className="aspect-[4/3] bg-zinc-800/50 border-none rounded-[4px] animate-pulse"></div>
                             ))
                         ) : filteredCollections.length > 0 ? (
                             filteredCollections.map((col, index) => (
@@ -86,7 +86,7 @@ export default function Koleksi({ supabase }) {
                                     onClick={() => {
                                         window.location.href = `/koleksi/${encodeURIComponent(col.name)}`;
                                     }}
-                                    className="group relative aspect-[4/3] rounded-2xl overflow-hidden cursor-pointer shadow-lg transition-transform duration-300 hover:-translate-y-1 bg-zinc-800/30 border-none"
+                                    className="group relative aspect-[4/3] rounded-[4px] overflow-hidden cursor-pointer shadow-lg transition-transform duration-300 hover:-translate-y-1 bg-zinc-900 border-none"
                                 >
                                     <img
                                         src={col.coverImage || '/placeholder-image.jpg'}
@@ -99,7 +99,7 @@ export default function Koleksi({ supabase }) {
 
                                     <div className="absolute inset-0 p-6 flex flex-col justify-end">
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className="bg-[#106EBE] text-white px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-[0_0_10px_rgba(16,110,190,0.4)] border-none">
+                                            <span className="bg-[#106EBE] text-white px-2.5 py-1 rounded-[3px] text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-[0_0_10px_rgba(16,110,190,0.4)] border-none">
                                                 <FolderOpen className="w-3 h-3" />
                                                 {col.count} Videos
                                             </span>

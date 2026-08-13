@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useSWR from 'swr';
-import { Play, MonitorPlay, FolderOpen } from 'lucide-react';
+import { Play, Eye, Clock, FolderOpen } from 'lucide-react';
 
 import { SiOnlyfans, SiTelegram } from 'react-icons/si';
 import { FaCrown, FaVideo, FaFire, FaBan, FaRandom, FaFilm, FaMask } from 'react-icons/fa';
@@ -52,7 +52,7 @@ const getCategoryIcon = (categoryName) => {
     if (name.includes('exclusive') || name.includes('eksklusif')) return <FaCrown className={iconClasses} />;
     if (name.includes('viral')) return <FaFire className={iconClasses} />;
     if (name.includes('random') || name.includes('acak')) return <FaRandom className={iconClasses} />;
-    if (name.includes('banned') || name.includes('banned')) return <FaBan className={iconClasses} />;
+    if (name.includes('banned')) return <FaBan className={iconClasses} />;
 
     return <BiSolidCategory className={iconClasses} />;
 };
@@ -108,7 +108,6 @@ export default function Jelajahi({ supabase }) {
 
                 {loading ? (
                     <div className="flex justify-center items-center py-32">
-                        {/* Border pada loading spinner dipertahankan karena itu adalah bentuk spinnernya sendiri */}
                         <div className="w-14 h-14 border-4 border-zinc-800 border-t-[#106EBE] rounded-full animate-spin shadow-[0_0_20px_rgba(16,110,190,0.5)]"></div>
                     </div>
                 ) : kategoriData.length > 0 ? (
@@ -138,7 +137,7 @@ export default function Jelajahi({ supabase }) {
                                         {heroVideo && (
                                             <div
                                                 onClick={() => window.location.href = `/streaming/${heroVideo.slug || heroVideo.id}`}
-                                                className="lg:col-span-7 group cursor-pointer relative aspect-video md:aspect-[16/10] lg:aspect-auto rounded-2xl overflow-hidden bg-zinc-800/30 border-none shadow-2xl"
+                                                className="lg:col-span-7 group cursor-pointer relative aspect-video md:aspect-[16/10] lg:aspect-auto rounded-[4px] overflow-hidden bg-zinc-900 border-none shadow-2xl"
                                             >
                                                 <img
                                                     src={getImageUrl(heroVideo.img)}
@@ -156,11 +155,11 @@ export default function Jelajahi({ supabase }) {
 
                                                 <div className="absolute bottom-0 left-0 right-0 p-5 md:p-8 z-30 transform transition-transform duration-300 group-hover:-translate-y-2">
                                                     <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2 md:mb-3 text-[10px] md:text-xs font-bold">
-                                                        <span className="bg-[#106EBE] text-white px-2.5 py-1.5 rounded-lg uppercase tracking-widest shadow-[0_0_15px_rgba(16,110,190,0.5)]">
+                                                        <span className="bg-[#106EBE] text-white px-2.5 py-1.5 rounded-[3px] uppercase tracking-widest shadow-[0_0_15px_rgba(16,110,190,0.5)]">
                                                             LATEST CONTENT
                                                         </span>
-                                                        <span className="flex items-center gap-1 text-zinc-300 bg-black/50 backdrop-blur-md px-2.5 py-1.5 rounded-lg">
-                                                            <MonitorPlay className="w-3.5 h-3.5 text-[#0FFCBE]" /> {formatViews(heroVideo.views)} Views
+                                                        <span className="flex items-center gap-1 text-zinc-300 bg-black/50 backdrop-blur-md px-2.5 py-1.5 rounded-[3px]">
+                                                            <Eye className="w-3.5 h-3.5 text-[#0FFCBE]" /> {formatViews(heroVideo.views)} Views
                                                         </span>
                                                     </div>
                                                     <h3 className="text-xl md:text-3xl lg:text-4xl font-bold text-white group-hover:text-[#0FFCBE] transition-colors line-clamp-2 drop-shadow-lg leading-tight md:leading-tight">
@@ -176,29 +175,34 @@ export default function Jelajahi({ supabase }) {
                                                     <div
                                                         key={video.id}
                                                         onClick={() => window.location.href = `/streaming/${video.slug || video.id}`}
-                                                        className="group cursor-pointer flex flex-col"
+                                                        className="group cursor-pointer flex flex-col gap-2"
                                                     >
-                                                        <div className="relative aspect-video rounded-xl overflow-hidden mb-2 md:mb-3 bg-zinc-800/30 border-none shadow-md">
+                                                        <div className="relative aspect-video rounded-[4px] overflow-hidden bg-zinc-900 border-none shadow-md">
                                                             <img
                                                                 src={getImageUrl(video.img)}
                                                                 alt={video.title}
-                                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                                                 loading="lazy"
                                                             />
-                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
-                                                                <div className="w-10 h-10 md:w-12 md:h-12 bg-[#106EBE] rounded-full flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(16,110,190,0.5)]">
-                                                                    <Play className="w-4 h-4 md:w-5 md:h-5 fill-current ml-1" />
-                                                                </div>
+                                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
+                                                                <Play className="w-8 h-8 text-white/90 fill-current drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300" />
                                                             </div>
+
+                                                            <div className="absolute bottom-1.5 left-1.5 bg-black/80 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
+                                                                <Eye className="w-2.5 h-2.5" /> {formatViews(video.views)}
+                                                            </div>
+
+                                                            {video.duration && video.duration !== 'EMPTY' && (
+                                                                <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
+                                                                    <Clock className="w-2.5 h-2.5" /> {video.duration}
+                                                                </div>
+                                                            )}
                                                         </div>
 
-                                                        <div className="px-1 text-center mt-auto">
-                                                            <h4 className="font-bold text-[13px] md:text-sm text-zinc-100 group-hover:text-[#0FFCBE] transition-colors line-clamp-2 mb-1.5 md:mb-2 leading-snug">
+                                                        <div className="px-1 text-center">
+                                                            <h4 className="font-bold text-[13px] md:text-[14px] text-zinc-300 group-hover:text-white transition-colors line-clamp-2 leading-snug" title={video.title}>
                                                                 {video.title}
                                                             </h4>
-                                                            <div className="flex items-center justify-center gap-1.5 text-[10px] md:text-[11px] font-medium text-zinc-400">
-                                                                <MonitorPlay className="w-3 h-3 md:w-3.5 md:h-3.5 text-[#106EBE]" /> {formatViews(video.views)} views
-                                                            </div>
                                                         </div>
                                                     </div>
                                                 ))}
@@ -211,7 +215,7 @@ export default function Jelajahi({ supabase }) {
                         })}
                     </div>
                 ) : (
-                    <div className="text-center text-zinc-500 py-32 bg-zinc-800/30 rounded-3xl border-none mx-4">
+                    <div className="text-center text-zinc-500 py-32 bg-zinc-900/40 rounded-[4px] border-none mx-4">
                         <FolderOpen className="w-16 h-16 mx-auto mb-4 opacity-30" />
                         <p className="text-lg md:text-xl font-medium">No categories available yet.</p>
                     </div>
