@@ -1,10 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Play, Download, Clock, Eye, MonitorPlay, Share2, Heart, HardDrive, FolderArchive, Database, Server, X, ZoomIn, LayoutGrid, Loader2, ExternalLink, Lock, ChevronDown } from 'lucide-react';
-import { SiOnlyfans, SiTelegram } from 'react-icons/si';
-import { FaCrown, FaVideo, FaFire, FaBan, FaRandom, FaFilm, FaMask } from 'react-icons/fa';
-import { FaClapperboard } from 'react-icons/fa6';
-import { BiSolidCategory } from 'react-icons/bi';
-import { MdLiveTv } from 'react-icons/md';
 
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -18,50 +13,11 @@ const formatViews = (views) => {
     return Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(views);
 };
 
-const getCategoryIcon = (category) => {
-    if (!category) return <BiSolidCategory className="w-3.5 h-3.5 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors shrink-0" />;
-
-    const name = String(category).toLowerCase();
-    const iconClasses = "w-3 h-3 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors shrink-0";
-
-    if (name.includes('onlyfans')) return <SiOnlyfans className={iconClasses} />;
-    if (name.includes('telegram')) return <SiTelegram className={iconClasses} />;
-    if (name.includes('movie') || name.includes('scene')) return <FaClapperboard className={iconClasses} />;
-    if (name.includes('live')) return <MdLiveTv className={iconClasses} />;
-    if (name.includes('deepfake')) return <FaMask className={iconClasses} />;
-
-    if (name.includes('kbj') || name.includes('korean')) {
-        return (
-            <div className="relative shrink-0 flex items-center justify-center">
-                <FaVideo className={iconClasses} />
-                <span className="absolute -bottom-1 -right-1 bg-zinc-800 border-none text-white text-[5px] font-black px-[2px] rounded-[1px] shadow-sm group-hover:text-[#0FFCBE] transition-colors leading-none">KR</span>
-            </div>
-        );
-    }
-
-    if (name.includes('jav') || name.includes('jepang') || name.includes('film')) {
-        return (
-            <div className="relative shrink-0 flex items-center justify-center">
-                <FaFilm className={iconClasses} />
-                <span className="absolute -bottom-1 -right-1 bg-zinc-800 border-none text-white text-[5px] font-black px-[2px] rounded-[1px] shadow-sm group-hover:text-[#0FFCBE] transition-colors leading-none">JP</span>
-            </div>
-        );
-    }
-
-    if (name.includes('exclusive') || name.includes('eksklusif')) return <FaCrown className={iconClasses} />;
-    if (name.includes('viral')) return <FaFire className={iconClasses} />;
-    if (name.includes('random') || name.includes('acak')) return <FaRandom className={iconClasses} />;
-    if (name.includes('banned')) return <FaBan className={iconClasses} />;
-
-    return <BiSolidCategory className={iconClasses} />;
-};
-
 export default function Streaming({ supabase }) {
     const [video, setVideo] = useState(null);
     const [relatedVideos, setRelatedVideos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isScrolled, setIsScrolled] = useState(false);
-    const [searchInput, setSearchInput] = useState('');
     const [activeServer, setActiveServer] = useState('main');
     const [isServerDropdownOpen, setIsServerDropdownOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
@@ -193,14 +149,16 @@ export default function Streaming({ supabase }) {
     const hasDownloadLink = video.embed_url && video.embed_url.trim() !== '' && video.embed_url !== 'EMPTY';
 
     const serverOptions = [];
-    if (hasMain) serverOptions.push({ id: 'main', label: 'Server 1' });
-    if (hasAlternativeServer) serverOptions.push({ id: 'alt', label: 'Server 2' });
-    if (hasAlternativeServer2) serverOptions.push({ id: 'alt2', label: 'Server 3' });
+    if (hasMain) serverOptions.push({ id: 'main', label: 'Main' });
+    if (hasAlternativeServer) serverOptions.push({ id: 'alt', label: 'Hydrax' });
+    if (hasAlternativeServer2) serverOptions.push({ id: 'alt2', label: 'Vidara' });
     const activeServerLabel = serverOptions.find(s => s.id === effectiveServer)?.label || 'Server';
 
     return (
         <>
-            <Navbar searchInput={searchInput} setSearchInput={setSearchInput} isScrolled={isScrolled} />
+            {/* SINKRONISASI NAVBAR TERBARU */}
+            <Navbar isScrolled={isScrolled} supabase={supabase} />
+
             <div className="pt-24 pb-20 max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 min-h-screen relative">
                 <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-8">
                     <div className="xl:col-span-8 flex flex-col gap-4">

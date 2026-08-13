@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import useSWR from 'swr';
 import { Play, Eye, Clock, FolderOpen } from 'lucide-react';
 
@@ -58,7 +58,6 @@ const getCategoryIcon = (categoryName) => {
 };
 
 export default function Jelajahi({ supabase }) {
-    const [searchInput, setSearchInput] = useState('');
 
     useEffect(() => {
         document.title = "Explore Categories | ShadowClips";
@@ -93,16 +92,13 @@ export default function Jelajahi({ supabase }) {
     const { data: kategoriData = [], isLoading: loading } = useSWR(
         supabase ? 'jelajahi_kategori' : null,
         fetchSemuaKategori,
-        {
-            revalidateOnFocus: false,
-            dedupingInterval: 300000,
-            keepPreviousData: true,
-        }
+        { revalidateOnFocus: false, dedupingInterval: 300000, keepPreviousData: true }
     );
 
     return (
         <>
-            <Navbar searchInput={searchInput} setSearchInput={setSearchInput} isScrolled={true} />
+            {/* SINKRONISASI NAVBAR TERBARU */}
+            <Navbar isScrolled={true} supabase={supabase} />
 
             <main className="max-w-[1440px] mx-auto px-4 sm:px-8 pt-32 pb-24 overflow-hidden">
 

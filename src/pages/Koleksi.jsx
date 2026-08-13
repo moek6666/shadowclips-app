@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useSWR from 'swr';
-import { FolderOpen, Search } from 'lucide-react';
+import { FolderOpen } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -15,7 +15,6 @@ const extractSingleLabel = (rawLabels) => {
 
 export default function Koleksi({ supabase }) {
     const [isScrolled, setIsScrolled] = useState(false);
-    const [searchInput, setSearchInput] = useState('');
 
     useEffect(() => {
         document.title = "Video Library | ShadowClips";
@@ -58,19 +57,13 @@ export default function Koleksi({ supabase }) {
     const { data: collections = [], isLoading } = useSWR(
         supabase ? 'koleksi_videos' : null,
         fetchCollections,
-        {
-            revalidateOnFocus: false,
-            dedupingInterval: 300000,
-        }
-    );
-
-    const filteredCollections = collections.filter(c =>
-        c.name.toLowerCase().includes(searchInput.toLowerCase())
+        { revalidateOnFocus: false, dedupingInterval: 300000 }
     );
 
     return (
         <>
-            <Navbar searchInput={searchInput} setSearchInput={setSearchInput} isScrolled={isScrolled} />
+            {/* SINKRONISASI NAVBAR TERBARU */}
+            <Navbar isScrolled={isScrolled} supabase={supabase} />
 
             <main className="min-h-screen pb-20 relative overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-8 duration-700 ease-out">
                 <div className="max-w-[1440px] mx-auto px-4 sm:px-8 pt-32 relative z-10">
@@ -79,8 +72,8 @@ export default function Koleksi({ supabase }) {
                             Array.from({ length: 8 }).map((_, i) => (
                                 <div key={i} className="aspect-[4/3] bg-zinc-800/50 border-none rounded-[4px] animate-pulse"></div>
                             ))
-                        ) : filteredCollections.length > 0 ? (
-                            filteredCollections.map((col, index) => (
+                        ) : collections.length > 0 ? (
+                            collections.map((col, index) => (
                                 <div
                                     key={index}
                                     onClick={() => {
@@ -113,7 +106,7 @@ export default function Koleksi({ supabase }) {
                             ))
                         ) : (
                             <div className="col-span-full py-20 flex flex-col items-center justify-center text-zinc-500 border-none">
-                                <Search className="w-12 h-12 mb-4 opacity-20" />
+                                <FolderOpen className="w-12 h-12 mb-4 opacity-20" />
                                 <p className="text-lg font-medium">No collections found.</p>
                             </div>
                         )}

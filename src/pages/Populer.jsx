@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useSWR from 'swr';
-import { Play, Eye, Clock, Search } from 'lucide-react';
-
-import { SiOnlyfans, SiTelegram } from 'react-icons/si';
-import { FaCrown, FaVideo, FaFire, FaBan, FaRandom, FaFilm, FaMask } from 'react-icons/fa';
-import { FaClapperboard } from 'react-icons/fa6';
-import { BiSolidCategory } from 'react-icons/bi';
-import { MdLiveTv } from 'react-icons/md';
+import { Play, Eye, Clock } from 'lucide-react';
 
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -19,7 +13,6 @@ const formatViews = (views) => {
 
 export default function Populer({ supabase }) {
     const [isScrolled, setIsScrolled] = useState(false);
-    const [searchInput, setSearchInput] = useState('');
 
     useEffect(() => {
         document.title = "Trending & Populer | ShadowClips";
@@ -30,7 +23,7 @@ export default function Populer({ supabase }) {
 
     const fetchPopularVideos = async () => {
         if (!supabase) throw new Error("Supabase not initialized");
-        const { data, error } = await supabase.from('videos').select('*').order('views', { ascending: false, nullsFirst: false }).limit(16);
+        const { data, error } = await supabase.from('videos').select('*').order('views', { ascending: false, nullsFirst: false }).limit(24);
 
         if (error) throw new Error(error.message);
         return data || [];
@@ -39,16 +32,13 @@ export default function Populer({ supabase }) {
     const { data: videos = [], isLoading: loading } = useSWR(
         supabase ? 'populer_videos' : null,
         fetchPopularVideos,
-        {
-            revalidateOnFocus: false,
-            dedupingInterval: 300000,
-            keepPreviousData: true,
-        }
+        { revalidateOnFocus: false, dedupingInterval: 300000, keepPreviousData: true }
     );
 
     return (
         <>
-            <Navbar searchInput={searchInput} setSearchInput={setSearchInput} isScrolled={isScrolled} />
+            {/* SINKRONISASI NAVBAR TERBARU */}
+            <Navbar isScrolled={isScrolled} supabase={supabase} />
 
             <main className="max-w-[1440px] mx-auto px-4 sm:px-8 pt-28 pb-20 min-h-screen">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-y-8 md:gap-x-6">

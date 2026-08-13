@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import { Play, Eye, Clock, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 
@@ -20,44 +20,6 @@ const formatViews = (views) => {
     return Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(views);
 };
 
-const getCategoryIcon = (category) => {
-    if (!category) return <BiSolidCategory className="w-3.5 h-3.5 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors shrink-0" />;
-
-    const name = category.toString().toLowerCase();
-    const iconClasses = "w-3.5 h-3.5 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors shrink-0";
-
-    if (name.includes('onlyfans')) return <SiOnlyfans className={iconClasses} />;
-    if (name.includes('telegram')) return <SiTelegram className={iconClasses} />;
-    if (name.includes('movie') || name.includes('scene')) return <FaClapperboard className={iconClasses} />;
-    if (name.includes('live')) return <MdLiveTv className={iconClasses} />;
-    if (name.includes('deepfake')) return <FaMask className={iconClasses} />;
-
-    if (name.includes('kbj') || name.includes('korean')) {
-        return (
-            <div className="relative shrink-0 flex items-center justify-center">
-                <FaVideo className={iconClasses} />
-                <span className="absolute -bottom-1 -right-1 bg-zinc-800 text-white text-[5px] font-black px-[2px] rounded-[1px] shadow-sm group-hover:text-[#0FFCBE] transition-colors leading-none">KR</span>
-            </div>
-        );
-    }
-
-    if (name.includes('jav') || name.includes('jepang') || name.includes('film')) {
-        return (
-            <div className="relative shrink-0 flex items-center justify-center">
-                <FaFilm className={iconClasses} />
-                <span className="absolute -bottom-1 -right-1 bg-zinc-800 text-white text-[5px] font-black px-[2px] rounded-[1px] shadow-sm group-hover:text-[#0FFCBE] transition-colors leading-none">JP</span>
-            </div>
-        );
-    }
-
-    if (name.includes('exclusive') || name.includes('eksklusif')) return <FaCrown className={iconClasses} />;
-    if (name.includes('viral')) return <FaFire className={iconClasses} />;
-    if (name.includes('random') || name.includes('acak')) return <FaRandom className={iconClasses} />;
-    if (name.includes('banned')) return <FaBan className={iconClasses} />;
-
-    return <BiSolidCategory className={iconClasses} />;
-};
-
 export default function Home({ supabase }) {
     const [isScrolled, setIsScrolled] = useState(false);
 
@@ -69,11 +31,6 @@ export default function Home({ supabase }) {
         }
         return 1;
     });
-
-    const [searchInput, setSearchInput] = useState('');
-    const [debouncedSearch, setDebouncedSearch] = useState('');
-
-    const isFirstMount = useRef(true);
 
     useEffect(() => {
         document.title = "ShadowClips | Premium Video Streaming";
@@ -90,16 +47,16 @@ export default function Home({ supabase }) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const fetchVideos = async ([key, page, search]) => {
+    const fetchVideos = async ([key, page]) => {
         if (!supabase) throw new Error("Supabase not initialized");
         const from = (page - 1) * ITEMS_PER_PAGE;
         const to = from + ITEMS_PER_PAGE - 1;
 
-        let query = supabase.from('videos').select('*', { count: 'exact' }).order('created_at', { ascending: false });
-        if (search) query = query.or(`title.ilike.%${search}%,category.ilike.%${search}%`);
-
-        query = query.range(from, to);
-        const { data, count, error } = await query;
+        const { data, count, error } = await supabase
+            .from('videos')
+            .select('*', { count: 'exact' })
+            .order('created_at', { ascending: false })
+            .range(from, to);
 
         if (error) throw new Error(error.message);
         return {
@@ -109,33 +66,13 @@ export default function Home({ supabase }) {
     };
 
     const { data: swrData, isLoading } = useSWR(
-        supabase ? ['home_videos', currentPage, debouncedSearch] : null,
+        supabase ? ['home_videos', currentPage] : null,
         fetchVideos,
-        {
-            revalidateOnFocus: false,
-            dedupingInterval: 300000,
-            keepPreviousData: true,
-        }
+        { revalidateOnFocus: false, dedupingInterval: 300000, keepPreviousData: true }
     );
 
     const videos = swrData?.data || [];
     const totalPages = swrData?.totalPages || 0;
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedSearch(searchInput);
-
-            if (isFirstMount.current) {
-                isFirstMount.current = false;
-            } else {
-                setCurrentPage(1);
-                const newUrl = new URL(window.location);
-                newUrl.searchParams.delete('page');
-                window.history.pushState({}, '', newUrl);
-            }
-        }, 500);
-        return () => clearTimeout(timer);
-    }, [searchInput]);
 
     const getPageNumbers = () => {
         const maxVisiblePages = 5;
@@ -147,17 +84,13 @@ export default function Home({ supabase }) {
 
     return (
         <>
-            <Navbar searchInput={searchInput} setSearchInput={setSearchInput} isScrolled={isScrolled} />
+            {/* SINKRONISASI NAVBAR TERBARU */}
+            <Navbar isScrolled={isScrolled} supabase={supabase} />
 
             <main className="max-w-[1440px] mx-auto px-4 sm:px-8 relative z-20 pb-10 pt-32 min-h-screen animate-in fade-in zoom-in-95 slide-in-from-bottom-8 duration-700 ease-out">
 
                 <div className="mb-10 text-center md:text-left animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-4xl">
-                    {debouncedSearch ? (
-                        <h1 className="text-zinc-400 text-sm md:text-base leading-relaxed">
-                            <strong className="text-white font-black text-lg md:text-xl tracking-tight mr-2">Search Results: <span className="text-[#106EBE]">"{debouncedSearch}"</span></strong>
-                            Displaying all content relevant to your search keywords.
-                        </h1>
-                    ) : currentPage === 1 ? (
+                    {currentPage === 1 ? (
                         <h1 className="text-zinc-400 text-sm md:text-base leading-relaxed">
                             <strong className="text-white font-black text-lg md:text-xl tracking-tight mr-2">Shadow<span className="text-[#106EBE]">Clips</span></strong>
                             is an exclusive, viral, comprehensive, and updated video streaming hub. Enjoy unlimited premium entertainment collections with the best viewing quality every day.
