@@ -193,9 +193,9 @@ export default function Streaming({ supabase }) {
     const hasDownloadLink = video.embed_url && video.embed_url.trim() !== '' && video.embed_url !== 'EMPTY';
 
     const serverOptions = [];
-    if (hasMain) serverOptions.push({ id: 'main', label: 'Main' });
-    if (hasAlternativeServer) serverOptions.push({ id: 'alt', label: 'Hydrax' });
-    if (hasAlternativeServer2) serverOptions.push({ id: 'alt2', label: 'Vidara' });
+    if (hasMain) serverOptions.push({ id: 'main', label: 'Server 1' });
+    if (hasAlternativeServer) serverOptions.push({ id: 'alt', label: 'Server 2' });
+    if (hasAlternativeServer2) serverOptions.push({ id: 'alt2', label: 'Server 3' });
     const activeServerLabel = serverOptions.find(s => s.id === effectiveServer)?.label || 'Server';
 
     return (
