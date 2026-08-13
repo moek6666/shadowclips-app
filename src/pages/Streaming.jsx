@@ -5,7 +5,6 @@ import {
     LayoutGrid, Loader2, ExternalLink, Lock, ChevronDown
 } from 'lucide-react';
 
-// IMPORT ICON KATEGORI DINAMIS
 import { SiOnlyfans, SiTelegram } from 'react-icons/si';
 import { FaCrown, FaVideo, FaFire, FaBan, FaRandom, FaFilm, FaMask } from 'react-icons/fa';
 import { FaClapperboard } from 'react-icons/fa6';
@@ -78,7 +77,6 @@ export default function Streaming({ supabase }) {
     const [modalStatus, setModalStatus] = useState('waiting');
     const [modalProgress, setModalProgress] = useState(0);
 
-    // STATE UNTUK SISTEM VIP LOCKER
     const [isVipUnlocked, setIsVipUnlocked] = useState(true);
     const [hasCommented, setHasCommented] = useState(false);
 
@@ -111,15 +109,12 @@ export default function Streaming({ supabase }) {
 
                 setLikes(data.likes || 0);
 
-                // CEK STATUS LIKE DARI MEMORI
                 const userLiked = localStorage.getItem(`shadowclips_liked_${data.id}`);
                 if (userLiked) setHasLiked(true);
 
-                // CEK STATUS KOMENTAR DARI MEMORI
                 const userCommented = localStorage.getItem(`shadowclips_commented_${data.id}`);
                 if (userCommented) setHasCommented(true);
 
-                // LOGIKA VIP LOCKER
                 const isVipContent = String(data.category).toLowerCase().includes('exclusive') || String(data.category).toLowerCase().includes('vip');
                 if (isVipContent) {
                     if (userLiked && userCommented) setIsVipUnlocked(true);
@@ -193,7 +188,6 @@ export default function Streaming({ supabase }) {
         return () => clearInterval(timer);
     }, [isDownloadModalOpen, modalStatus]);
 
-    // FUNGSI SAAT TOMBOL LIKE DIKLIK
     const handleLike = async () => {
         if (!supabase || !video) return;
         const newLikesCount = hasLiked ? (likes > 0 ? likes - 1 : 0) : likes + 1;
@@ -205,7 +199,6 @@ export default function Streaming({ supabase }) {
         } else {
             localStorage.setItem(`shadowclips_liked_${video.id}`, 'true');
 
-            // CEK APAKAH BISA BUKA GEMBOK VIP (Jika sudah komen juga)
             const isVipContent = String(video.category).toLowerCase().includes('exclusive') || String(video.category).toLowerCase().includes('vip');
             if (isVipContent && hasCommented) {
                 setIsVipUnlocked(true);
@@ -267,7 +260,7 @@ export default function Streaming({ supabase }) {
 
                     <div className="xl:col-span-8 flex flex-col gap-4">
 
-                        <div className={`w-full ${currentVideoUrl || !isVipUnlocked ? 'aspect-video' : 'min-h-[400px] max-h-[80vh]'} bg-zinc-950 rounded-[1.5rem] overflow-hidden relative flex items-center justify-center shadow-[0_20px_50px_rgba(0,0,0,0.5)]`}>
+                        <div className={`w-full ${currentVideoUrl || !isVipUnlocked ? 'aspect-video' : 'min-h-[400px] max-h-[80vh]'} bg-zinc-950 rounded-[1.5rem] overflow-hidden relative flex items-center justify-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-none`}>
 
                             {!isVipUnlocked ? (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center p-8 bg-zinc-900/95 backdrop-blur-3xl z-50 text-center">
@@ -285,7 +278,7 @@ export default function Streaming({ supabase }) {
                                 <div className="w-full h-full overflow-y-auto p-4 sm:p-6 custom-scrollbar" onContextMenu={(e) => e.preventDefault()}>
                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
                                         {imageList.map((imgUrl, idx) => (
-                                            <div key={idx} onClick={() => setSelectedImage(imgUrl)} className="relative group cursor-pointer aspect-[3/4] rounded-xl overflow-hidden bg-zinc-900 shadow-lg">
+                                            <div key={idx} onClick={() => setSelectedImage(imgUrl)} className="relative group cursor-pointer aspect-[3/4] rounded-xl overflow-hidden bg-zinc-900 shadow-lg border-none">
                                                 <img src={imgUrl} alt="Gallery" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 select-none" draggable="false" onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} />
                                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><ZoomIn className="w-6 h-6 text-white" /></div>
                                             </div>
@@ -298,7 +291,7 @@ export default function Streaming({ supabase }) {
                         </div>
 
                         {isVipUnlocked && (
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-900/40 p-3 sm:p-4 rounded-[1.5rem]">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-900/40 p-3 sm:p-4 rounded-[1.5rem] border-none">
 
                                 <div className="flex items-center gap-3 relative">
                                     <span className="text-zinc-500 text-xs font-bold uppercase tracking-wider mr-1 hidden sm:block">Server:</span>
@@ -344,7 +337,7 @@ export default function Streaming({ supabase }) {
                             </div>
                         )}
 
-                        <div className="bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] flex flex-col gap-5">
+                        <div className="bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] flex flex-col gap-5 border-none">
                             <h1 className="text-xl sm:text-2xl font-black text-white leading-snug tracking-tight" title={video.title}>{video.title}</h1>
 
                             <div className="flex flex-wrap items-center gap-4 text-xs sm:text-[13px] text-zinc-400 font-medium">
@@ -369,8 +362,7 @@ export default function Streaming({ supabase }) {
                             </div>
                         </div>
 
-                        {/* WADAH KOMENTAR DENGAN PROP onCommentSuccess */}
-                        <div className="bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] w-full">
+                        <div className="bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] w-full border-none">
                             <Komentar
                                 videoId={video.id}
                                 onCommentSuccess={() => {
@@ -386,7 +378,7 @@ export default function Streaming({ supabase }) {
 
                     <div className="xl:col-span-4 flex flex-col gap-4 w-full">
 
-                        <div className="bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] flex flex-col gap-5">
+                        <div className="bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] flex flex-col gap-5 border-none">
                             <h3 className="text-lg font-black text-white flex items-center gap-2 mb-1">
                                 <LayoutGrid className="w-5 h-5 text-[#106EBE]" /> Related Videos
                             </h3>
@@ -395,7 +387,7 @@ export default function Streaming({ supabase }) {
                                 {relatedVideos.map((item) => (
                                     <div key={item.id} onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer flex flex-col overflow-hidden">
 
-                                        <div className="relative aspect-video w-full rounded-xl overflow-hidden mb-2 bg-zinc-900 shadow-md border-none shrink-0">
+                                        <div className="relative aspect-video w-full rounded-xl overflow-hidden mb-2 bg-zinc-800/30 shadow-md border-none shrink-0">
                                             <img src={getImageUrl(item.img)} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                                                 <div className="w-8 h-8 bg-[#106EBE] rounded-full flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(16,110,190,0.6)] border-none">
@@ -404,9 +396,9 @@ export default function Streaming({ supabase }) {
                                             </div>
                                         </div>
 
-                                        <div className="px-0.5 flex flex-col flex-1 overflow-hidden">
+                                        <div className="px-0.5 flex flex-col flex-1 overflow-hidden border-none">
                                             <h4 className="font-bold text-[11px] sm:text-xs mb-1.5 text-zinc-100 group-hover:text-[#0FFCBE] transition-colors truncate" title={item.title}>{item.title}</h4>
-                                            <div className="flex flex-wrap items-center justify-between gap-1 mt-auto">
+                                            <div className="flex flex-wrap items-center justify-between gap-1 mt-auto border-none">
                                                 <span className="flex items-center gap-1 font-bold uppercase tracking-wider text-zinc-400 group-hover:text-[#0FFCBE] transition-colors text-[9px] sm:text-[10px]">
                                                     {getCategoryIcon(item.category)}
                                                     <span className="truncate max-w-[60px]">{item.category}</span>
@@ -433,15 +425,15 @@ export default function Streaming({ supabase }) {
             <Footer />
 
             {selectedImage && (
-                <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300" onClick={() => setSelectedImage(null)} onContextMenu={(e) => e.preventDefault()}>
+                <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300 border-none" onClick={() => setSelectedImage(null)} onContextMenu={(e) => e.preventDefault()}>
                     <button className="absolute top-4 right-4 sm:top-8 sm:right-8 bg-zinc-900 hover:bg-[#106EBE] text-white p-3 rounded-full transition-colors z-50 group border-none" onClick={(e) => { e.stopPropagation(); setSelectedImage(null); }}><X className="w-6 h-6 group-hover:rotate-90 transition-transform" /></button>
-                    <img src={selectedImage} alt="Fullscreen View" className="max-w-full max-h-full object-contain rounded-2xl select-none shadow-[0_20px_50px_rgba(0,0,0,0.9)]" draggable="false" onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} />
+                    <img src={selectedImage} alt="Fullscreen View" className="max-w-full max-h-full object-contain rounded-2xl select-none shadow-[0_20px_50px_rgba(0,0,0,0.9)] border-none" draggable="false" onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} />
                 </div>
             )}
 
             {isDownloadModalOpen && (
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/95 backdrop-blur-xl animate-in fade-in duration-500 border-none">
-                    <div className="w-full max-w-xl flex flex-col items-center text-center animate-in slide-in-from-bottom-10 duration-500 relative">
+                    <div className="w-full max-w-xl flex flex-col items-center text-center animate-in slide-in-from-bottom-10 duration-500 relative border-none">
 
                         <div className="flex items-center justify-center gap-3 sm:gap-4 mb-8 w-full border-none">
                             <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 sm:w-16 sm:h-16 drop-shadow-[0_0_12px_rgba(16,110,190,0.8)] shrink-0 border-none">

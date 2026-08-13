@@ -36,7 +36,7 @@ const getCategoryIcon = (category) => {
         return (
             <div className="relative shrink-0 flex items-center justify-center">
                 <FaVideo className={iconClasses} />
-                <span className="absolute -bottom-1 -right-1 bg-zinc-800 border border-zinc-600 text-white text-[5px] font-black px-[2px] rounded-[1px] shadow-sm group-hover:border-[#0FFCBE] group-hover:text-[#0FFCBE] transition-colors leading-none">KR</span>
+                <span className="absolute -bottom-1 -right-1 bg-zinc-800 text-white text-[5px] font-black px-[2px] rounded-[1px] shadow-sm group-hover:text-[#0FFCBE] transition-colors leading-none">KR</span>
             </div>
         );
     }
@@ -45,7 +45,7 @@ const getCategoryIcon = (category) => {
         return (
             <div className="relative shrink-0 flex items-center justify-center">
                 <FaFilm className={iconClasses} />
-                <span className="absolute -bottom-1 -right-1 bg-zinc-800 border border-zinc-600 text-white text-[5px] font-black px-[2px] rounded-[1px] shadow-sm group-hover:border-[#0FFCBE] group-hover:text-[#0FFCBE] transition-colors leading-none">JP</span>
+                <span className="absolute -bottom-1 -right-1 bg-zinc-800 text-white text-[5px] font-black px-[2px] rounded-[1px] shadow-sm group-hover:text-[#0FFCBE] transition-colors leading-none">JP</span>
             </div>
         );
     }
@@ -215,7 +215,7 @@ export default function Home({ supabase }) {
                                 )}
                                 <div onClick={() => window.location.href = `/streaming/${video.slug || video.id}`} className="group cursor-pointer">
 
-                                    <div className="relative aspect-video rounded-xl overflow-hidden mb-3 bg-zinc-800/30 border border-zinc-800/80 shadow-lg">
+                                    <div className="relative aspect-video rounded-xl overflow-hidden mb-3 bg-zinc-800/30 shadow-lg">
                                         <img src={getImageUrl(video.img)} alt={video.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
                                             <div className="w-14 h-14 bg-[#106EBE] rounded-full flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_30px_rgba(16,110,190,0.6)]">
@@ -252,17 +252,17 @@ export default function Home({ supabase }) {
                 {!isLoading && totalPages > 1 && (
                     <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mt-20">
                         {currentPage > 1 && (
-                            <button onClick={() => handlePageChange(currentPage - 1)} className="px-4 h-10 flex items-center justify-center gap-1 rounded-full font-bold text-sm transition-all border border-zinc-800 text-white hover:bg-zinc-800 hover:text-[#0FFCBE]">
+                            <button onClick={() => handlePageChange(currentPage - 1)} className="px-4 h-10 flex items-center justify-center gap-1 rounded-full font-bold text-sm transition-all text-white hover:bg-zinc-800 hover:text-[#0FFCBE]">
                                 <ChevronLeft className="w-4 h-4" /> Prev
                             </button>
                         )}
                         {getPageNumbers().map((num) => (
-                            <button key={num} onClick={() => handlePageChange(num)} className={`w-10 h-10 flex items-center justify-center rounded-full font-bold text-sm transition-all ${currentPage === num ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.5)] border-transparent' : 'border border-zinc-800 text-white hover:bg-zinc-800 hover:text-[#0FFCBE]'}`}>
+                            <button key={num} onClick={() => handlePageChange(num)} className={`w-10 h-10 flex items-center justify-center rounded-full font-bold text-sm transition-all ${currentPage === num ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.5)]' : 'text-white hover:bg-zinc-800 hover:text-[#0FFCBE]'}`}>
                                 {num}
                             </button>
                         ))}
                         {currentPage < totalPages && (
-                            <button onClick={() => handlePageChange(currentPage + 1)} className="px-4 h-10 flex items-center justify-center gap-1 rounded-full font-bold text-sm transition-all border border-zinc-800 text-white hover:bg-zinc-800 hover:text-[#0FFCBE]">
+                            <button onClick={() => handlePageChange(currentPage + 1)} className="px-4 h-10 flex items-center justify-center gap-1 rounded-full font-bold text-sm transition-all text-white hover:bg-zinc-800 hover:text-[#0FFCBE]">
                                 Next <ChevronRight className="w-4 h-4" />
                             </button>
                         )}

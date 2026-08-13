@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useSWR from 'swr';
-import { Play, MonitorPlay, FolderOpen } from 'lucide-react'; // ChevronRight dihapus
+import { Play, MonitorPlay, FolderOpen } from 'lucide-react';
 
 import { SiOnlyfans, SiTelegram } from 'react-icons/si';
 import { FaCrown, FaVideo, FaFire, FaBan, FaRandom, FaFilm, FaMask } from 'react-icons/fa';
@@ -31,7 +31,7 @@ const getCategoryIcon = (categoryName) => {
         return (
             <div className="relative shrink-0 flex items-center justify-center">
                 <FaVideo className={iconClasses} />
-                <span className="absolute -bottom-1 -right-2 bg-zinc-800 border border-zinc-600 text-white text-[8px] md:text-[9px] font-black px-1 rounded-sm shadow-md group-hover:border-[#0FFCBE] group-hover:text-[#0FFCBE] transition-colors">
+                <span className="absolute -bottom-1 -right-2 bg-zinc-800 border-none text-white text-[8px] md:text-[9px] font-black px-1 rounded-sm shadow-md group-hover:text-[#0FFCBE] transition-colors">
                     KR
                 </span>
             </div>
@@ -42,7 +42,7 @@ const getCategoryIcon = (categoryName) => {
         return (
             <div className="relative shrink-0 flex items-center justify-center">
                 <FaFilm className={iconClasses} />
-                <span className="absolute -bottom-1 -right-2 bg-zinc-800 border border-zinc-600 text-white text-[8px] md:text-[9px] font-black px-1 rounded-sm shadow-md group-hover:border-[#0FFCBE] group-hover:text-[#0FFCBE] transition-colors">
+                <span className="absolute -bottom-1 -right-2 bg-zinc-800 border-none text-white text-[8px] md:text-[9px] font-black px-1 rounded-sm shadow-md group-hover:text-[#0FFCBE] transition-colors">
                     JP
                 </span>
             </div>
@@ -101,13 +101,14 @@ export default function Jelajahi({ supabase }) {
     );
 
     return (
-        <div className="bg-zinc-950 min-h-screen font-sans">
+        <>
             <Navbar searchInput={searchInput} setSearchInput={setSearchInput} isScrolled={true} />
 
             <main className="max-w-[1440px] mx-auto px-4 sm:px-8 pt-32 pb-24 overflow-hidden">
 
                 {loading ? (
                     <div className="flex justify-center items-center py-32">
+                        {/* Border pada loading spinner dipertahankan karena itu adalah bentuk spinnernya sendiri */}
                         <div className="w-14 h-14 border-4 border-zinc-800 border-t-[#106EBE] rounded-full animate-spin shadow-[0_0_20px_rgba(16,110,190,0.5)]"></div>
                     </div>
                 ) : kategoriData.length > 0 ? (
@@ -129,7 +130,6 @@ export default function Jelajahi({ supabase }) {
 
                                         <div className="flex items-center gap-1 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors">
                                             <span className="text-sm font-bold uppercase tracking-wider hidden sm:block">View All ({videos.length})</span>
-                                            {/* TANDA ">" (ChevronRight) TELAH DIHAPUS SEPENUHNYA DI SINI */}
                                         </div>
                                     </div>
 
@@ -138,7 +138,7 @@ export default function Jelajahi({ supabase }) {
                                         {heroVideo && (
                                             <div
                                                 onClick={() => window.location.href = `/streaming/${heroVideo.slug || heroVideo.id}`}
-                                                className="lg:col-span-7 group cursor-pointer relative aspect-video md:aspect-[16/10] lg:aspect-auto rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 shadow-2xl"
+                                                className="lg:col-span-7 group cursor-pointer relative aspect-video md:aspect-[16/10] lg:aspect-auto rounded-2xl overflow-hidden bg-zinc-800/30 border-none shadow-2xl"
                                             >
                                                 <img
                                                     src={getImageUrl(heroVideo.img)}
@@ -149,7 +149,7 @@ export default function Jelajahi({ supabase }) {
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90 transition-opacity duration-300"></div>
 
                                                 <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75 group-hover:scale-100">
-                                                    <div className="w-20 h-20 bg-[#106EBE]/90 backdrop-blur-md rounded-full flex items-center justify-center text-white shadow-[0_0_40px_rgba(16,110,190,0.8)] border border-white/10">
+                                                    <div className="w-20 h-20 bg-[#106EBE]/90 backdrop-blur-md rounded-full flex items-center justify-center text-white shadow-[0_0_40px_rgba(16,110,190,0.8)] border-none">
                                                         <Play className="w-8 h-8 fill-current ml-2" />
                                                     </div>
                                                 </div>
@@ -178,7 +178,7 @@ export default function Jelajahi({ supabase }) {
                                                         onClick={() => window.location.href = `/streaming/${video.slug || video.id}`}
                                                         className="group cursor-pointer flex flex-col"
                                                     >
-                                                        <div className="relative aspect-video rounded-xl overflow-hidden mb-2 md:mb-3 bg-zinc-900 border border-zinc-800 shadow-md">
+                                                        <div className="relative aspect-video rounded-xl overflow-hidden mb-2 md:mb-3 bg-zinc-800/30 border-none shadow-md">
                                                             <img
                                                                 src={getImageUrl(video.img)}
                                                                 alt={video.title}
@@ -211,13 +211,13 @@ export default function Jelajahi({ supabase }) {
                         })}
                     </div>
                 ) : (
-                    <div className="text-center text-zinc-500 py-32 bg-zinc-900/30 rounded-3xl border border-zinc-800/50 mx-4">
+                    <div className="text-center text-zinc-500 py-32 bg-zinc-800/30 rounded-3xl border-none mx-4">
                         <FolderOpen className="w-16 h-16 mx-auto mb-4 opacity-30" />
                         <p className="text-lg md:text-xl font-medium">No categories available yet.</p>
                     </div>
                 )}
             </main>
             <Footer />
-        </div>
+        </>
     );
 }

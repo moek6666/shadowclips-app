@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import useSWR from 'swr'; // IMPORT SWR
+import useSWR from 'swr';
 import { Play, MonitorPlay, Search } from 'lucide-react';
 
 import { SiOnlyfans, SiTelegram } from 'react-icons/si';
@@ -33,7 +33,7 @@ const getCategoryIcon = (category) => {
         return (
             <div className="relative shrink-0 flex items-center justify-center">
                 <FaVideo className={iconClasses} />
-                <span className="absolute -bottom-1 -right-1 bg-zinc-800 border border-zinc-600 text-white text-[5px] font-black px-[2px] rounded-[1px] shadow-sm group-hover:border-[#0FFCBE] group-hover:text-[#0FFCBE] transition-colors leading-none">KR</span>
+                <span className="absolute -bottom-1 -right-1 bg-zinc-800 border-none text-white text-[5px] font-black px-[2px] rounded-[1px] shadow-sm group-hover:text-[#0FFCBE] transition-colors leading-none">KR</span>
             </div>
         );
     }
@@ -42,7 +42,7 @@ const getCategoryIcon = (category) => {
         return (
             <div className="relative shrink-0 flex items-center justify-center">
                 <FaFilm className={iconClasses} />
-                <span className="absolute -bottom-1 -right-1 bg-zinc-800 border border-zinc-600 text-white text-[5px] font-black px-[2px] rounded-[1px] shadow-sm group-hover:border-[#0FFCBE] group-hover:text-[#0FFCBE] transition-colors leading-none">JP</span>
+                <span className="absolute -bottom-1 -right-1 bg-zinc-800 border-none text-white text-[5px] font-black px-[2px] rounded-[1px] shadow-sm group-hover:text-[#0FFCBE] transition-colors leading-none">JP</span>
             </div>
         );
     }
@@ -87,7 +87,6 @@ export default function DetailKoleksi({ supabase }) {
         document.title = `${displayTitle} | ShadowClips`;
     }, []);
 
-    // FUNGSI FETCHER UNTUK SWR
     const fetchLabelVideos = async (targetLabel) => {
         if (!supabase) throw new Error("Supabase not initialized");
 
@@ -103,7 +102,6 @@ export default function DetailKoleksi({ supabase }) {
         return [];
     };
 
-    // IMPLEMENTASI SWR UNTUK CACHING
     const { data: videos = [], isLoading: loading } = useSWR(
         targetLabelSearch && supabase ? ['koleksi_videos', targetLabelSearch] : null,
         () => fetchLabelVideos(targetLabelSearch),
@@ -123,15 +121,15 @@ export default function DetailKoleksi({ supabase }) {
                     {loading ? (
                         Array.from({ length: 8 }).map((_, i) => (
                             <div className="animate-pulse" key={i}>
-                                <div className="aspect-video bg-zinc-900 rounded-xl mb-3"></div>
-                                <div className="h-4 bg-zinc-900 rounded w-3/4"></div>
+                                <div className="aspect-video bg-zinc-800/50 border-none rounded-xl mb-3"></div>
+                                <div className="h-4 bg-zinc-800/50 border-none rounded w-3/4"></div>
                             </div>
                         ))
                     ) : videos.length > 0 ? (
                         videos.map((item) => (
                             <div key={item.id} onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer">
 
-                                <div className="relative aspect-video rounded-xl overflow-hidden mb-3 bg-zinc-900 border border-zinc-800 shadow-lg">
+                                <div className="relative aspect-video rounded-xl overflow-hidden mb-3 bg-zinc-800/30 border-none shadow-lg">
                                     <img src={getImageUrl(item.img)} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
                                         <div className="w-14 h-14 bg-[#106EBE] rounded-full flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_30px_rgba(16,110,190,0.6)]">
@@ -157,7 +155,7 @@ export default function DetailKoleksi({ supabase }) {
                             </div>
                         ))
                     ) : (
-                        <div className="col-span-full py-20 text-center text-zinc-500 flex flex-col items-center">
+                        <div className="col-span-full py-20 text-center text-zinc-500 flex flex-col items-center border-none">
                             <Search className="w-12 h-12 mb-4 opacity-20" />
                             <p className="text-lg">Belum ada video di dalam koleksi ini.</p>
                         </div>
