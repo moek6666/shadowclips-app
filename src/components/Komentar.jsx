@@ -49,7 +49,6 @@ function Komentar({ videoId, onCommentSuccess }) {
         const fetchData = async () => {
             if (!videoId) return;
 
-            // 1. Fetch Comments
             const { data: commentsData, error: commentsError } = await supabase
                 .from('comments')
                 .select('*')
@@ -57,7 +56,6 @@ function Komentar({ videoId, onCommentSuccess }) {
                 .eq('status', 'approved')
                 .order('created_at', { ascending: false });
 
-            // 2. Fetch Admin Profiles
             const { data: profilesData } = await supabase
                 .from('profiles')
                 .select('email')
@@ -105,8 +103,9 @@ function Komentar({ videoId, onCommentSuccess }) {
     };
 
     const handleReplyClick = (comment) => {
-        setReplyTo(comment);
         if (isLoggedIn) {
+            setReplyTo(comment);
+            setCaptchaToken(null); // Reset captcha saat pindah posisi form
             setTimeout(() => {
                 if (textareaRef.current) {
                     textareaRef.current.focus();
@@ -120,6 +119,7 @@ function Komentar({ videoId, onCommentSuccess }) {
 
     const cancelReply = () => {
         setReplyTo(null);
+        setCaptchaToken(null); // Reset captcha saat kembali ke form utama
         setFormData(prev => ({ ...prev, content: '' }));
     };
 
@@ -267,12 +267,14 @@ function Komentar({ videoId, onCommentSuccess }) {
     const mainComments = comments.filter(c => !c.parent_id);
     const getReplies = (parentId) => comments.filter(c => c.parent_id === parentId).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
-    return (
-        <div className="w-full mt-6 mb-8 font-sans">
-
-            <div className="bg-zinc-800/60 rounded-[1.5rem] overflow-hidden mb-10 shadow-lg transition-all duration-500 border-none">
-
-                {!isLoggedIn ? (
+    // ==========================================
+    // FUNGSI UNTUK RENDER FORM (TOP ATAU INLINE)
+    // ==========================================
+    const renderAuthOrForm = (isInline = false) => {
+        if (!isLoggedIn) {
+            if (isInline) return null; // Tidak perlu tampilkan form login jika di inline
+            return (
+                <div className="bg-zinc-800/60 rounded-[1.5rem] overflow-hidden mb-10 shadow-lg transition-all duration-500 border-none">
                     <div className="px-4 sm:px-6 py-16 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-300 border-none">
                         <p className="text-zinc-300 text-sm mb-8 text-center max-w-md">
                             Login securely with Google to join the discussion and unlock exclusive VIP contents instantly.
@@ -283,16 +285,10 @@ function Komentar({ videoId, onCommentSuccess }) {
                             className="w-full max-w-xs sm:max-w-sm bg-white hover:bg-zinc-200 rounded-xl p-2 flex items-center justify-between transition-colors shadow-lg group outline-none border-none"
                         >
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-zinc-100 rounded-lg flex items-center justify-center text-lg font-black text-zinc-800 overflow-hidden">
-                                    G
-                                </div>
+                                <div className="w-10 h-10 bg-zinc-100 rounded-lg flex items-center justify-center text-lg font-black text-zinc-800 overflow-hidden">G</div>
                                 <div className="flex flex-col text-left">
-                                    <span className="text-[14px] sm:text-[15px] font-bold text-zinc-900 group-hover:text-[#106EBE] transition-colors">
-                                        Continue with Google
-                                    </span>
-                                    <span className="text-[10px] sm:text-[11px] font-medium text-zinc-500">
-                                        Fast, secure & seamless
-                                    </span>
+                                    <span className="text-[14px] sm:text-[15px] font-bold text-zinc-900 group-hover:text-[#106EBE] transition-colors">Continue with Google</span>
+                                    <span className="text-[10px] sm:text-[11px] font-medium text-zinc-500">Fast, secure & seamless</span>
                                 </div>
                             </div>
                             <div className="pr-3 hidden sm:block">
@@ -304,109 +300,109 @@ function Komentar({ videoId, onCommentSuccess }) {
                                 </svg>
                             </div>
                         </button>
-
                         {notification && notification.type === 'error' && (
                             <span className="mt-4 text-xs font-medium text-red-400 animate-in fade-in">{notification.message}</span>
                         )}
                     </div>
-                ) : (
-                    <form onSubmit={handleSubmit} className="animate-in fade-in duration-300 border-none">
+                </div>
+            );
+        }
 
-                        <div className="flex items-center justify-between px-4 sm:px-5 py-4 bg-zinc-900/40 border-none">
-                            <div className="flex items-center gap-3">
-                                <div className="relative">
-                                    <img
-                                        src={formData.picture}
-                                        alt={formData.name}
-                                        className="w-10 h-10 rounded-full shadow-md object-cover border-none"
-                                        referrerPolicy="no-referrer"
-                                    />
-                                    {adminEmails.includes(formData.email) && (
-                                        <div className="absolute -bottom-1 -right-1 bg-zinc-900 rounded-full p-0.5">
-                                            <BadgeCheck className="w-4 h-4 text-[#0FFCBE] fill-[#106EBE]" />
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[13px] sm:text-[14px] font-bold text-white leading-tight flex items-center gap-1.5">
-                                        {formData.name}
-                                    </span>
-                                    <span className="text-[10px] sm:text-[11px] font-medium text-zinc-400 truncate max-w-[150px] sm:max-w-none">{formData.email}</span>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={handleLogout}
-                                className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-zinc-300 hover:text-red-400 transition-colors outline-none bg-zinc-800/80 hover:bg-zinc-800 px-3 py-1.5 rounded-lg border-none shrink-0"
-                            >
-                                <LogOut className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Logout
-                            </button>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-4 px-4 sm:px-5 py-3 bg-zinc-800/80 text-zinc-300 border-none overflow-x-auto custom-scrollbar">
-                            <button type="button" onClick={() => insertFormat('bold')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Bold"><Bold className="w-4 h-4" /></button>
-                            <button type="button" onClick={() => insertFormat('italic')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Italic"><Italic className="w-4 h-4" /></button>
-                            <button type="button" onClick={() => insertFormat('code')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Code"><Code className="w-4 h-4" /></button>
-                            <button type="button" onClick={() => insertFormat('link')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Link"><LinkIcon className="w-4 h-4" /></button>
-                            <button type="button" onClick={() => insertFormat('quote')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Quote"><Quote className="w-4 h-4" /></button>
-
-                            {replyTo && (
-                                <div className="ml-auto flex items-center gap-2 bg-[#106EBE]/20 text-[#106EBE] px-3 py-1 rounded-lg border-none shrink-0">
-                                    <span className="text-[10px] sm:text-[11px] font-bold truncate max-w-[100px] sm:max-w-[150px]">Replying to @{replyTo.name}</span>
-                                    <button type="button" onClick={cancelReply} className="hover:bg-[#106EBE]/30 rounded-full p-0.5 outline-none border-none"><X className="w-3.5 h-3.5" /></button>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="relative bg-zinc-900/40 border-none">
-                            <textarea
-                                ref={textareaRef}
-                                name="content"
-                                value={formData.content}
-                                onChange={handleInputChange}
-                                placeholder="Type your comment here..."
-                                className="w-full bg-transparent px-4 sm:px-5 py-5 text-[13px] sm:text-[14px] text-white placeholder-zinc-500 focus:outline-none min-h-[140px] resize-y border-none"
-                                required
-                            />
-                            <div className="absolute bottom-3 right-4 text-[9px] sm:text-[10px] font-medium text-zinc-500 select-none border-none">
-                                {formData.content.length}/2000
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-zinc-800/80 border-none">
-                            <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2 sm:gap-4 border-none">
-                                <div className="w-full flex justify-center sm:justify-start overflow-hidden py-1 border-none">
-                                    <div className="transform scale-[0.75] min-[380px]:scale-[0.85] sm:scale-100 origin-center sm:origin-left transition-all border-none">
-                                        <Turnstile
-                                            siteKey="0x4AAAAAAEI8owBAGHjSd7E5"
-                                            onSuccess={(token) => setCaptchaToken(token)}
-                                            onExpire={() => setCaptchaToken(null)}
-                                            onError={() => setCaptchaToken(null)}
-                                            theme="dark"
-                                            ref={turnstileRef}
-                                        />
+        return (
+            <div className={`bg-zinc-800/60 rounded-[1.5rem] overflow-hidden shadow-lg transition-all duration-500 border-none ${isInline ? 'mt-3 mb-2 border border-[#106EBE]/20' : 'mb-10'}`}>
+                <form onSubmit={handleSubmit} className="animate-in fade-in duration-300 border-none">
+                    <div className="flex items-center justify-between px-4 sm:px-5 py-4 bg-zinc-900/40 border-none">
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <img
+                                    src={formData.picture} alt={formData.name}
+                                    className="w-10 h-10 rounded-full shadow-md object-cover border-none" referrerPolicy="no-referrer"
+                                />
+                                {adminEmails.includes(formData.email) && (
+                                    <div className="absolute -bottom-1 -right-1 bg-zinc-900 rounded-full p-0.5">
+                                        <BadgeCheck className="w-4 h-4 text-[#0FFCBE] fill-[#106EBE]" />
                                     </div>
-                                </div>
-
-                                {notification && (
-                                    <span className={`text-[11px] sm:text-[12px] font-medium animate-in fade-in border-none text-center ${notification.type === 'success' ? 'text-[#0FFCBE]' : 'text-red-400'}`}>
-                                        {notification.message}
-                                    </span>
                                 )}
                             </div>
-
-                            <button
-                                type="submit"
-                                disabled={isSubmitting || !formData.content.trim() || !captchaToken}
-                                className="w-full sm:w-auto bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-700 disabled:text-zinc-500 text-white px-8 py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold text-[13px] transition-all shadow-[0_5px_15px_rgba(16,110,190,0.3)] disabled:shadow-none outline-none border-none shrink-0"
-                            >
-                                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                                Post Comment
-                            </button>
+                            <div className="flex flex-col">
+                                <span className="text-[13px] sm:text-[14px] font-bold text-white leading-tight flex items-center gap-1.5">{formData.name}</span>
+                                <span className="text-[10px] sm:text-[11px] font-medium text-zinc-400 truncate max-w-[150px] sm:max-w-none">{formData.email}</span>
+                            </div>
                         </div>
-                    </form>
-                )}
+                        <button type="button" onClick={handleLogout} className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-zinc-300 hover:text-red-400 transition-colors outline-none bg-zinc-800/80 hover:bg-zinc-800 px-3 py-1.5 rounded-lg border-none shrink-0">
+                            <LogOut className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Logout
+                        </button>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-4 px-4 sm:px-5 py-3 bg-zinc-800/80 text-zinc-300 border-none overflow-x-auto custom-scrollbar">
+                        <button type="button" onClick={() => insertFormat('bold')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Bold"><Bold className="w-4 h-4" /></button>
+                        <button type="button" onClick={() => insertFormat('italic')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Italic"><Italic className="w-4 h-4" /></button>
+                        <button type="button" onClick={() => insertFormat('code')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Code"><Code className="w-4 h-4" /></button>
+                        <button type="button" onClick={() => insertFormat('link')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Link"><LinkIcon className="w-4 h-4" /></button>
+                        <button type="button" onClick={() => insertFormat('quote')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Quote"><Quote className="w-4 h-4" /></button>
+
+                        {replyTo && (
+                            <div className="ml-auto flex items-center gap-2 bg-[#106EBE]/20 text-[#106EBE] px-3 py-1 rounded-lg border-none shrink-0">
+                                <span className="text-[10px] sm:text-[11px] font-bold truncate max-w-[100px] sm:max-w-[150px]">Replying to @{replyTo.name}</span>
+                                <button type="button" onClick={cancelReply} className="hover:bg-[#106EBE]/30 rounded-full p-0.5 outline-none border-none"><X className="w-3.5 h-3.5" /></button>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="relative bg-zinc-900/40 border-none">
+                        <textarea
+                            ref={textareaRef}
+                            name="content"
+                            value={formData.content}
+                            onChange={handleInputChange}
+                            placeholder="Type your comment here..."
+                            className={`w-full bg-transparent px-4 sm:px-5 py-5 text-[13px] sm:text-[14px] text-white placeholder-zinc-500 focus:outline-none resize-y border-none ${isInline ? 'min-h-[100px]' : 'min-h-[140px]'}`}
+                            required
+                        />
+                        <div className="absolute bottom-3 right-4 text-[9px] sm:text-[10px] font-medium text-zinc-500 select-none border-none">
+                            {formData.content.length}/2000
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-zinc-800/80 border-none">
+                        <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2 sm:gap-4 border-none">
+                            <div className="w-full flex justify-center sm:justify-start overflow-hidden py-1 border-none">
+                                <div className="transform scale-[0.75] min-[380px]:scale-[0.85] sm:scale-100 origin-center sm:origin-left transition-all border-none">
+                                    <Turnstile
+                                        siteKey="0x4AAAAAAEI8owBAGHjSd7E5"
+                                        onSuccess={(token) => setCaptchaToken(token)}
+                                        onExpire={() => setCaptchaToken(null)}
+                                        onError={() => setCaptchaToken(null)}
+                                        theme="dark"
+                                        ref={turnstileRef}
+                                    />
+                                </div>
+                            </div>
+                            {notification && (
+                                <span className={`text-[11px] sm:text-[12px] font-medium animate-in fade-in border-none text-center ${notification.type === 'success' ? 'text-[#0FFCBE]' : 'text-red-400'}`}>
+                                    {notification.message}
+                                </span>
+                            )}
+                        </div>
+                        <button
+                            type="submit"
+                            disabled={isSubmitting || !formData.content.trim() || !captchaToken}
+                            className="w-full sm:w-auto bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-700 disabled:text-zinc-500 text-white px-8 py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold text-[13px] transition-all shadow-[0_5px_15px_rgba(16,110,190,0.3)] disabled:shadow-none outline-none border-none shrink-0"
+                        >
+                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                            Post Comment
+                        </button>
+                    </div>
+                </form>
             </div>
+        );
+    };
+
+    return (
+        <div className="w-full mt-6 mb-8 font-sans">
+
+            {/* Tampilkan form/login utama HANYA jika tidak sedang mereply (membalas) */}
+            {!replyTo && renderAuthOrForm(false)}
 
             {/* KOMENTAR HEADER */}
             <div className="flex items-center justify-between mb-8 pb-2 border-none">
@@ -444,7 +440,8 @@ function Komentar({ videoId, onCommentSuccess }) {
                                         )}
                                     </div>
 
-                                    <div className={`flex-1 min-w-0 flex flex-col bg-zinc-800/60 p-4 sm:p-5 rounded-[1.2rem] sm:rounded-[1.5rem] border-none ${isAdmin ? 'ring-1 ring-[#106EBE]/50 shadow-[0_0_15px_rgba(16,110,190,0.15)]' : ''}`}>
+                                    {/* MENGUBAH BACKGROUND MENJADI GRADIENT KHUSUS ADMIN, TANPA RING/BORDER */}
+                                    <div className={`flex-1 min-w-0 flex flex-col p-4 sm:p-5 rounded-[1.2rem] sm:rounded-[1.5rem] border-none ${isAdmin ? 'bg-gradient-to-br from-zinc-800/80 to-[#106EBE]/20 shadow-[0_5px_20px_rgba(16,110,190,0.15)]' : 'bg-zinc-800/60'}`}>
                                         <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
                                             <span className={`text-[13px] sm:text-[14px] font-bold flex items-center gap-1.5 ${isAdmin ? 'text-[#0FFCBE]' : 'text-white'}`}>
                                                 {comment.name}
@@ -466,43 +463,60 @@ function Komentar({ videoId, onCommentSuccess }) {
                                     </div>
                                 </div>
 
+                                {/* FORM INLINE MUNCUL DI SINI JIKA MEREPLY KOMENTAR UTAMA */}
+                                {replyTo && replyTo.id === comment.id && (
+                                    <div className="ml-10 sm:ml-16 animate-in slide-in-from-top-2 fade-in duration-300 border-none">
+                                        {renderAuthOrForm(true)}
+                                    </div>
+                                )}
+
                                 {getReplies(comment.id).length > 0 && (
                                     <div className="flex flex-col gap-4 mt-1 ml-10 sm:ml-16 border-none">
                                         {getReplies(comment.id).map(reply => {
                                             const isReplyAdmin = adminEmails.includes(reply.email);
 
                                             return (
-                                                <div key={reply.id} className="flex gap-2.5 sm:gap-3 group border-none">
-                                                    <div className="relative w-8 h-8 sm:w-10 sm:h-10 shrink-0">
-                                                        <div className="w-full h-full rounded-full bg-zinc-800/60 flex items-center justify-center overflow-hidden shadow-sm border-none">
-                                                            {reply.avatar_url ? (
-                                                                <img src={reply.avatar_url} alt={reply.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                                                            ) : (
-                                                                <span className="text-zinc-300 font-bold text-[10px] sm:text-xs border-none">{getInitial(reply.name)}</span>
+                                                <div key={reply.id} className="flex flex-col gap-3 border-none">
+                                                    <div className="flex gap-2.5 sm:gap-3 group border-none">
+                                                        <div className="relative w-8 h-8 sm:w-10 sm:h-10 shrink-0">
+                                                            <div className="w-full h-full rounded-full bg-zinc-800/60 flex items-center justify-center overflow-hidden shadow-sm border-none">
+                                                                {reply.avatar_url ? (
+                                                                    <img src={reply.avatar_url} alt={reply.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                                                ) : (
+                                                                    <span className="text-zinc-300 font-bold text-[10px] sm:text-xs border-none">{getInitial(reply.name)}</span>
+                                                                )}
+                                                            </div>
+                                                            {isReplyAdmin && (
+                                                                <div className="absolute -bottom-1 -right-1 bg-zinc-900 rounded-full p-0.5" title="Verified Admin">
+                                                                    <BadgeCheck className="w-3.5 h-3.5 text-[#0FFCBE] fill-[#106EBE]" />
+                                                                </div>
                                                             )}
                                                         </div>
-                                                        {isReplyAdmin && (
-                                                            <div className="absolute -bottom-1 -right-1 bg-zinc-900 rounded-full p-0.5" title="Verified Admin">
-                                                                <BadgeCheck className="w-3.5 h-3.5 text-[#0FFCBE] fill-[#106EBE]" />
+
+                                                        {/* MENGUBAH BACKGROUND MENJADI GRADIENT KHUSUS ADMIN PADA BALASAN */}
+                                                        <div className={`flex-1 min-w-0 flex flex-col p-3 sm:p-4 rounded-xl sm:rounded-[1.2rem] border-none ${isReplyAdmin ? 'bg-gradient-to-br from-zinc-800/60 to-[#106EBE]/15 shadow-[0_5px_15px_rgba(16,110,190,0.1)]' : 'bg-zinc-800/40'}`}>
+                                                            <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
+                                                                <span className={`text-[11px] sm:text-[13px] font-bold ${isReplyAdmin ? 'text-[#0FFCBE]' : 'text-white'}`}>
+                                                                    {reply.name}
+                                                                </span>
+                                                                <span className="text-[9px] sm:text-[10px] font-medium text-zinc-400 border-none">{timeAgo(reply.created_at)}</span>
                                                             </div>
-                                                        )}
+                                                            <div className="text-[11px] sm:text-[13px] text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none">
+                                                                <span className="text-[#106EBE] font-bold mr-1 border-none">@{comment.name}</span>
+                                                                <span dangerouslySetInnerHTML={{ __html: parseMarkdown(reply.content) }} />
+                                                            </div>
+                                                            <div className="flex items-center gap-4 mt-3 pt-2 border-none">
+                                                                <button onClick={() => handleReplyClick(reply)} className="text-[9px] sm:text-[10px] text-zinc-400 font-bold hover:text-[#0FFCBE] transition-colors outline-none border-none">Reply</button>
+                                                            </div>
+                                                        </div>
                                                     </div>
 
-                                                    <div className={`flex-1 min-w-0 flex flex-col bg-zinc-800/40 p-3 sm:p-4 rounded-xl sm:rounded-[1.2rem] border-none ${isReplyAdmin ? 'ring-1 ring-[#106EBE]/30' : ''}`}>
-                                                        <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
-                                                            <span className={`text-[11px] sm:text-[13px] font-bold ${isReplyAdmin ? 'text-[#0FFCBE]' : 'text-white'}`}>
-                                                                {reply.name}
-                                                            </span>
-                                                            <span className="text-[9px] sm:text-[10px] font-medium text-zinc-400 border-none">{timeAgo(reply.created_at)}</span>
+                                                    {/* FORM INLINE MUNCUL DI SINI JIKA MEREPLY BALASAN (REPLY TO REPLY) */}
+                                                    {replyTo && replyTo.id === reply.id && (
+                                                        <div className="ml-10 sm:ml-13 animate-in slide-in-from-top-2 fade-in duration-300 border-none">
+                                                            {renderAuthOrForm(true)}
                                                         </div>
-                                                        <div className="text-[11px] sm:text-[13px] text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none">
-                                                            <span className="text-[#106EBE] font-bold mr-1 border-none">@{comment.name}</span>
-                                                            <span dangerouslySetInnerHTML={{ __html: parseMarkdown(reply.content) }} />
-                                                        </div>
-                                                        <div className="flex items-center gap-4 mt-3 pt-2 border-none">
-                                                            <button onClick={() => handleReplyClick(reply)} className="text-[9px] sm:text-[10px] text-zinc-400 font-bold hover:text-[#0FFCBE] transition-colors outline-none border-none">Reply</button>
-                                                        </div>
-                                                    </div>
+                                                    )}
                                                 </div>
                                             );
                                         })}
