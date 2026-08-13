@@ -16,7 +16,7 @@ export default function Navbar({ isScrolled, supabase }) {
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
 
-    // Efek untuk mengunci scroll body saat modal terbuka
+    // Effect to lock body scroll when search modal is open
     useEffect(() => {
         if (showSearchModal) {
             document.body.style.overflow = 'hidden';
@@ -26,7 +26,7 @@ export default function Navbar({ isScrolled, supabase }) {
         return () => { document.body.style.overflow = 'unset'; };
     }, [showSearchModal]);
 
-    // Efek debounce agar pencarian tidak spamming database setiap kali mengetik 1 huruf
+    // Debounce effect to prevent spamming database queries
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedSearch(localSearch);
@@ -34,7 +34,7 @@ export default function Navbar({ isScrolled, supabase }) {
         return () => clearTimeout(timer);
     }, [localSearch]);
 
-    // Fungsi Fetching Data Pencarian (Berdiri Sendiri)
+    // Independent Fetching Function for Search Modal
     const fetchSearchResults = async (query) => {
         if (!supabase || !query) return [];
         const { data, error } = await supabase.from('videos')
@@ -64,7 +64,7 @@ export default function Navbar({ isScrolled, supabase }) {
             <nav className={`fixed top-0 w-full z-40 transition-all duration-300 ${isScrolled ? 'bg-gradient-to-r from-zinc-950 via-zinc-950 to-[#106EBE]/10 backdrop-blur-md py-3' : 'bg-gradient-to-b from-zinc-950/90 to-transparent py-5'}`}>
                 <div className="max-w-[1440px] mx-auto px-4 sm:px-8 flex justify-between items-center">
 
-                    {/* SISI KIRI: Logo & Menu Utama */}
+                    {/* LEFT SIDE: Logo & Main Menu */}
                     <div className="flex items-center gap-8 lg:gap-12">
                         {/* LOGO */}
                         <a href="/" className="flex items-center gap-2.5 z-50">
@@ -89,7 +89,7 @@ export default function Navbar({ isScrolled, supabase }) {
                             </div>
                         </a>
 
-                        {/* MENU DESKTOP (Di Samping Logo) */}
+                        {/* DESKTOP MENU */}
                         <div className="hidden md:flex gap-6 text-sm font-bold z-50">
                             <a href="/" className={`flex items-center gap-1.5 group transition-colors ${pathname === '/' ? 'text-[#106EBE]' : 'text-zinc-400 hover:text-[#0FFCBE]'}`}>
                                 <Home className={`w-4 h-4 transition-colors ${pathname === '/' ? 'text-[#106EBE]' : 'text-[#106EBE] group-hover:text-[#0FFCBE]'}`} /> Home
@@ -106,20 +106,20 @@ export default function Navbar({ isScrolled, supabase }) {
                         </div>
                     </div>
 
-                    {/* SISI KANAN: Search & Mobile Controls */}
+                    {/* RIGHT SIDE: Search & Mobile Controls */}
                     <div className="flex items-center gap-3">
-                        {/* Fake Input Pembuka Modal (Desktop) */}
+                        {/* Fake Input to Trigger Search Modal (Desktop) */}
                         <div
                             className="hidden md:flex relative group cursor-text z-50"
                             onClick={() => setShowSearchModal(true)}
                         >
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-hover:text-[#0FFCBE] transition-colors w-4 h-4" />
                             <div className="bg-zinc-900/80 border border-zinc-800 rounded-full py-2 pl-11 pr-5 w-72 transition-all text-sm text-zinc-500 backdrop-blur-sm group-hover:border-[#106EBE] flex items-center select-none">
-                                Cari video eksklusif...
+                                Search exclusive videos...
                             </div>
                         </div>
 
-                        {/* MENU MOBILE CONTROLS */}
+                        {/* MOBILE MENU CONTROLS */}
                         <div className="flex items-center gap-3 md:hidden z-50">
                             <button
                                 onClick={() => setShowSearchModal(true)}
@@ -157,12 +157,12 @@ export default function Navbar({ isScrolled, supabase }) {
                 </div>
             </nav>
 
-            {/* FULL PAGE SEARCH MODAL DENGAN PREVIEW HASIL */}
+            {/* FULL PAGE SEARCH MODAL WITH LIVE PREVIEW */}
             {showSearchModal && (
                 <div className="fixed inset-0 z-[100] bg-zinc-950/95 backdrop-blur-3xl overflow-y-auto custom-scrollbar animate-in fade-in duration-300">
                     <div className="min-h-screen px-4 sm:px-8 py-10 md:py-16 flex flex-col items-center">
 
-                        {/* Tombol Close */}
+                        {/* Close Button */}
                         <button
                             onClick={closeAndClearSearch}
                             className="fixed top-6 right-6 md:top-10 md:right-10 p-2 text-zinc-400 hover:text-[#0FFCBE] transition-colors bg-zinc-900 rounded-full border border-zinc-800 z-50 shadow-lg"
@@ -170,7 +170,7 @@ export default function Navbar({ isScrolled, supabase }) {
                             <X className="w-6 h-6 md:w-8 md:h-8" />
                         </button>
 
-                        {/* Search Input Floating */}
+                        {/* Floating Search Input */}
                         <div className="w-full max-w-4xl relative animate-in slide-in-from-top-8 duration-500 mb-10 sticky top-0 z-40 pt-4">
                             <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 md:w-8 md:h-8 text-zinc-500 mt-2" />
                             <input
@@ -178,12 +178,12 @@ export default function Navbar({ isScrolled, supabase }) {
                                 type="text"
                                 value={localSearch}
                                 onChange={(e) => setLocalSearch(e.target.value)}
-                                placeholder="Ketik kata kunci pencarian..."
+                                placeholder="Type keywords to search..."
                                 className="w-full bg-zinc-900 border border-zinc-800 rounded-full py-5 md:py-6 pl-16 md:pl-20 pr-8 text-lg md:text-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#106EBE] shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all"
                             />
                         </div>
 
-                        {/* AREA HASIL PENCARIAN (Menampilkan Card Bersih) */}
+                        {/* SEARCH RESULTS AREA */}
                         <div className="w-full max-w-[1440px] animate-in fade-in duration-700">
                             {isSearching ? (
                                 <div className="flex justify-center py-32">
@@ -216,11 +216,11 @@ export default function Navbar({ isScrolled, supabase }) {
                             ) : debouncedSearch && searchResults.length === 0 ? (
                                 <div className="text-center py-32 text-zinc-500">
                                     <Search className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                                    <p className="text-xl">Tidak ada hasil yang ditemukan untuk "{debouncedSearch}"</p>
+                                    <p className="text-xl">No results found for "{debouncedSearch}"</p>
                                 </div>
                             ) : (
                                 <div className="text-center py-32 text-zinc-600">
-                                    <p className="text-lg">Ketik sesuatu untuk mulai mencari video.</p>
+                                    <p className="text-lg">Type something to start searching for videos.</p>
                                 </div>
                             )}
                         </div>
