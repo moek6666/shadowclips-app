@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import useSWR from 'swr';
-// TAMBAHAN: Import ikon 'Clock' (Jam) & 'Eye' (Mata)
 import { Play, Eye, Clock, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 
 import { SiOnlyfans, SiTelegram } from 'react-icons/si';
@@ -124,6 +123,7 @@ export default function Home({ supabase }) {
     const videos = swrData?.data || [];
     const totalPages = swrData?.totalPages || 0;
 
+    // EKSEKUSI SCRIPT IKLAN TENGAH
     useEffect(() => {
         const currentAdRef = hilltopMiddleAdRef.current;
         if (videos.length > 0 && currentAdRef && !currentAdRef.querySelector('script')) {
@@ -137,6 +137,7 @@ export default function Home({ supabase }) {
         return () => { if (currentAdRef) currentAdRef.innerHTML = ''; };
     }, [videos]);
 
+    // EKSEKUSI SCRIPT IKLAN BAWAH
     useEffect(() => {
         const currentAdRef = hilltopBottomAdRef.current;
         if (currentAdRef && !currentAdRef.querySelector('script')) {
@@ -210,8 +211,10 @@ export default function Home({ supabase }) {
                     ) : videos.length > 0 ? (
                         videos.map((video, index) => (
                             <React.Fragment key={video.id}>
+
+                                {/* KEMBALIKAN WADAH IKLAN TENGAH DI SINI */}
                                 {index === 12 && (
-                                    <div className="col-span-full w-full flex justify-center my-4 overflow-hidden min-h-[90px]">
+                                    <div className="col-span-full w-full flex justify-center my-4 overflow-hidden min-h-[90px] border-none">
                                         <div ref={hilltopMiddleAdRef}></div>
                                     </div>
                                 )}
@@ -225,12 +228,10 @@ export default function Home({ supabase }) {
                                             <Play className="w-12 h-12 text-white/90 fill-current drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300" />
                                         </div>
 
-                                        {/* VIEWS (MATA) - POJOK KIRI BAWAH */}
                                         <div className="absolute bottom-1.5 left-1.5 bg-black/80 text-white text-[10px] md:text-[11px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
                                             <Eye className="w-3 h-3 md:w-3.5 md:h-3.5" /> {formatViews(video.views)}
                                         </div>
 
-                                        {/* DURASI (JAM) - POJOK KANAN BAWAH */}
                                         {video.duration && video.duration !== 'EMPTY' && (
                                             <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[10px] md:text-[11px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
                                                 <Clock className="w-3 h-3 md:w-3.5 md:h-3.5" /> {video.duration}
@@ -238,7 +239,6 @@ export default function Home({ supabase }) {
                                         )}
                                     </div>
 
-                                    {/* TEKS BERSIH RATA TENGAH */}
                                     <div className="px-1 text-center">
                                         <h3 className="font-bold text-[13px] md:text-[14px] text-zinc-300 group-hover:text-white transition-colors line-clamp-2 leading-snug" title={video.title}>
                                             {video.title}
@@ -276,7 +276,8 @@ export default function Home({ supabase }) {
                     </div>
                 )}
 
-                <div className="w-full flex justify-center mt-16 mb-4 overflow-hidden min-h-[90px]">
+                {/* KEMBALIKAN WADAH IKLAN BAWAH DI SINI */}
+                <div className="w-full flex justify-center mt-16 mb-4 overflow-hidden min-h-[90px] border-none">
                     <div ref={hilltopBottomAdRef}></div>
                 </div>
 

@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { Play, Download, Clock, Eye, MonitorPlay, Share2, Heart, HardDrive, FolderArchive, Database, Server, X, ZoomIn, LayoutGrid, Loader2, ExternalLink, Lock, ChevronDown } from 'lucide-react';
-// IMPORT IKON KATEGORI KEMBALI KARENA DIBUTUHKAN
 import { SiOnlyfans, SiTelegram } from 'react-icons/si';
 import { FaCrown, FaVideo, FaFire, FaBan, FaRandom, FaFilm, FaMask } from 'react-icons/fa';
 import { FaClapperboard } from 'react-icons/fa6';
@@ -17,6 +16,44 @@ const getImageUrl = (imgString) => imgString ? imgString.split(',')[0].trim() : 
 const formatViews = (views) => {
     if (!views) return '0';
     return Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(views);
+};
+
+const getCategoryIcon = (category) => {
+    if (!category) return <BiSolidCategory className="w-3.5 h-3.5 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors shrink-0" />;
+
+    const name = String(category).toLowerCase();
+    const iconClasses = "w-3 h-3 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors shrink-0";
+
+    if (name.includes('onlyfans')) return <SiOnlyfans className={iconClasses} />;
+    if (name.includes('telegram')) return <SiTelegram className={iconClasses} />;
+    if (name.includes('movie') || name.includes('scene')) return <FaClapperboard className={iconClasses} />;
+    if (name.includes('live')) return <MdLiveTv className={iconClasses} />;
+    if (name.includes('deepfake')) return <FaMask className={iconClasses} />;
+
+    if (name.includes('kbj') || name.includes('korean')) {
+        return (
+            <div className="relative shrink-0 flex items-center justify-center">
+                <FaVideo className={iconClasses} />
+                <span className="absolute -bottom-1 -right-1 bg-zinc-800 border-none text-white text-[5px] font-black px-[2px] rounded-[1px] shadow-sm group-hover:text-[#0FFCBE] transition-colors leading-none">KR</span>
+            </div>
+        );
+    }
+
+    if (name.includes('jav') || name.includes('jepang') || name.includes('film')) {
+        return (
+            <div className="relative shrink-0 flex items-center justify-center">
+                <FaFilm className={iconClasses} />
+                <span className="absolute -bottom-1 -right-1 bg-zinc-800 border-none text-white text-[5px] font-black px-[2px] rounded-[1px] shadow-sm group-hover:text-[#0FFCBE] transition-colors leading-none">JP</span>
+            </div>
+        );
+    }
+
+    if (name.includes('exclusive') || name.includes('eksklusif')) return <FaCrown className={iconClasses} />;
+    if (name.includes('viral')) return <FaFire className={iconClasses} />;
+    if (name.includes('random') || name.includes('acak')) return <FaRandom className={iconClasses} />;
+    if (name.includes('banned')) return <FaBan className={iconClasses} />;
+
+    return <BiSolidCategory className={iconClasses} />;
 };
 
 export default function Streaming({ supabase }) {
@@ -36,6 +73,8 @@ export default function Streaming({ supabase }) {
 
     const [isVipUnlocked, setIsVipUnlocked] = useState(true);
     const [hasCommented, setHasCommented] = useState(false);
+
+    // REF IKLAN HILLTOPADS
     const hilltopAdRef = useRef(null);
 
     useEffect(() => {
@@ -87,6 +126,21 @@ export default function Streaming({ supabase }) {
         };
         fetchVideoDetails();
     }, [supabase]);
+
+    // EKSEKUSI SCRIPT IKLAN HILLTOPADS
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (video && hilltopAdRef.current && !hilltopAdRef.current.querySelector('script')) {
+                const s = document.createElement('script');
+                s.settings = {};
+                s.src = "//winding-hurt.com/b.XwV/s-deGllV0BYEWYct/Senm/9XuBZgUFl/kQPfT/cMyeOITbA/4RNITRMkt/NvzGIu5qMyDHgD1jNCwo";
+                s.async = true;
+                s.referrerPolicy = "no-referrer-when-downgrade";
+                hilltopAdRef.current.appendChild(s);
+            }
+        }, 2500);
+        return () => clearTimeout(timer);
+    }, [video]);
 
     useEffect(() => {
         if (selectedImage || isDownloadModalOpen) document.body.style.overflow = 'hidden';
@@ -251,7 +305,6 @@ export default function Streaming({ supabase }) {
                         </div>
                     </div>
 
-                    {/* RELATED VIDEOS AREA */}
                     <div className="xl:col-span-4 flex flex-col gap-4 w-full">
                         <div className="bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] flex flex-col gap-5 border-none">
                             <h3 className="text-lg font-black text-white flex items-center gap-2 mb-1">
@@ -281,10 +334,55 @@ export default function Streaming({ supabase }) {
                                 ))}
                             </div>
                         </div>
+
+                        {/* WADAH IKLAN HILLTOPADS DIKEMBALIKAN */}
+                        <div className="w-full flex justify-center overflow-hidden rounded-[1.5rem] min-h-[90px] mt-2 border-none">
+                            <div ref={hilltopAdRef}></div>
+                        </div>
+
                     </div>
                 </div>
             </div>
             <Footer />
+
+            {selectedImage && (
+                <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300 border-none" onClick={() => setSelectedImage(null)} onContextMenu={(e) => e.preventDefault()}>
+                    <button className="absolute top-4 right-4 sm:top-8 sm:right-8 bg-zinc-900 hover:bg-[#106EBE] text-white p-3 rounded-full transition-colors z-50 group border-none" onClick={(e) => { e.stopPropagation(); setSelectedImage(null); }}><X className="w-6 h-6 group-hover:rotate-90 transition-transform" /></button>
+                    <img src={selectedImage} alt="Fullscreen View" className="max-w-full max-h-full object-contain rounded-2xl select-none shadow-[0_20px_50px_rgba(0,0,0,0.9)] border-none" draggable="false" onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} />
+                </div>
+            )}
+
+            {isDownloadModalOpen && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/95 backdrop-blur-xl animate-in fade-in duration-500 border-none">
+                    <div className="w-full max-w-xl flex flex-col items-center text-center animate-in slide-in-from-bottom-10 duration-500 relative border-none">
+                        <div className="flex items-center justify-center gap-3 sm:gap-4 mb-8 w-full border-none">
+                            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 sm:w-16 sm:h-16 drop-shadow-[0_0_12px_rgba(16,110,190,0.8)] shrink-0 border-none">
+                                <polygon points="50,5 89,27.5 89,72.5 50,95 11,72.5 11,27.5" stroke="#106EBE" strokeWidth="8" strokeLinejoin="round" />
+                                <polygon points="50,18 78,34 78,66 50,82 22,66 22,34" stroke="#106EBE" strokeWidth="3.5" strokeLinejoin="round" opacity="0.9" />
+                                <polygon points="43,36 64,50 43,64" stroke="#106EBE" strokeWidth="3" strokeLinejoin="round" fill="rgba(16, 110, 190, 0.3)" />
+                            </svg>
+                            <div className="flex flex-col justify-center text-left border-none">
+                                <span className="text-2xl sm:text-4xl font-black tracking-tighter text-white leading-none mb-1 border-none">Shadow<span className="text-[#106EBE]">Clips</span></span>
+                                <span className="text-[10px] sm:text-[12px] font-bold tracking-[0.22em] text-[#A0B3C6] uppercase ml-[1px] leading-none border-none">www.shadowclips.asia</span>
+                            </div>
+                        </div>
+                        <div className="space-y-4 mb-10 w-full px-2 border-none">
+                            <p className="text-zinc-300 text-base md:text-lg leading-relaxed md:leading-loose border-none">ShadowClips never sells or charges a single penny for this file. We provide this link 100% free for entertainment purposes.<br /><span className="text-zinc-500 text-sm mt-2 block border-none">Please be aware of any scams claiming to represent us.</span></p>
+                        </div>
+                        <div className="w-full max-w-sm mb-10 flex flex-col items-center border-none">
+                            <div className="w-full h-1 bg-zinc-800/50 rounded-full overflow-hidden mb-4 border-none"><div className="h-full bg-[#106EBE] transition-all duration-75 ease-linear shadow-[0_0_15px_rgba(16,110,190,0.8)] border-none" style={{ width: `${modalProgress}%` }}></div></div>
+                            <span className="text-[10px] md:text-xs text-zinc-500 tracking-wide h-4 border-none">{modalStatus === 'waiting' && `Preparing secure link... ${Math.ceil(4 - (modalProgress / 25))}s`}</span>
+                        </div>
+                        <div className="w-full max-w-sm border-none">
+                            {modalStatus === 'waiting' ? (
+                                <button disabled className="w-full flex items-center justify-center gap-3 px-8 py-4 rounded-3xl bg-zinc-900/40 text-zinc-600 cursor-wait transition-all border-none"><Loader2 className="w-5 h-5 animate-spin shrink-0 border-none" /><span className="border-none">Please wait...</span></button>
+                            ) : (
+                                <button onClick={() => { const targetUrl = video.embed_url || video.url_download; if (targetUrl) window.open(targetUrl, '_blank'); else alert("Download link is not available for this video."); setIsDownloadModalOpen(false); }} className="w-full flex items-center justify-center gap-3 px-8 py-4 rounded-3xl bg-[#106EBE] text-white hover:bg-[#0e5c9f] transition-all transform hover:scale-105 shadow-[0_15px_30px_rgba(16,110,190,0.4)] animate-in zoom-in duration-300 border-none"><ExternalLink className="w-5 h-5 shrink-0 border-none" /><span className="border-none">Continue to download page</span></button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
