@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import useSWR from 'swr';
-import { Play, Eye, Clock, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { Play, MonitorPlay, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 
 import { SiOnlyfans, SiTelegram } from 'react-icons/si';
 import { FaCrown, FaVideo, FaFire, FaBan, FaRandom, FaFilm, FaMask } from 'react-icons/fa';
@@ -123,13 +123,12 @@ export default function Home({ supabase }) {
     const videos = swrData?.data || [];
     const totalPages = swrData?.totalPages || 0;
 
-    // EKSEKUSI SCRIPT IKLAN TENGAH
     useEffect(() => {
         const currentAdRef = hilltopMiddleAdRef.current;
         if (videos.length > 0 && currentAdRef && !currentAdRef.querySelector('script')) {
             const s = document.createElement('script');
             s.settings = {};
-            s.src = "//winding-hurt.com/bgXwV/s/duGYlB0jYRWMci/WeImQ9/uOZ/UflWkGP/TXc_yTO/TsAM4xNVT/M/tVNXzEIv5PMqDHg_1/NkwS";
+            s.src = "//winding-hurt.com/b/XCVrsQd.Gkl/0OYTWFcb/hevma9Pu/ZNUrlOkVPuTSYB4KMNT/MV1UOQTzMDtwNQj/gzxhM/zBUn5BNswG";
             s.async = true;
             s.referrerPolicy = "no-referrer-when-downgrade";
             currentAdRef.appendChild(s);
@@ -137,13 +136,12 @@ export default function Home({ supabase }) {
         return () => { if (currentAdRef) currentAdRef.innerHTML = ''; };
     }, [videos]);
 
-    // EKSEKUSI SCRIPT IKLAN BAWAH
     useEffect(() => {
         const currentAdRef = hilltopBottomAdRef.current;
         if (currentAdRef && !currentAdRef.querySelector('script')) {
             const s = document.createElement('script');
             s.settings = {};
-            s.src = "//winding-hurt.com/bPX-V/sndIGglK0oYdWrch/peNmh9/uVZlUhl/kgP-TScLykOHDMg/xkMDjzUvtqNkzQI/4/OnD/ETy/OMQh";
+            s.src = "//winding-hurt.com/b/XKVzsJd.G/lP0bY/WYcS/zexm/9cuhZhU-lskGPNTDcZyQOVDkg/x/MFjmUJtaNnz/IY4HOTD_E/y/OKQL";
             s.async = true;
             s.referrerPolicy = "no-referrer-when-downgrade";
             currentAdRef.appendChild(s);
@@ -199,52 +197,47 @@ export default function Home({ supabase }) {
                     )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-y-8 md:gap-x-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
                     {isLoading ? (
                         Array.from({ length: 12 }).map((_, i) => (
-                            <div key={i} className="animate-pulse flex flex-col gap-2">
-                                <div className="aspect-video bg-zinc-800/50 rounded-[4px]"></div>
-                                <div className="h-4 bg-zinc-800/50 rounded w-full"></div>
-                                <div className="h-4 bg-zinc-800/50 rounded w-2/3 mx-auto"></div>
+                            <div key={i} className="animate-pulse">
+                                <div className="aspect-video bg-zinc-800/50 rounded-xl mb-3"></div>
+                                <div className="h-5 bg-zinc-800/50 rounded w-3/4 mb-2"></div>
                             </div>
                         ))
                     ) : videos.length > 0 ? (
                         videos.map((video, index) => (
                             <React.Fragment key={video.id}>
-
-                                {/* KEMBALIKAN WADAH IKLAN TENGAH DI SINI */}
                                 {index === 12 && (
-                                    <div className="col-span-full w-full flex justify-center my-4 overflow-hidden min-h-[90px] border-none">
+                                    <div className="col-span-full w-full flex justify-center my-4 overflow-hidden min-h-[90px]">
                                         <div ref={hilltopMiddleAdRef}></div>
                                     </div>
                                 )}
+                                <div onClick={() => window.location.href = `/streaming/${video.slug || video.id}`} className="group cursor-pointer">
 
-                                <div onClick={() => window.location.href = `/streaming/${video.slug || video.id}`} className="group cursor-pointer flex flex-col gap-2">
-
-                                    <div className="relative aspect-video rounded-[4px] overflow-hidden bg-zinc-900 border-none">
+                                    <div className="relative aspect-video rounded-xl overflow-hidden mb-3 bg-zinc-800/30 shadow-lg">
                                         <img src={getImageUrl(video.img)} alt={video.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
-
-                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
-                                            <Play className="w-12 h-12 text-white/90 fill-current drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300" />
-                                        </div>
-
-                                        <div className="absolute bottom-1.5 left-1.5 bg-black/80 text-white text-[10px] md:text-[11px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
-                                            <Eye className="w-3 h-3 md:w-3.5 md:h-3.5" /> {formatViews(video.views)}
-                                        </div>
-
-                                        {video.duration && video.duration !== 'EMPTY' && (
-                                            <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[10px] md:text-[11px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
-                                                <Clock className="w-3 h-3 md:w-3.5 md:h-3.5" /> {video.duration}
+                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
+                                            <div className="w-14 h-14 bg-[#106EBE] rounded-full flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_30px_rgba(16,110,190,0.6)]">
+                                                <Play className="w-6 h-6 fill-current ml-1" />
                                             </div>
-                                        )}
+                                        </div>
                                     </div>
 
-                                    <div className="px-1 text-center">
-                                        <h3 className="font-bold text-[13px] md:text-[14px] text-zinc-300 group-hover:text-white transition-colors line-clamp-2 leading-snug" title={video.title}>
+                                    <div className="px-2 text-center">
+                                        <h3 className="font-bold text-sm md:text-base mb-1.5 text-white group-hover:text-[#0FFCBE] transition-colors truncate" title={video.title}>
                                             {video.title}
                                         </h3>
-                                    </div>
 
+                                        <div className="flex flex-wrap items-center justify-center gap-3 text-[11px]">
+                                            <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-white group-hover:text-[#0FFCBE] transition-colors">
+                                                {getCategoryIcon(video.category)} {video.category}
+                                            </span>
+                                            <span className="flex items-center gap-1 font-medium text-white group-hover:text-[#0FFCBE] transition-colors">
+                                                <MonitorPlay className="w-3.5 h-3.5 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors" /> {formatViews(video.views)} views
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                             </React.Fragment>
                         ))
@@ -276,8 +269,7 @@ export default function Home({ supabase }) {
                     </div>
                 )}
 
-                {/* KEMBALIKAN WADAH IKLAN BAWAH DI SINI */}
-                <div className="w-full flex justify-center mt-16 mb-4 overflow-hidden min-h-[90px] border-none">
+                <div className="w-full flex justify-center mt-16 mb-4 overflow-hidden min-h-[90px]">
                     <div ref={hilltopBottomAdRef}></div>
                 </div>
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import useSWR from 'swr';
-import { Play, Eye, Clock, FolderOpen } from 'lucide-react';
-// TAMBAHAN: Kembalikan import ikon React Icons yang sempat terhapus
+import { Play, MonitorPlay, FolderOpen } from 'lucide-react';
+
 import { SiOnlyfans, SiTelegram } from 'react-icons/si';
 import { FaCrown, FaVideo, FaFire, FaBan, FaRandom, FaFilm, FaMask } from 'react-icons/fa';
 import { FaClapperboard } from 'react-icons/fa6';
@@ -17,7 +17,6 @@ const formatViews = (views) => {
     return Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(views);
 };
 
-// KEMBALIKAN FUNGSI ICON KATEGORI UTAMA DI SINI
 const getCategoryIcon = (categoryName) => {
     const name = categoryName.toLowerCase();
     const iconClasses = "w-7 h-7 md:w-8 md:h-8 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors drop-shadow-md shrink-0";
@@ -58,15 +57,17 @@ const getCategoryIcon = (categoryName) => {
     return <BiSolidCategory className={iconClasses} />;
 };
 
-
 export default function Jelajahi({ supabase }) {
     const [searchInput, setSearchInput] = useState('');
 
-    useEffect(() => { document.title = "Explore Categories | ShadowClips"; }, []);
+    useEffect(() => {
+        document.title = "Explore Categories | ShadowClips";
+    }, []);
 
     const fetchSemuaKategori = async () => {
         if (!supabase) throw new Error("Supabase not initialized");
         const { data, error } = await supabase.from('videos').select('*').order('created_at', { ascending: false }).limit(300);
+
         if (error) throw new Error(error.message);
 
         if (data) {
@@ -76,6 +77,7 @@ export default function Jelajahi({ supabase }) {
                 if (!video.category) cats = ['Others'];
                 else if (Array.isArray(video.category)) cats = video.category;
                 else if (typeof video.category === 'string') cats = video.category.split(',').map(c => c.trim());
+
                 cats.forEach(cat => {
                     if (!cat) return;
                     const formattedCat = cat.charAt(0).toUpperCase() + cat.slice(1);
@@ -91,15 +93,22 @@ export default function Jelajahi({ supabase }) {
     const { data: kategoriData = [], isLoading: loading } = useSWR(
         supabase ? 'jelajahi_kategori' : null,
         fetchSemuaKategori,
-        { revalidateOnFocus: false, dedupingInterval: 300000, keepPreviousData: true }
+        {
+            revalidateOnFocus: false,
+            dedupingInterval: 300000,
+            keepPreviousData: true,
+        }
     );
 
     return (
         <>
             <Navbar searchInput={searchInput} setSearchInput={setSearchInput} isScrolled={true} />
-            <main className="max-w-[1440px] mx-auto px-4 sm:px-8 pt-32 pb-24 overflow-hidden min-h-screen font-sans">
+
+            <main className="max-w-[1440px] mx-auto px-4 sm:px-8 pt-32 pb-24 overflow-hidden">
+
                 {loading ? (
                     <div className="flex justify-center items-center py-32">
+                        {/* Border pada loading spinner dipertahankan karena itu adalah bentuk spinnernya sendiri */}
                         <div className="w-14 h-14 border-4 border-zinc-800 border-t-[#106EBE] rounded-full animate-spin shadow-[0_0_20px_rgba(16,110,190,0.5)]"></div>
                     </div>
                 ) : kategoriData.length > 0 ? (
@@ -110,9 +119,10 @@ export default function Jelajahi({ supabase }) {
 
                             return (
                                 <section key={kategori} className="relative">
-                                    <div onClick={() => window.location.href = `/kategori/${encodeURIComponent(kategori)}`} className="flex items-center justify-between mb-5 md:mb-6 group cursor-pointer">
-
-                                        {/* KEMBALIKAN ICON KATEGORI DI SINI */}
+                                    <div
+                                        onClick={() => window.location.href = `/kategori/${encodeURIComponent(kategori)}`}
+                                        className="flex items-center justify-between mb-5 md:mb-6 group cursor-pointer"
+                                    >
                                         <div className="flex items-center gap-2 md:gap-3">
                                             {getCategoryIcon(kategori)}
                                             <h2 className="text-2xl md:text-3xl font-black text-white group-hover:text-[#0FFCBE] transition-colors">{kategori}</h2>
@@ -124,24 +134,36 @@ export default function Jelajahi({ supabase }) {
                                     </div>
 
                                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
+
                                         {heroVideo && (
-                                            <div onClick={() => window.location.href = `/streaming/${heroVideo.slug || heroVideo.id}`} className="lg:col-span-7 group cursor-pointer flex flex-col gap-2">
-                                                <div className="relative aspect-video md:aspect-[16/10] lg:aspect-auto h-full rounded-[4px] overflow-hidden bg-zinc-900 border-none shadow-2xl">
-                                                    <img src={getImageUrl(heroVideo.img)} alt={heroVideo.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
-                                                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
-                                                        <Play className="w-16 h-16 text-white/90 fill-current drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300" />
+                                            <div
+                                                onClick={() => window.location.href = `/streaming/${heroVideo.slug || heroVideo.id}`}
+                                                className="lg:col-span-7 group cursor-pointer relative aspect-video md:aspect-[16/10] lg:aspect-auto rounded-2xl overflow-hidden bg-zinc-800/30 border-none shadow-2xl"
+                                            >
+                                                <img
+                                                    src={getImageUrl(heroVideo.img)}
+                                                    alt={heroVideo.title}
+                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                                    loading="lazy"
+                                                />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90 transition-opacity duration-300"></div>
+
+                                                <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75 group-hover:scale-100">
+                                                    <div className="w-20 h-20 bg-[#106EBE]/90 backdrop-blur-md rounded-full flex items-center justify-center text-white shadow-[0_0_40px_rgba(16,110,190,0.8)] border-none">
+                                                        <Play className="w-8 h-8 fill-current ml-2" />
                                                     </div>
-                                                    <div className="absolute bottom-2 left-2 bg-black/80 text-white text-xs font-bold px-2 py-1 rounded-[3px] flex items-center gap-1.5 z-30 pointer-events-none">
-                                                        <Eye className="w-4 h-4" /> {formatViews(heroVideo.views)}
-                                                    </div>
-                                                    {heroVideo.duration && heroVideo.duration !== 'EMPTY' && (
-                                                        <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs font-bold px-2 py-1 rounded-[3px] flex items-center gap-1.5 z-30 pointer-events-none">
-                                                            <Clock className="w-4 h-4" /> {heroVideo.duration}
-                                                        </div>
-                                                    )}
                                                 </div>
-                                                <div className="px-1 text-center lg:text-left mt-1">
-                                                    <h3 className="text-xl md:text-2xl font-bold text-zinc-300 group-hover:text-white transition-colors line-clamp-2 leading-tight">
+
+                                                <div className="absolute bottom-0 left-0 right-0 p-5 md:p-8 z-30 transform transition-transform duration-300 group-hover:-translate-y-2">
+                                                    <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2 md:mb-3 text-[10px] md:text-xs font-bold">
+                                                        <span className="bg-[#106EBE] text-white px-2.5 py-1.5 rounded-lg uppercase tracking-widest shadow-[0_0_15px_rgba(16,110,190,0.5)]">
+                                                            LATEST CONTENT
+                                                        </span>
+                                                        <span className="flex items-center gap-1 text-zinc-300 bg-black/50 backdrop-blur-md px-2.5 py-1.5 rounded-lg">
+                                                            <MonitorPlay className="w-3.5 h-3.5 text-[#0FFCBE]" /> {formatViews(heroVideo.views)} Views
+                                                        </span>
+                                                    </div>
+                                                    <h3 className="text-xl md:text-3xl lg:text-4xl font-bold text-white group-hover:text-[#0FFCBE] transition-colors line-clamp-2 drop-shadow-lg leading-tight md:leading-tight">
                                                         {heroVideo.title}
                                                     </h3>
                                                 </div>
@@ -151,37 +173,45 @@ export default function Jelajahi({ supabase }) {
                                         {subVideos.length > 0 && (
                                             <div className="lg:col-span-5 grid grid-cols-2 gap-3 md:gap-6">
                                                 {subVideos.map((video) => (
-                                                    <div key={video.id} onClick={() => window.location.href = `/streaming/${video.slug || video.id}`} className="group cursor-pointer flex flex-col gap-2">
-                                                        <div className="relative aspect-video rounded-[4px] overflow-hidden bg-zinc-900 border-none shadow-md">
-                                                            <img src={getImageUrl(video.img)} alt={video.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
-                                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
-                                                                <Play className="w-10 h-10 text-white/90 fill-current drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300" />
-                                                            </div>
-                                                            <div className="absolute bottom-1.5 left-1.5 bg-black/80 text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
-                                                                <Eye className="w-3 h-3" /> {formatViews(video.views)}
-                                                            </div>
-                                                            {video.duration && video.duration !== 'EMPTY' && (
-                                                                <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
-                                                                    <Clock className="w-3 h-3" /> {video.duration}
+                                                    <div
+                                                        key={video.id}
+                                                        onClick={() => window.location.href = `/streaming/${video.slug || video.id}`}
+                                                        className="group cursor-pointer flex flex-col"
+                                                    >
+                                                        <div className="relative aspect-video rounded-xl overflow-hidden mb-2 md:mb-3 bg-zinc-800/30 border-none shadow-md">
+                                                            <img
+                                                                src={getImageUrl(video.img)}
+                                                                alt={video.title}
+                                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                                loading="lazy"
+                                                            />
+                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
+                                                                <div className="w-10 h-10 md:w-12 md:h-12 bg-[#106EBE] rounded-full flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(16,110,190,0.5)]">
+                                                                    <Play className="w-4 h-4 md:w-5 md:h-5 fill-current ml-1" />
                                                                 </div>
-                                                            )}
+                                                            </div>
                                                         </div>
-                                                        <div className="px-1 text-center">
-                                                            <h4 className="font-bold text-[11px] sm:text-xs text-zinc-300 group-hover:text-white transition-colors line-clamp-2 leading-snug">
+
+                                                        <div className="px-1 text-center mt-auto">
+                                                            <h4 className="font-bold text-[13px] md:text-sm text-zinc-100 group-hover:text-[#0FFCBE] transition-colors line-clamp-2 mb-1.5 md:mb-2 leading-snug">
                                                                 {video.title}
                                                             </h4>
+                                                            <div className="flex items-center justify-center gap-1.5 text-[10px] md:text-[11px] font-medium text-zinc-400">
+                                                                <MonitorPlay className="w-3 h-3 md:w-3.5 md:h-3.5 text-[#106EBE]" /> {formatViews(video.views)} views
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 ))}
                                             </div>
                                         )}
+
                                     </div>
                                 </section>
                             );
                         })}
                     </div>
                 ) : (
-                    <div className="text-center text-zinc-500 py-32 bg-zinc-800/30 rounded-[4px] border-none mx-4">
+                    <div className="text-center text-zinc-500 py-32 bg-zinc-800/30 rounded-3xl border-none mx-4">
                         <FolderOpen className="w-16 h-16 mx-auto mb-4 opacity-30" />
                         <p className="text-lg md:text-xl font-medium">No categories available yet.</p>
                     </div>
