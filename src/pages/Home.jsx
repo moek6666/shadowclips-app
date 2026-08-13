@@ -129,7 +129,7 @@ export default function Home({ supabase }) {
         if (videos.length > 0 && currentAdRef && !currentAdRef.querySelector('script')) {
             const s = document.createElement('script');
             s.settings = {};
-            s.src = "//winding-hurt.com/b/XCVrsQd.Gkl/0OYTWFcb/hevma9Pu/ZNUrlOkVPuTSYB4KMNT/MV1UOQTzMDtwNQj/gzxhM/zBUn5BNswG";
+            s.src = "//winding-hurt.com/bgXwV/s/duGYlB0jYRWMci/WeImQ9/uOZ/UflWkGP/TXc_yTO/TsAM4xNVT/M/tVNXzEIv5PMqDHg_1/NkwS";
             s.async = true;
             s.referrerPolicy = "no-referrer-when-downgrade";
             currentAdRef.appendChild(s);
@@ -143,7 +143,7 @@ export default function Home({ supabase }) {
         if (currentAdRef && !currentAdRef.querySelector('script')) {
             const s = document.createElement('script');
             s.settings = {};
-            s.src = "//winding-hurt.com/b/XKVzsJd.G/lP0bY/WYcS/zexm/9cuhZhU-lskGPNTDcZyQOVDkg/x/MFjmUJtaNnz/IY4HOTD_E/y/OKQL";
+            s.src = "//winding-hurt.com/bPX-V/sndIGglK0oYdWrch/peNmh9/uVZlUhl/kgP-TScLykOHDMg/xkMDjzUvtqNkzQI/4/OnD/ETy/OMQh";
             s.async = true;
             s.referrerPolicy = "no-referrer-when-downgrade";
             currentAdRef.appendChild(s);

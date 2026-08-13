@@ -73,8 +73,6 @@ export default function Streaming({ supabase }) {
 
     const [isVipUnlocked, setIsVipUnlocked] = useState(true);
     const [hasCommented, setHasCommented] = useState(false);
-
-    // REF IKLAN HILLTOPADS
     const hilltopAdRef = useRef(null);
 
     useEffect(() => {
@@ -127,13 +125,14 @@ export default function Streaming({ supabase }) {
         fetchVideoDetails();
     }, [supabase]);
 
-    // EKSEKUSI SCRIPT IKLAN HILLTOPADS
+    // EKSEKUSI SCRIPT IKLAN SIDEBAR (TYPO FIXED)
     useEffect(() => {
         const timer = setTimeout(() => {
             if (video && hilltopAdRef.current && !hilltopAdRef.current.querySelector('script')) {
                 const s = document.createElement('script');
                 s.settings = {};
-                s.src = "//winding-hurt.com/b.XwV/s-deGllV0BYEWYct/Senm/9XuBZgUFl/kQPfT/cMyeOITbA/4RNITRMkt/NvzGIu5qMyDHgD1jNCwo";
+                // Typo titik telah diubah menjadi slash (/) agar terhindar dari Error 502
+                s.src = "//winding-hurt.com/bbXKVgswd/Gkl/0nYAWwcp/GemmU9BuXZ-UUlTktP/TDcDyIOEDfg/xjM-j/U-tvN/zNIw4qNnzyk/1LNLyKZIsIadWO1/psdbDb0IxV";
                 s.async = true;
                 s.referrerPolicy = "no-referrer-when-downgrade";
                 hilltopAdRef.current.appendChild(s);
@@ -230,7 +229,17 @@ export default function Streaming({ supabase }) {
                                     <p className="text-zinc-400 text-sm sm:text-base max-w-lg leading-relaxed">This premium content is locked. Please <strong className="text-white">Like</strong> and leave a <strong className="text-white">Comment</strong> below to unlock full access immediately.</p>
                                 </div>
                             ) : currentVideoUrl ? (
-                                isDirectVideo ? <CustomPlayer key={currentVideoUrl} src={currentVideoUrl} poster={getImageUrl(video.img)} /> : <iframe key={currentVideoUrl} src={currentVideoUrl} className="w-full h-full object-contain border-none" frameBorder="0" allowFullScreen title={video.title}></iframe>
+                                isDirectVideo ? (
+                                    <CustomPlayer
+                                        key={currentVideoUrl}
+                                        src={currentVideoUrl}
+                                        poster={getImageUrl(video.img)}
+                                        // VAST URL TELAH DISISIPKAN DAN DIPERBAIKI (TYPO FIXED)
+                                        vastUrl="https://direct-league.com/dTm/F/zadLGTNPvZZLGFUt/gefm_9/u/ZlUClvkbPFTUcdy/OmDRcT5/N/ToMutoN/zNIw4qNnzyk/1LNLyKZIsIadWO1/psdbDb0IxV"
+                                    />
+                                ) : (
+                                    <iframe key={currentVideoUrl} src={currentVideoUrl} className="w-full h-full object-contain border-none" frameBorder="0" allowFullScreen title={video.title}></iframe>
+                                )
                             ) : isDeepFake && imageList.length > 0 ? (
                                 <div className="w-full h-full overflow-y-auto p-4 sm:p-6 custom-scrollbar" onContextMenu={(e) => e.preventDefault()}>
                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
@@ -335,7 +344,7 @@ export default function Streaming({ supabase }) {
                             </div>
                         </div>
 
-                        {/* WADAH IKLAN HILLTOPADS DIKEMBALIKAN */}
+                        {/* WADAH IKLAN SIDEBAR HILLTOPADS */}
                         <div className="w-full flex justify-center overflow-hidden rounded-[1.5rem] min-h-[90px] mt-2 border-none">
                             <div ref={hilltopAdRef}></div>
                         </div>
