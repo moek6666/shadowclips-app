@@ -149,9 +149,9 @@ export default function Streaming({ supabase }) {
     const hasDownloadLink = video.embed_url && video.embed_url.trim() !== '' && video.embed_url !== 'EMPTY';
 
     const serverOptions = [];
-    if (hasMain) serverOptions.push({ id: 'main', label: 'Server 1' });
-    if (hasAlternativeServer) serverOptions.push({ id: 'alt', label: 'Server 2' });
-    if (hasAlternativeServer2) serverOptions.push({ id: 'alt2', label: 'Server 3' });
+    if (hasMain) serverOptions.push({ id: 'main', label: 'Main' });
+    if (hasAlternativeServer) serverOptions.push({ id: 'alt', label: 'Hydrax' });
+    if (hasAlternativeServer2) serverOptions.push({ id: 'alt2', label: 'Vidara' });
     const activeServerLabel = serverOptions.find(s => s.id === effectiveServer)?.label || 'Server';
 
     return (
@@ -270,13 +270,13 @@ export default function Streaming({ supabase }) {
                                 <LayoutGrid className="w-4 h-4 text-[#106EBE]" /> Related Videos
                             </h3>
 
-                            {/* LAYOUT LIST */}
+                            {/* LAYOUT LIST (Telah Disempurnakan) */}
                             <div className="flex flex-col gap-4 border-none">
                                 {relatedVideos.map((item) => (
-                                    <div key={item.id} onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer flex items-start gap-3 border-none">
+                                    <div key={item.id} onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer flex items-start gap-3 sm:gap-4 w-full border-none">
 
-                                        {/* Thumbnail Sisi Kiri */}
-                                        <div className="relative w-36 sm:w-40 aspect-video rounded-[6px] overflow-hidden bg-zinc-900 border-none shrink-0 shadow-md">
+                                        {/* Thumbnail Sisi Kiri (Diperbesar) */}
+                                        <div className="relative w-40 sm:w-48 aspect-video rounded-[8px] overflow-hidden bg-zinc-900 border-none shrink-0 shadow-md">
                                             <img src={getImageUrl(item.img)} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
                                                 <div className="w-8 h-8 bg-[#106EBE] rounded-full flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(16,110,190,0.6)] border-none">
@@ -290,9 +290,9 @@ export default function Streaming({ supabase }) {
                                             )}
                                         </div>
 
-                                        {/* Teks Sisi Kanan */}
+                                        {/* Teks Sisi Kanan (Diperbesar sedikit) */}
                                         <div className="flex flex-col flex-1 min-w-0 border-none pt-0.5">
-                                            <h4 className="font-bold text-[12px] sm:text-[13px] text-zinc-100 group-hover:text-[#0FFCBE] transition-colors line-clamp-2 leading-snug mb-1" title={item.title}>
+                                            <h4 className="font-bold text-[13px] sm:text-[14px] text-zinc-100 group-hover:text-[#0FFCBE] transition-colors line-clamp-2 leading-snug mb-1" title={item.title}>
                                                 {item.title}
                                             </h4>
 
