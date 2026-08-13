@@ -4,7 +4,7 @@ import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import { Turnstile } from '@marsidev/react-turnstile';
 import {
     Loader2, Send, MessageSquare, ChevronDown,
-    Bold, Italic, Code, Link as LinkIcon, Quote, X, LogOut
+    Bold, Italic, Code, Link as LinkIcon, Quote, X, LogOut, BadgeCheck
 } from 'lucide-react';
 
 // ==========================================
@@ -23,6 +23,7 @@ export default function KomentarWrapper(props) {
 // ==========================================
 function Komentar({ videoId, onCommentSuccess }) {
     const [comments, setComments] = useState([]);
+    const [adminEmails, setAdminEmails] = useState([]);
 
     const [formData, setFormData] = useState(() => {
         return {
@@ -41,31 +42,43 @@ function Komentar({ videoId, onCommentSuccess }) {
     const turnstileRef = useRef(null);
     const textareaRef = useRef(null);
 
-    // Cek apakah user sudah login berdasarkan data email dan foto dari Google
     const isLoggedIn = Boolean(formData.email && formData.picture);
 
+    // FETCH DATA KOMENTAR & ADMIN
     useEffect(() => {
-        const fetchComments = async () => {
+        const fetchData = async () => {
             if (!videoId) return;
 
-            const { data, error } = await supabase
+            // 1. Fetch Comments
+            const { data: commentsData, error: commentsError } = await supabase
                 .from('comments')
                 .select('*')
                 .eq('video_id', String(videoId))
                 .eq('status', 'approved')
                 .order('created_at', { ascending: false });
 
-            if (!error && data) {
+            // 2. Fetch Admin Profiles
+            const { data: profilesData } = await supabase
+                .from('profiles')
+                .select('email')
+                .eq('is_admin', true);
+
+            if (profilesData) {
+                const admins = profilesData.map(p => p.email);
+                setAdminEmails(admins);
+            }
+
+            if (!commentsError && commentsData) {
                 const localPending = JSON.parse(localStorage.getItem(`shadowclips_pending_${videoId}`) || '[]');
                 const validPending = localPending.filter(
-                    pending => !data.some(approved => approved.content === pending.content && approved.name === pending.name)
+                    pending => !commentsData.some(approved => approved.content === pending.content && approved.name === pending.name)
                 );
 
                 localStorage.setItem(`shadowclips_pending_${videoId}`, JSON.stringify(validPending));
-                setComments([...validPending, ...data]);
+                setComments([...validPending, ...commentsData]);
             }
         };
-        fetchComments();
+        fetchData();
     }, [videoId]);
 
     const timeAgo = (dateString) => {
@@ -220,6 +233,7 @@ function Komentar({ videoId, onCommentSuccess }) {
             const newPendingComment = {
                 id: `temp-${Date.now()}`,
                 name: formData.name,
+                email: formData.email,
                 avatar_url: formData.picture,
                 content: formData.content,
                 created_at: new Date().toISOString(),
@@ -256,10 +270,8 @@ function Komentar({ videoId, onCommentSuccess }) {
     return (
         <div className="w-full mt-6 mb-8 font-sans">
 
-            {/* WADAH UTAMA FORM / LOGIN */}
             <div className="bg-zinc-800/60 rounded-[1.5rem] overflow-hidden mb-10 shadow-lg transition-all duration-500 border-none">
 
-                {/* JIKA BELUM LOGIN -> TAMPILKAN TOMBOL GOOGLE SAJA */}
                 {!isLoggedIn ? (
                     <div className="px-4 sm:px-6 py-16 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-300 border-none">
                         <p className="text-zinc-300 text-sm mb-8 text-center max-w-md">
@@ -298,20 +310,27 @@ function Komentar({ videoId, onCommentSuccess }) {
                         )}
                     </div>
                 ) : (
-                    /* JIKA SUDAH LOGIN -> TAMPILKAN FORM KOMENTAR */
                     <form onSubmit={handleSubmit} className="animate-in fade-in duration-300 border-none">
 
-                        {/* HEADER PROFIL USER */}
                         <div className="flex items-center justify-between px-4 sm:px-5 py-4 bg-zinc-900/40 border-none">
                             <div className="flex items-center gap-3">
-                                <img
-                                    src={formData.picture}
-                                    alt={formData.name}
-                                    className="w-10 h-10 rounded-full shadow-md object-cover border-none"
-                                    referrerPolicy="no-referrer"
-                                />
+                                <div className="relative">
+                                    <img
+                                        src={formData.picture}
+                                        alt={formData.name}
+                                        className="w-10 h-10 rounded-full shadow-md object-cover border-none"
+                                        referrerPolicy="no-referrer"
+                                    />
+                                    {adminEmails.includes(formData.email) && (
+                                        <div className="absolute -bottom-1 -right-1 bg-zinc-900 rounded-full p-0.5">
+                                            <BadgeCheck className="w-4 h-4 text-[#0FFCBE] fill-[#106EBE]" />
+                                        </div>
+                                    )}
+                                </div>
                                 <div className="flex flex-col">
-                                    <span className="text-[13px] sm:text-[14px] font-bold text-white leading-tight">{formData.name}</span>
+                                    <span className="text-[13px] sm:text-[14px] font-bold text-white leading-tight flex items-center gap-1.5">
+                                        {formData.name}
+                                    </span>
                                     <span className="text-[10px] sm:text-[11px] font-medium text-zinc-400 truncate max-w-[150px] sm:max-w-none">{formData.email}</span>
                                 </div>
                             </div>
@@ -324,7 +343,6 @@ function Komentar({ videoId, onCommentSuccess }) {
                             </button>
                         </div>
 
-                        {/* TOOLBAR FORMATTING */}
                         <div className="flex flex-wrap items-center gap-4 px-4 sm:px-5 py-3 bg-zinc-800/80 text-zinc-300 border-none overflow-x-auto custom-scrollbar">
                             <button type="button" onClick={() => insertFormat('bold')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Bold"><Bold className="w-4 h-4" /></button>
                             <button type="button" onClick={() => insertFormat('italic')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Italic"><Italic className="w-4 h-4" /></button>
@@ -340,7 +358,6 @@ function Komentar({ videoId, onCommentSuccess }) {
                             )}
                         </div>
 
-                        {/* TEXTAREA KOMENTAR */}
                         <div className="relative bg-zinc-900/40 border-none">
                             <textarea
                                 ref={textareaRef}
@@ -356,14 +373,9 @@ function Komentar({ videoId, onCommentSuccess }) {
                             </div>
                         </div>
 
-                        {/* FOOTER FORM (TURNSTILE & SUBMIT) */}
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-zinc-800/80 border-none">
-
                             <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2 sm:gap-4 border-none">
-
-                                {/* CLOUDFLARE TURNSTILE (DIKECILKAN OTOMATIS HANYA DI MOBILE) */}
                                 <div className="w-full flex justify-center sm:justify-start overflow-hidden py-1 border-none">
-                                    {/* scale-[0.75] di HP (<640px), sm:scale-100 (ukuran normal) di Desktop */}
                                     <div className="transform scale-[0.75] min-[380px]:scale-[0.85] sm:scale-100 origin-center sm:origin-left transition-all border-none">
                                         <Turnstile
                                             siteKey="0x4AAAAAAEI8owBAGHjSd7E5"
@@ -410,70 +422,96 @@ function Komentar({ videoId, onCommentSuccess }) {
 
             {/* LIST KOMENTAR */}
             <div className="flex flex-col gap-6 border-none">
-                {mainComments.length > 0 ? mainComments.map((comment) => (
-                    <div key={comment.id} className="flex flex-col gap-3 border-none">
+                {mainComments.length > 0 ? (
+                    mainComments.map((comment) => {
+                        const isAdmin = adminEmails.includes(comment.email);
 
-                        <div className={`flex gap-3 sm:gap-4 group border-none ${comment.status === 'pending' ? 'opacity-60' : ''}`}>
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-800/60 flex items-center justify-center shrink-0 shadow-lg overflow-hidden border-none">
-                                {comment.avatar_url ? (
-                                    <img src={comment.avatar_url} alt={comment.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                                ) : (
-                                    <span className="text-zinc-300 font-black text-sm sm:text-base border-none">{getInitial(comment.name)}</span>
-                                )}
-                            </div>
-
-                            <div className="flex-1 min-w-0 flex flex-col bg-zinc-800/60 p-4 sm:p-5 rounded-[1.2rem] sm:rounded-[1.5rem] border-none">
-                                <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
-                                    <span className="text-[13px] sm:text-[14px] font-bold text-white border-none">{comment.name}</span>
-                                    <span className="text-[10px] sm:text-[11px] font-medium text-zinc-400 border-none">{timeAgo(comment.created_at)}</span>
-                                    {comment.status === 'pending' && (
-                                        <span className="px-2 py-0.5 rounded-[4px] text-[8px] sm:text-[9px] uppercase tracking-wider font-bold bg-yellow-500/10 text-yellow-500 border-none">Awaiting Approval</span>
-                                    )}
-                                </div>
-                                <div
-                                    className="text-[12px] sm:text-[14px] text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none"
-                                    dangerouslySetInnerHTML={{ __html: parseMarkdown(comment.content) }}
-                                />
-                                <div className="flex items-center gap-4 mt-3 pt-3 border-none">
-                                    <button onClick={() => handleReplyClick(comment)} className="text-[10px] sm:text-[11px] text-zinc-400 font-bold hover:text-[#0FFCBE] transition-colors outline-none border-none">
-                                        Reply
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Balasan (Replies) */}
-                        {getReplies(comment.id).length > 0 && (
-                            <div className="flex flex-col gap-4 mt-1 ml-10 sm:ml-16 border-none">
-                                {getReplies(comment.id).map(reply => (
-                                    <div key={reply.id} className="flex gap-2.5 sm:gap-3 group border-none">
-                                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-zinc-800/60 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border-none">
-                                            {reply.avatar_url ? (
-                                                <img src={reply.avatar_url} alt={reply.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        return (
+                            <div key={comment.id} className="flex flex-col gap-3 border-none">
+                                <div className={`flex gap-3 sm:gap-4 group border-none ${comment.status === 'pending' ? 'opacity-60' : ''}`}>
+                                    <div className="relative w-10 h-10 sm:w-12 sm:h-12 shrink-0">
+                                        <div className="w-full h-full rounded-full bg-zinc-800/60 flex items-center justify-center shadow-lg overflow-hidden border-none">
+                                            {comment.avatar_url ? (
+                                                <img src={comment.avatar_url} alt={comment.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                             ) : (
-                                                <span className="text-zinc-300 font-bold text-[10px] sm:text-xs border-none">{getInitial(reply.name)}</span>
+                                                <span className="text-zinc-300 font-black text-sm sm:text-base border-none">{getInitial(comment.name)}</span>
                                             )}
                                         </div>
+                                        {isAdmin && (
+                                            <div className="absolute -bottom-1 -right-1 bg-zinc-900 rounded-full p-0.5" title="Verified Admin">
+                                                <BadgeCheck className="w-4 h-4 sm:w-5 sm:h-5 text-[#0FFCBE] fill-[#106EBE]" />
+                                            </div>
+                                        )}
+                                    </div>
 
-                                        <div className="flex-1 min-w-0 flex flex-col bg-zinc-800/40 p-3 sm:p-4 rounded-xl sm:rounded-[1.2rem] border-none">
-                                            <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
-                                                <span className="text-[11px] sm:text-[13px] font-bold text-white border-none">{reply.name}</span>
-                                                <span className="text-[9px] sm:text-[10px] font-medium text-zinc-400 border-none">{timeAgo(reply.created_at)}</span>
-                                            </div>
-                                            <div className="text-[11px] sm:text-[13px] text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none">
-                                                <span className="text-[#106EBE] font-bold mr-1 border-none">@{comment.name}</span>
-                                                <span dangerouslySetInnerHTML={{ __html: parseMarkdown(reply.content) }} />
-                                            </div>
-                                            <div className="flex items-center gap-4 mt-3 pt-2 border-none">
-                                                <button onClick={() => handleReplyClick(reply)} className="text-[9px] sm:text-[10px] text-zinc-400 font-bold hover:text-[#0FFCBE] transition-colors outline-none border-none">Reply</button>
-                                            </div>
+                                    <div className={`flex-1 min-w-0 flex flex-col bg-zinc-800/60 p-4 sm:p-5 rounded-[1.2rem] sm:rounded-[1.5rem] border-none ${isAdmin ? 'ring-1 ring-[#106EBE]/50 shadow-[0_0_15px_rgba(16,110,190,0.15)]' : ''}`}>
+                                        <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
+                                            <span className={`text-[13px] sm:text-[14px] font-bold flex items-center gap-1.5 ${isAdmin ? 'text-[#0FFCBE]' : 'text-white'}`}>
+                                                {comment.name}
+                                            </span>
+                                            <span className="text-[10px] sm:text-[11px] font-medium text-zinc-400 border-none">{timeAgo(comment.created_at)}</span>
+                                            {comment.status === 'pending' && (
+                                                <span className="px-2 py-0.5 rounded-[4px] text-[8px] sm:text-[9px] uppercase tracking-wider font-bold bg-yellow-500/10 text-yellow-500 border-none">Awaiting Approval</span>
+                                            )}
+                                        </div>
+                                        <div
+                                            className="text-[12px] sm:text-[14px] text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none"
+                                            dangerouslySetInnerHTML={{ __html: parseMarkdown(comment.content) }}
+                                        />
+                                        <div className="flex items-center gap-4 mt-3 pt-3 border-none">
+                                            <button onClick={() => handleReplyClick(comment)} className="text-[10px] sm:text-[11px] text-zinc-400 font-bold hover:text-[#0FFCBE] transition-colors outline-none border-none">
+                                                Reply
+                                            </button>
                                         </div>
                                     </div>
-                                ))}
+                                </div>
+
+                                {getReplies(comment.id).length > 0 && (
+                                    <div className="flex flex-col gap-4 mt-1 ml-10 sm:ml-16 border-none">
+                                        {getReplies(comment.id).map(reply => {
+                                            const isReplyAdmin = adminEmails.includes(reply.email);
+
+                                            return (
+                                                <div key={reply.id} className="flex gap-2.5 sm:gap-3 group border-none">
+                                                    <div className="relative w-8 h-8 sm:w-10 sm:h-10 shrink-0">
+                                                        <div className="w-full h-full rounded-full bg-zinc-800/60 flex items-center justify-center overflow-hidden shadow-sm border-none">
+                                                            {reply.avatar_url ? (
+                                                                <img src={reply.avatar_url} alt={reply.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                                            ) : (
+                                                                <span className="text-zinc-300 font-bold text-[10px] sm:text-xs border-none">{getInitial(reply.name)}</span>
+                                                            )}
+                                                        </div>
+                                                        {isReplyAdmin && (
+                                                            <div className="absolute -bottom-1 -right-1 bg-zinc-900 rounded-full p-0.5" title="Verified Admin">
+                                                                <BadgeCheck className="w-3.5 h-3.5 text-[#0FFCBE] fill-[#106EBE]" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <div className={`flex-1 min-w-0 flex flex-col bg-zinc-800/40 p-3 sm:p-4 rounded-xl sm:rounded-[1.2rem] border-none ${isReplyAdmin ? 'ring-1 ring-[#106EBE]/30' : ''}`}>
+                                                        <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
+                                                            <span className={`text-[11px] sm:text-[13px] font-bold ${isReplyAdmin ? 'text-[#0FFCBE]' : 'text-white'}`}>
+                                                                {reply.name}
+                                                            </span>
+                                                            <span className="text-[9px] sm:text-[10px] font-medium text-zinc-400 border-none">{timeAgo(reply.created_at)}</span>
+                                                        </div>
+                                                        <div className="text-[11px] sm:text-[13px] text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none">
+                                                            <span className="text-[#106EBE] font-bold mr-1 border-none">@{comment.name}</span>
+                                                            <span dangerouslySetInnerHTML={{ __html: parseMarkdown(reply.content) }} />
+                                                        </div>
+                                                        <div className="flex items-center gap-4 mt-3 pt-2 border-none">
+                                                            <button onClick={() => handleReplyClick(reply)} className="text-[9px] sm:text-[10px] text-zinc-400 font-bold hover:text-[#0FFCBE] transition-colors outline-none border-none">Reply</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
-                )) : (
+                        );
+                    })
+                ) : (
                     <div className="text-center py-12 text-zinc-500 bg-zinc-800/40 rounded-[1.5rem] border-none">
                         <MessageSquare className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 opacity-20 border-none" />
                         <p className="text-[12px] sm:text-sm font-medium border-none">Be the first to share your thoughts!</p>
