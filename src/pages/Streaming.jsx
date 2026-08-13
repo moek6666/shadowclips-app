@@ -258,7 +258,7 @@ export default function Streaming({ supabase }) {
                         </div>
                     </div>
 
-                    {/* WADAH SIDEBAR KANAN */}
+                    {/* WADAH SIDEBAR KANAN (lg:col-span-4) */}
                     <div className="lg:col-span-4 flex flex-col gap-4 w-full">
 
                         <div className="bg-zinc-900/40 p-3 sm:p-5 rounded-[1.5rem] flex flex-col gap-3 sm:gap-4 border-none">
@@ -271,7 +271,7 @@ export default function Streaming({ supabase }) {
                                 {relatedVideos.map((item) => (
                                     <div key={item.id} onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer flex flex-row items-start gap-3 sm:gap-4 w-full border-none">
 
-                                        {/* Thumbnail Sisi Kiri (Sekarang Lebih Besar: w-40 di Mobile, w-52 di Desktop) */}
+                                        {/* Thumbnail Sisi Kiri (Besar Proporsional) */}
                                         <div className="relative w-40 sm:w-52 aspect-video rounded-[8px] overflow-hidden bg-zinc-900 border-none shrink-0 shadow-md">
                                             <img src={getImageUrl(item.img)} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
@@ -286,7 +286,7 @@ export default function Streaming({ supabase }) {
                                             )}
                                         </div>
 
-                                        {/* Teks Sisi Kanan (Ukuran disesuaikan dengan gambar yang lebih besar) */}
+                                        {/* Teks Sisi Kanan */}
                                         <div className="flex flex-col flex-1 min-w-0 border-none pt-0.5 sm:pt-1">
                                             <h4 className="font-bold text-[12px] sm:text-[14px] text-zinc-100 group-hover:text-[#0FFCBE] transition-colors line-clamp-2 leading-snug mb-1.5" title={item.title}>
                                                 {item.title}
