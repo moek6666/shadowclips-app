@@ -160,13 +160,10 @@ export default function Streaming({ supabase }) {
 
             <div className="pt-24 pb-20 max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 min-h-screen relative">
 
-                {/* SETTING GRID: lg:grid-cols-12, Kolom Kiri span-8 (2/3), Kanan span-4 (1/3) */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
 
-                    {/* WADAH UTAMA KIRI (lg:col-span-8) */}
                     <div className="lg:col-span-8 flex flex-col gap-4">
 
-                        {/* WADAH PLAYER VIDEO */}
                         <div className={`w-full ${currentVideoUrl || !isVipUnlocked ? 'aspect-video' : 'min-h-[400px] max-h-[80vh]'} bg-zinc-950 rounded-[1.5rem] overflow-hidden relative flex items-center justify-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-none`}>
                             {!isVipUnlocked ? (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center p-8 bg-zinc-900/95 backdrop-blur-3xl z-50 text-center">
@@ -198,38 +195,39 @@ export default function Streaming({ supabase }) {
                             ) : (<div className="text-zinc-500 flex flex-col items-center p-12"><Play className="w-12 h-12 mb-2 opacity-50" /><p>Video unavailable</p></div>)}
                         </div>
 
-                        {/* WADAH SERVER & DOWNLOAD */}
+                        {/* --- SIDE-BY-SIDE MOBILE DI SINI --- */}
                         {isVipUnlocked && (
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-900/40 p-3 sm:p-4 rounded-[1.5rem] border-none">
-                                <div className="flex items-center gap-3 relative">
-                                    <span className="text-zinc-500 text-xs font-bold uppercase tracking-wider mr-1 hidden sm:block">Server:</span>
+                            <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 bg-zinc-900/40 p-2.5 sm:p-4 rounded-[1.5rem] border-none">
+                                <div className="flex items-center gap-2 relative min-w-0">
+                                    <span className="text-zinc-500 text-[10px] sm:text-xs font-bold uppercase tracking-wider mr-1 hidden sm:block">Server:</span>
                                     {serverOptions.length > 1 ? (
-                                        <div className="relative">
-                                            <button onClick={() => setIsServerDropdownOpen(!isServerDropdownOpen)} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all bg-[#106EBE] text-white shadow-[0_5px_15px_rgba(16,110,190,0.3)] border-none relative z-[101]">
-                                                <Server className="w-3.5 h-3.5" /> {activeServerLabel} <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ml-1 ${isServerDropdownOpen ? 'rotate-180' : ''}`} />
+                                        <div className="relative min-w-0">
+                                            <button onClick={() => setIsServerDropdownOpen(!isServerDropdownOpen)} className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-[13px] font-bold transition-all bg-[#106EBE] text-white shadow-[0_5px_15px_rgba(16,110,190,0.3)] border-none relative z-[101] max-w-full">
+                                                <Server className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
+                                                <span className="truncate max-w-[70px] sm:max-w-none">{activeServerLabel}</span>
+                                                <ChevronDown className={`w-3 h-3 sm:w-3.5 sm:h-3.5 transition-transform duration-300 ml-0.5 shrink-0 ${isServerDropdownOpen ? 'rotate-180' : ''}`} />
                                             </button>
                                             {isServerDropdownOpen && <div className="fixed inset-0 z-[90]" onClick={() => setIsServerDropdownOpen(false)}></div>}
-                                            <div className={`absolute top-full left-0 mt-2 w-36 bg-zinc-900/95 backdrop-blur-xl rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden z-[100] flex flex-col py-1.5 transition-all duration-300 origin-top border-none ${isServerDropdownOpen ? 'opacity-100 scale-y-100 visible' : 'opacity-0 scale-y-95 invisible'}`}>
+                                            <div className={`absolute top-full left-0 mt-2 w-32 sm:w-36 bg-zinc-900/95 backdrop-blur-xl rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden z-[100] flex flex-col py-1.5 transition-all duration-300 origin-top border-none ${isServerDropdownOpen ? 'opacity-100 scale-y-100 visible' : 'opacity-0 scale-y-95 invisible'}`}>
                                                 {serverOptions.map(option => (
-                                                    <button key={option.id} onClick={() => { setActiveServer(option.id); setIsServerDropdownOpen(false); }} className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-[13px] font-bold transition-colors w-full text-left border-none ${effectiveServer === option.id ? 'text-[#0FFCBE] bg-zinc-800/50' : 'text-zinc-300 hover:text-white hover:bg-zinc-800'}`}>
-                                                        <Server className="w-3.5 h-3.5 shrink-0" /> {option.label}
+                                                    <button key={option.id} onClick={() => { setActiveServer(option.id); setIsServerDropdownOpen(false); }} className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 text-[11px] sm:text-[13px] font-bold transition-colors w-full text-left border-none ${effectiveServer === option.id ? 'text-[#0FFCBE] bg-zinc-800/50' : 'text-zinc-300 hover:text-white hover:bg-zinc-800'}`}>
+                                                        <Server className="w-3 h-3 shrink-0" /> {option.label}
                                                     </button>
                                                 ))}
                                             </div>
                                         </div>
                                     ) : serverOptions.length === 1 ? (
-                                        <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all bg-[#106EBE] text-white shadow-[0_5px_15px_rgba(16,110,190,0.3)] cursor-default border-none"><Server className="w-3.5 h-3.5" /> {serverOptions[0].label}</button>
+                                        <button className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-[13px] font-bold transition-all bg-[#106EBE] text-white shadow-[0_5px_15px_rgba(16,110,190,0.3)] cursor-default border-none"><Server className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" /> {serverOptions[0].label}</button>
                                     ) : null}
                                 </div>
                                 {hasDownloadLink && (
-                                    <button onClick={() => { setIsDownloadModalOpen(true); setModalStatus('waiting'); setModalProgress(0); }} className="flex items-center justify-center gap-2 bg-[#106EBE] hover:bg-[#0e5c9f] text-white px-5 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all shadow-[0_5px_15px_rgba(16,110,190,0.3)] border-none">
-                                        <Download className="w-4 h-4 shrink-0" /> Download
+                                    <button onClick={() => { setIsDownloadModalOpen(true); setModalStatus('waiting'); setModalProgress(0); }} className="flex items-center justify-center gap-1.5 bg-[#106EBE] hover:bg-[#0e5c9f] text-white px-3 sm:px-5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-[13px] font-bold transition-all shadow-[0_5px_15px_rgba(16,110,190,0.3)] border-none shrink-0">
+                                        <Download className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" /> Download
                                     </button>
                                 )}
                             </div>
                         )}
 
-                        {/* WADAH DESKRIPSI & INFO */}
                         <div className="bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] flex flex-col gap-5 border-none">
                             <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white leading-snug tracking-tight" title={video.title}>{video.title}</h1>
                             <div className="flex flex-wrap items-center gap-4 text-xs sm:text-[13px] text-zinc-400 font-medium">
@@ -251,8 +249,7 @@ export default function Streaming({ supabase }) {
                             </div>
                         </div>
 
-                        {/* WADAH KOMENTAR */}
-                        <div className="bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] w-full border-none">
+                        <div className="bg-zinc-900/40 p-2 sm:p-6 rounded-[1.5rem] w-full border-none overflow-hidden">
                             <Komentar videoId={video.id} onCommentSuccess={() => {
                                 setHasCommented(true);
                                 const isVipContent = String(video?.category).toLowerCase().includes('exclusive') || String(video?.category).toLowerCase().includes('vip');
@@ -261,38 +258,37 @@ export default function Streaming({ supabase }) {
                         </div>
                     </div>
 
-                    {/* WADAH SIDEBAR KANAN (lg:col-span-4) */}
+                    {/* WADAH SIDEBAR KANAN */}
                     <div className="lg:col-span-4 flex flex-col gap-4 w-full">
 
-                        {/* WADAH RELATED VIDEOS */}
-                        <div className="bg-zinc-900/40 p-4 sm:p-5 rounded-[1.5rem] flex flex-col gap-4 border-none">
-                            <h3 className="text-[16px] font-black text-white flex items-center gap-2 mb-1">
+                        <div className="bg-zinc-900/40 p-3 sm:p-5 rounded-[1.5rem] flex flex-col gap-3 sm:gap-4 border-none">
+                            <h3 className="text-[15px] sm:text-[16px] font-black text-white flex items-center gap-2 mb-1 px-1">
                                 <LayoutGrid className="w-4 h-4 text-[#106EBE]" /> Related Videos
                             </h3>
 
-                            {/* LAYOUT LIST (Telah Disempurnakan) */}
-                            <div className="flex flex-col gap-4 border-none">
+                            {/* --- LIST RELATED VIDEOS (Gambar Diperbesar) --- */}
+                            <div className="flex flex-col gap-4 sm:gap-5 border-none">
                                 {relatedVideos.map((item) => (
-                                    <div key={item.id} onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer flex items-start gap-3 sm:gap-4 w-full border-none">
+                                    <div key={item.id} onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer flex flex-row items-start gap-3 sm:gap-4 w-full border-none">
 
-                                        {/* Thumbnail Sisi Kiri (Diperbesar) */}
-                                        <div className="relative w-40 sm:w-48 aspect-video rounded-[8px] overflow-hidden bg-zinc-900 border-none shrink-0 shadow-md">
+                                        {/* Thumbnail Sisi Kiri (Sekarang Lebih Besar: w-40 di Mobile, w-52 di Desktop) */}
+                                        <div className="relative w-40 sm:w-52 aspect-video rounded-[8px] overflow-hidden bg-zinc-900 border-none shrink-0 shadow-md">
                                             <img src={getImageUrl(item.img)} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
-                                                <div className="w-8 h-8 bg-[#106EBE] rounded-full flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(16,110,190,0.6)] border-none">
-                                                    <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+                                                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#106EBE] rounded-full flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(16,110,190,0.6)] border-none">
+                                                    <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current ml-0.5" />
                                                 </div>
                                             </div>
                                             {item.duration && item.duration !== 'EMPTY' && (
-                                                <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
+                                                <div className="absolute bottom-1 right-1 sm:bottom-1.5 sm:right-1.5 bg-black/80 text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
                                                     {item.duration}
                                                 </div>
                                             )}
                                         </div>
 
-                                        {/* Teks Sisi Kanan (Diperbesar sedikit) */}
-                                        <div className="flex flex-col flex-1 min-w-0 border-none pt-0.5">
-                                            <h4 className="font-bold text-[13px] sm:text-[14px] text-zinc-100 group-hover:text-[#0FFCBE] transition-colors line-clamp-2 leading-snug mb-1" title={item.title}>
+                                        {/* Teks Sisi Kanan (Ukuran disesuaikan dengan gambar yang lebih besar) */}
+                                        <div className="flex flex-col flex-1 min-w-0 border-none pt-0.5 sm:pt-1">
+                                            <h4 className="font-bold text-[12px] sm:text-[14px] text-zinc-100 group-hover:text-[#0FFCBE] transition-colors line-clamp-2 leading-snug mb-1.5" title={item.title}>
                                                 {item.title}
                                             </h4>
 
