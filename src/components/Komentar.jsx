@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient';
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import { Turnstile } from '@marsidev/react-turnstile';
 import {
-    Loader2, User, Send, MessageSquare, ChevronDown,
+    Loader2, Send, MessageSquare, ChevronDown,
     Bold, Italic, Code, Link as LinkIcon, Quote, X, LogOut
 } from 'lucide-react';
 
@@ -23,9 +23,6 @@ export default function KomentarWrapper(props) {
 // ==========================================
 function Komentar({ videoId, onCommentSuccess }) {
     const [comments, setComments] = useState([]);
-    const [activeTab, setActiveTab] = useState(() => {
-        return (typeof window !== 'undefined' && localStorage.getItem('shadowclips_user_picture')) ? 'guest' : 'login';
-    });
 
     const [formData, setFormData] = useState(() => {
         return {
@@ -40,10 +37,12 @@ function Komentar({ videoId, onCommentSuccess }) {
     const [notification, setNotification] = useState(null);
     const [replyTo, setReplyTo] = useState(null);
 
-    // State & Ref untuk Cloudflare Turnstile
     const [captchaToken, setCaptchaToken] = useState(null);
     const turnstileRef = useRef(null);
     const textareaRef = useRef(null);
+
+    // Cek apakah user sudah login berdasarkan data email dan foto dari Google
+    const isLoggedIn = Boolean(formData.email && formData.picture);
 
     useEffect(() => {
         const fetchComments = async () => {
@@ -94,10 +93,16 @@ function Komentar({ videoId, onCommentSuccess }) {
 
     const handleReplyClick = (comment) => {
         setReplyTo(comment);
-        setActiveTab('guest');
-        setTimeout(() => {
-            if (textareaRef.current) textareaRef.current.focus();
-        }, 50);
+        if (isLoggedIn) {
+            setTimeout(() => {
+                if (textareaRef.current) {
+                    textareaRef.current.focus();
+                    textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
+        } else {
+            setNotification({ type: 'error', message: 'Silakan login terlebih dahulu untuk membalas komentar.' });
+        }
     };
 
     const cancelReply = () => {
@@ -125,7 +130,6 @@ function Komentar({ videoId, onCommentSuccess }) {
                 localStorage.setItem('shadowclips_user_picture', userInfo.picture);
 
                 setNotification(null);
-                setActiveTab('guest');
             } catch (error) {
                 console.error("Gagal mengambil data Google:", error);
                 setNotification({ type: 'error', message: 'Autentikasi gagal.' });
@@ -141,10 +145,8 @@ function Komentar({ videoId, onCommentSuccess }) {
         localStorage.removeItem('shadowclips_user_name');
         localStorage.removeItem('shadowclips_user_email');
         localStorage.removeItem('shadowclips_user_picture');
-        setActiveTab('login');
     };
 
-    // Fungsi Toolbar dengan penyisipan teks yang lebih baik
     const insertFormat = (format) => {
         if (!textareaRef.current) return;
         const start = textareaRef.current.selectionStart;
@@ -163,23 +165,18 @@ function Komentar({ videoId, onCommentSuccess }) {
         setTimeout(() => textareaRef.current.focus(), 0);
     };
 
-    // Fungsi Parsing Markdown ke HTML
     const parseMarkdown = (text) => {
         if (!text) return '';
 
-        // 1. Hindari XSS (Sanitasi HTML sederhana)
         let html = text.replace(/[&<>'"]/g, tag => ({
             '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
         }[tag] || tag));
 
-        // 2. Terapkan Regex Markdown
-        html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>'); // Bold
-        html = html.replace(/\*(.*?)\*/g, '<em class="italic text-zinc-300">$1</em>'); // Italic
-        html = html.replace(/`(.*?)`/g, '<code class="bg-zinc-800 px-1.5 py-0.5 rounded text-[#0FFCBE] text-[12px] font-mono">$1</code>'); // Code
-        html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-[#106EBE] hover:underline">$1</a>'); // Link
-        html = html.replace(/^&gt; (.*$)/gm, '<blockquote class="border-l-2 border-[#106EBE] pl-3 my-1 text-zinc-400 italic bg-zinc-900/30 py-1">$1</blockquote>'); // Quote
-
-        // 3. Konversi enter menjadi line-break (<br/>)
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>');
+        html = html.replace(/\*(.*?)\*/g, '<em class="italic text-zinc-300">$1</em>');
+        html = html.replace(/`(.*?)`/g, '<code class="bg-zinc-900/60 px-1.5 py-0.5 rounded text-[#0FFCBE] text-[12px] font-mono">$1</code>');
+        html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-[#106EBE] hover:underline">$1</a>');
+        html = html.replace(/^&gt; (.*$)/gm, '<blockquote class="border-l-2 border-[#106EBE] pl-3 my-1 text-zinc-400 italic bg-zinc-900/30 py-1">$1</blockquote>');
         html = html.replace(/\n/g, '<br/>');
 
         return html;
@@ -257,41 +254,24 @@ function Komentar({ videoId, onCommentSuccess }) {
     const getReplies = (parentId) => comments.filter(c => c.parent_id === parentId).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
     return (
-        <div className="w-full mt-4 mb-8 font-sans">
+        <div className="w-full mt-6 mb-8 font-sans">
 
-            {/* TOP BAR: Navigasi Login / Guest */}
-            <div className="flex items-center gap-4 mb-5 border-b border-zinc-800/60 pb-4">
-                <button
-                    onClick={() => setActiveTab('login')}
-                    className={`px-5 py-2 rounded-md flex items-center gap-2 text-sm font-bold transition-all outline-none ${activeTab === 'login' ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.3)]' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}
-                >
-                    <User className="w-4 h-4" /> Sign in
-                </button>
-                <span className="text-zinc-600 text-sm font-medium">or</span>
-                <button
-                    onClick={() => setActiveTab('guest')}
-                    className={`text-sm font-medium transition-colors outline-none ${activeTab === 'guest' ? 'text-white border-b-2 border-[#106EBE] pb-0.5' : 'text-zinc-400 hover:text-zinc-200'}`}
-                >
-                    post as guest
-                </button>
-            </div>
+            {/* WADAH UTAMA FORM / LOGIN */}
+            <div className="bg-zinc-800/60 rounded-[1.5rem] overflow-hidden mb-10 shadow-lg transition-all duration-500 border-none">
 
-            {/* WADAH UTAMA FORM (Dengan Border Elegan) */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden mb-10 shadow-lg transition-all duration-500">
-
-                {/* === TAMPILAN LOGIN GOOGLE === */}
-                {activeTab === 'login' && (
-                    <div className="px-6 py-14 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-300">
-                        <p className="text-zinc-400 text-sm mb-8 text-center max-w-md">
+                {/* JIKA BELUM LOGIN -> TAMPILKAN TOMBOL GOOGLE SAJA */}
+                {!isLoggedIn ? (
+                    <div className="px-6 py-16 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-300 border-none">
+                        <p className="text-zinc-300 text-sm mb-8 text-center max-w-md">
                             Login securely with Google to join the discussion and unlock exclusive VIP contents instantly.
                         </p>
 
                         <button
                             onClick={() => login()}
-                            className="w-full max-w-sm bg-white hover:bg-zinc-200 rounded-lg p-2 flex items-center justify-between transition-colors shadow-md group outline-none"
+                            className="w-full max-w-sm bg-white hover:bg-zinc-200 rounded-xl p-2 flex items-center justify-between transition-colors shadow-lg group outline-none border-none"
                         >
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-zinc-100 rounded-md flex items-center justify-center text-lg font-black text-zinc-800 overflow-hidden">
+                                <div className="w-10 h-10 bg-zinc-100 rounded-lg flex items-center justify-center text-lg font-black text-zinc-800 overflow-hidden">
                                     G
                                 </div>
                                 <div className="flex flex-col text-left">
@@ -317,93 +297,70 @@ function Komentar({ videoId, onCommentSuccess }) {
                             <span className="mt-4 text-xs font-medium text-red-400 animate-in fade-in">{notification.message}</span>
                         )}
                     </div>
-                )}
+                ) : (
+                    /* JIKA SUDAH LOGIN -> TAMPILKAN FORM KOMENTAR */
+                    <form onSubmit={handleSubmit} className="animate-in fade-in duration-300 border-none">
 
-                {/* === TAMPILAN TAB GUEST / FORM KOMENTAR === */}
-                {activeTab === 'guest' && (
-                    <form onSubmit={handleSubmit} className="animate-in fade-in zoom-in-95 duration-300">
-
-                        {/* HEADER PROFIL ATAU INPUT GUEST */}
-                        {formData.email && formData.picture ? (
-                            <div className="flex items-center justify-between px-5 py-4 bg-zinc-950/50 border-b border-zinc-800">
-                                <div className="flex items-center gap-3">
-                                    <img
-                                        src={formData.picture}
-                                        alt={formData.name}
-                                        className="w-10 h-10 rounded-full shadow-md object-cover border border-zinc-800"
-                                        referrerPolicy="no-referrer"
-                                    />
-                                    <div className="flex flex-col">
-                                        <span className="text-[14px] font-bold text-white leading-tight">{formData.name}</span>
-                                        <span className="text-[11px] font-medium text-zinc-400">{formData.email}</span>
-                                    </div>
+                        {/* HEADER PROFIL USER */}
+                        <div className="flex items-center justify-between px-5 py-4 bg-zinc-900/40 border-none">
+                            <div className="flex items-center gap-3">
+                                <img
+                                    src={formData.picture}
+                                    alt={formData.name}
+                                    className="w-10 h-10 rounded-full shadow-md object-cover border-none"
+                                    referrerPolicy="no-referrer"
+                                />
+                                <div className="flex flex-col">
+                                    <span className="text-[14px] font-bold text-white leading-tight">{formData.name}</span>
+                                    <span className="text-[11px] font-medium text-zinc-400">{formData.email}</span>
                                 </div>
-                                <button type="button" onClick={handleLogout} className="flex items-center gap-1.5 text-[11px] font-bold text-zinc-500 hover:text-red-400 transition-colors outline-none bg-zinc-900 px-3 py-1.5 rounded-md border border-zinc-800 hover:border-red-400/50">
-                                    <LogOut className="w-3.5 h-3.5" /> Logout
-                                </button>
                             </div>
-                        ) : (
-                            <div className="flex flex-col sm:flex-row bg-zinc-950/50 border-b border-zinc-800">
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleInputChange}
-                                    placeholder="Your name *"
-                                    className="w-full sm:w-1/2 bg-transparent px-5 py-4 text-[13px] text-white placeholder-zinc-500 focus:outline-none focus:bg-zinc-900 transition-colors"
-                                    required
-                                />
-                                <div className="w-full sm:w-px h-px sm:h-auto bg-zinc-800"></div>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleInputChange}
-                                    placeholder="Email (required for access) *"
-                                    className="w-full sm:w-1/2 bg-transparent px-5 py-4 text-[13px] text-white placeholder-zinc-500 focus:outline-none focus:bg-zinc-900 transition-colors"
-                                    required
-                                />
-                            </div>
-                        )}
+                            <button
+                                type="button"
+                                onClick={handleLogout}
+                                className="flex items-center gap-1.5 text-[11px] font-bold text-zinc-300 hover:text-red-400 transition-colors outline-none bg-zinc-800/80 hover:bg-zinc-800 px-3 py-1.5 rounded-lg border-none"
+                            >
+                                <LogOut className="w-3.5 h-3.5" /> Logout
+                            </button>
+                        </div>
 
                         {/* TOOLBAR FORMATTING */}
-                        <div className="flex items-center gap-4 px-5 py-3 bg-zinc-900 text-zinc-400 border-b border-zinc-800">
-                            <button type="button" onClick={() => insertFormat('bold')} className="hover:text-white transition-colors outline-none"><Bold className="w-4 h-4" /></button>
-                            <button type="button" onClick={() => insertFormat('italic')} className="hover:text-white transition-colors outline-none"><Italic className="w-4 h-4" /></button>
-                            <button type="button" onClick={() => insertFormat('code')} className="hover:text-white transition-colors outline-none"><Code className="w-4 h-4" /></button>
-                            <button type="button" onClick={() => insertFormat('link')} className="hover:text-white transition-colors outline-none"><LinkIcon className="w-4 h-4" /></button>
-                            <button type="button" onClick={() => insertFormat('quote')} className="hover:text-white transition-colors outline-none"><Quote className="w-4 h-4" /></button>
+                        <div className="flex items-center gap-4 px-5 py-3 bg-zinc-800/80 text-zinc-300 border-none">
+                            <button type="button" onClick={() => insertFormat('bold')} className="hover:text-white transition-colors outline-none border-none" title="Bold"><Bold className="w-4 h-4" /></button>
+                            <button type="button" onClick={() => insertFormat('italic')} className="hover:text-white transition-colors outline-none border-none" title="Italic"><Italic className="w-4 h-4" /></button>
+                            <button type="button" onClick={() => insertFormat('code')} className="hover:text-white transition-colors outline-none border-none" title="Code"><Code className="w-4 h-4" /></button>
+                            <button type="button" onClick={() => insertFormat('link')} className="hover:text-white transition-colors outline-none border-none" title="Link"><LinkIcon className="w-4 h-4" /></button>
+                            <button type="button" onClick={() => insertFormat('quote')} className="hover:text-white transition-colors outline-none border-none" title="Quote"><Quote className="w-4 h-4" /></button>
 
                             {replyTo && (
-                                <div className="ml-auto flex items-center gap-2 bg-[#106EBE]/20 text-[#106EBE] px-3 py-1 rounded-md border border-[#106EBE]/30">
-                                    <span className="text-[11px] font-bold truncate max-w-[100px] sm:max-w-[200px]">Replying to @{replyTo.name}</span>
-                                    <button type="button" onClick={cancelReply} className="hover:bg-[#106EBE]/30 rounded-full p-0.5 outline-none"><X className="w-3.5 h-3.5" /></button>
+                                <div className="ml-auto flex items-center gap-2 bg-[#106EBE]/20 text-[#106EBE] px-3 py-1 rounded-lg border-none">
+                                    <span className="text-[11px] font-bold truncate max-w-[150px]">Replying to @{replyTo.name}</span>
+                                    <button type="button" onClick={cancelReply} className="hover:bg-[#106EBE]/30 rounded-full p-0.5 outline-none border-none"><X className="w-3.5 h-3.5" /></button>
                                 </div>
                             )}
                         </div>
 
                         {/* TEXTAREA KOMENTAR */}
-                        <div className="relative bg-zinc-950/80">
+                        <div className="relative bg-zinc-900/40 border-none">
                             <textarea
                                 ref={textareaRef}
                                 name="content"
                                 value={formData.content}
                                 onChange={handleInputChange}
-                                placeholder="Join the discussion..."
-                                className="w-full bg-transparent px-5 py-5 text-[14px] text-white placeholder-zinc-600 focus:outline-none min-h-[140px] resize-y"
+                                placeholder="Type your comment here..."
+                                className="w-full bg-transparent px-5 py-5 text-[14px] text-white placeholder-zinc-500 focus:outline-none min-h-[140px] resize-y border-none"
                                 required
                             />
-                            <div className="absolute bottom-3 right-5 text-[11px] font-medium text-zinc-600 select-none">
+                            <div className="absolute bottom-3 right-4 text-[10px] font-medium text-zinc-500 select-none border-none">
                                 {formData.content.length}/2000
                             </div>
                         </div>
 
-                        {/* FOOTER SUBMIT & CLOUDFLARE TURNSTILE */}
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-zinc-900 border-t border-zinc-800">
-
-                            <div className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-4">
+                        {/* FOOTER FORM (TURNSTILE & SUBMIT) */}
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-zinc-800/80 border-none">
+                            <div className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-4 border-none">
                                 {/* CLOUDFLARE TURNSTILE */}
-                                <div className="min-h-[65px] flex items-center bg-zinc-950 rounded-lg p-1 border border-zinc-800">
+                                <div className="min-h-[65px] flex items-center bg-zinc-900/60 rounded-xl p-1 shadow-inner border-none">
                                     <Turnstile
                                         siteKey="0x4AAAAAAEI8owBAGHjSd7E5"
                                         onSuccess={(token) => setCaptchaToken(token)}
@@ -415,7 +372,7 @@ function Komentar({ videoId, onCommentSuccess }) {
                                 </div>
 
                                 {notification && (
-                                    <span className={`text-[12px] font-medium animate-in fade-in ${notification.type === 'success' ? 'text-[#0FFCBE]' : 'text-red-400'}`}>
+                                    <span className={`text-[12px] font-medium animate-in fade-in border-none ${notification.type === 'success' ? 'text-[#0FFCBE]' : 'text-red-400'}`}>
                                         {notification.message}
                                     </span>
                                 )}
@@ -424,7 +381,7 @@ function Komentar({ videoId, onCommentSuccess }) {
                             <button
                                 type="submit"
                                 disabled={isSubmitting || !formData.content.trim() || !captchaToken}
-                                className="w-full sm:w-auto bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-800 disabled:text-zinc-600 text-white px-8 py-3.5 rounded-lg flex items-center justify-center gap-2 font-bold text-[13px] transition-all shadow-[0_0_15px_rgba(16,110,190,0.3)] disabled:shadow-none outline-none"
+                                className="w-full sm:w-auto bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-700 disabled:text-zinc-500 text-white px-8 py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold text-[13px] transition-all shadow-[0_5px_15px_rgba(16,110,190,0.3)] disabled:shadow-none outline-none border-none"
                             >
                                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                                 Post Comment
@@ -435,45 +392,46 @@ function Komentar({ videoId, onCommentSuccess }) {
             </div>
 
             {/* KOMENTAR HEADER */}
-            <div className="flex items-center justify-between mb-8 pb-4">
-                <div className="flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5 text-zinc-400" />
+            <div className="flex items-center justify-between mb-8 pb-2 border-none">
+                <div className="flex items-center gap-2 border-none">
+                    <MessageSquare className="w-5 h-5 text-white" />
                     <h3 className="text-xl font-black text-white tracking-tight">Comments</h3>
-                    <span className="bg-zinc-800 text-[#0FFCBE] text-xs font-black px-2.5 py-0.5 rounded-full">{comments.length}</span>
+                    <span className="bg-zinc-800/60 text-[#0FFCBE] text-sm font-black px-2.5 py-0.5 rounded-full border-none">{comments.length}</span>
                 </div>
-                <div className="flex items-center gap-1 text-xs font-bold text-zinc-500 cursor-pointer hover:text-white transition-colors">
+                <div className="flex items-center gap-1 text-xs font-bold text-zinc-400 cursor-pointer hover:text-white transition-colors border-none">
                     Newest First <ChevronDown className="w-4 h-4" />
                 </div>
             </div>
 
             {/* LIST KOMENTAR */}
-            <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-6 border-none">
                 {mainComments.length > 0 ? mainComments.map((comment) => (
-                    <div key={comment.id} className="flex flex-col gap-3">
+                    <div key={comment.id} className="flex flex-col gap-3 border-none">
 
-                        <div className={`flex gap-4 group ${comment.status === 'pending' ? 'opacity-60' : ''}`}>
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-800 flex items-center justify-center shrink-0 shadow-md border border-zinc-700 overflow-hidden">
+                        <div className={`flex gap-4 group border-none ${comment.status === 'pending' ? 'opacity-60' : ''}`}>
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-800/60 flex items-center justify-center shrink-0 shadow-lg overflow-hidden border-none">
                                 {comment.avatar_url ? (
                                     <img src={comment.avatar_url} alt={comment.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                 ) : (
-                                    <span className="text-zinc-300 font-black text-sm sm:text-base">{getInitial(comment.name)}</span>
+                                    <span className="text-zinc-300 font-black text-sm sm:text-base border-none">{getInitial(comment.name)}</span>
                                 )}
                             </div>
-                            <div className="flex-1 min-w-0 flex flex-col bg-zinc-900/40 p-4 rounded-xl border border-zinc-800/60">
-                                <div className="flex items-center flex-wrap gap-2 mb-2">
-                                    <span className="text-[13px] sm:text-[14px] font-bold text-zinc-100">{comment.name}</span>
-                                    <span className="text-[11px] sm:text-[12px] font-medium text-zinc-500">{timeAgo(comment.created_at)}</span>
+
+                            {/* Card Item Menggunakan Warna Zinc-800/60 */}
+                            <div className="flex-1 min-w-0 flex flex-col bg-zinc-800/60 p-4 sm:p-5 rounded-[1.5rem] border-none">
+                                <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
+                                    <span className="text-[13px] sm:text-[14px] font-bold text-white border-none">{comment.name}</span>
+                                    <span className="text-[11px] sm:text-[12px] font-medium text-zinc-400 border-none">{timeAgo(comment.created_at)}</span>
                                     {comment.status === 'pending' && (
-                                        <span className="px-2 py-0.5 rounded-[4px] text-[9px] uppercase tracking-wider font-bold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">Awaiting Approval</span>
+                                        <span className="px-2 py-0.5 rounded-[4px] text-[9px] uppercase tracking-wider font-bold bg-yellow-500/10 text-yellow-500 border-none">Awaiting Approval</span>
                                     )}
                                 </div>
-                                {/* RENDER MARKDOWN DISINI */}
                                 <div
-                                    className="text-[13px] sm:text-[14px] text-zinc-300 leading-relaxed whitespace-pre-wrap break-words"
+                                    className="text-[13px] sm:text-[14px] text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none"
                                     dangerouslySetInnerHTML={{ __html: parseMarkdown(comment.content) }}
                                 />
-                                <div className="flex items-center gap-4 mt-3 pt-3 border-t border-zinc-800/60">
-                                    <button onClick={() => handleReplyClick(comment)} className="text-[11px] sm:text-[12px] text-zinc-400 font-bold hover:text-[#0FFCBE] transition-colors outline-none">
+                                <div className="flex items-center gap-4 mt-3 pt-3 border-none">
+                                    <button onClick={() => handleReplyClick(comment)} className="text-[11px] sm:text-[12px] text-zinc-400 font-bold hover:text-[#0FFCBE] transition-colors outline-none border-none">
                                         Reply
                                     </button>
                                 </div>
@@ -482,28 +440,28 @@ function Komentar({ videoId, onCommentSuccess }) {
 
                         {/* Balasan (Replies) */}
                         {getReplies(comment.id).length > 0 && (
-                            <div className="flex flex-col gap-4 mt-1 ml-14 sm:ml-16">
+                            <div className="flex flex-col gap-4 mt-1 ml-14 sm:ml-16 border-none">
                                 {getReplies(comment.id).map(reply => (
-                                    <div key={reply.id} className="flex gap-3 group">
-                                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-zinc-800 flex items-center justify-center shrink-0 border border-zinc-700 overflow-hidden">
+                                    <div key={reply.id} className="flex gap-3 group border-none">
+                                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-zinc-800/60 flex items-center justify-center shrink-0 overflow-hidden shadow-sm border-none">
                                             {reply.avatar_url ? (
                                                 <img src={reply.avatar_url} alt={reply.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                             ) : (
-                                                <span className="text-zinc-400 font-bold text-xs sm:text-sm">{getInitial(reply.name)}</span>
+                                                <span className="text-zinc-300 font-bold text-xs sm:text-sm border-none">{getInitial(reply.name)}</span>
                                             )}
                                         </div>
-                                        <div className="flex-1 min-w-0 flex flex-col bg-zinc-900/40 p-3 sm:p-4 rounded-xl border border-zinc-800/60">
-                                            <div className="flex items-center flex-wrap gap-2 mb-2">
-                                                <span className="text-[12px] sm:text-[13px] font-bold text-zinc-200">{reply.name}</span>
-                                                <span className="text-[10px] sm:text-[11px] font-medium text-zinc-500">{timeAgo(reply.created_at)}</span>
+
+                                        <div className="flex-1 min-w-0 flex flex-col bg-zinc-800/40 p-3 sm:p-4 rounded-[1.2rem] border-none">
+                                            <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
+                                                <span className="text-[12px] sm:text-[13px] font-bold text-white border-none">{reply.name}</span>
+                                                <span className="text-[10px] sm:text-[11px] font-medium text-zinc-400 border-none">{timeAgo(reply.created_at)}</span>
                                             </div>
-                                            {/* RENDER MARKDOWN DISINI (REPLY) */}
-                                            <div className="text-[12px] sm:text-[13px] text-zinc-400 leading-relaxed whitespace-pre-wrap break-words">
-                                                <span className="text-[#106EBE] font-bold mr-1">@{comment.name}</span>
+                                            <div className="text-[12px] sm:text-[13px] text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none">
+                                                <span className="text-[#106EBE] font-bold mr-1 border-none">@{comment.name}</span>
                                                 <span dangerouslySetInnerHTML={{ __html: parseMarkdown(reply.content) }} />
                                             </div>
-                                            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-zinc-800/60">
-                                                <button onClick={() => handleReplyClick(reply)} className="text-[10px] sm:text-[11px] text-zinc-500 font-bold hover:text-[#0FFCBE] transition-colors outline-none">Reply</button>
+                                            <div className="flex items-center gap-4 mt-3 pt-2 border-none">
+                                                <button onClick={() => handleReplyClick(reply)} className="text-[10px] sm:text-[11px] text-zinc-400 font-bold hover:text-[#0FFCBE] transition-colors outline-none border-none">Reply</button>
                                             </div>
                                         </div>
                                     </div>
@@ -512,9 +470,9 @@ function Komentar({ videoId, onCommentSuccess }) {
                         )}
                     </div>
                 )) : (
-                    <div className="text-center py-12 text-zinc-600 bg-zinc-900/30 rounded-xl border border-zinc-800/50">
-                        <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                        <p className="text-sm font-medium">Be the first to share your thoughts!</p>
+                    <div className="text-center py-12 text-zinc-500 bg-zinc-800/40 rounded-[1.5rem] border-none">
+                        <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20 border-none" />
+                        <p className="text-sm font-medium border-none">Be the first to share your thoughts!</p>
                     </div>
                 )}
             </div>

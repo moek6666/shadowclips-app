@@ -64,7 +64,7 @@ export default function Streaming({ supabase }) {
                     else setIsVipUnlocked(false);
                 } else setIsVipUnlocked(true);
 
-                const { data: relatedData } = await supabase.from('videos').select('*').eq('category', vidData.category).neq('id', vidData.id).limit(8).order('created_at', { ascending: false });
+                const { data: relatedData } = await supabase.from('videos').select('*').eq('category', vidData.category).neq('id', vidData.id).limit(10).order('created_at', { ascending: false });
                 if (relatedData) setRelatedVideos(relatedData);
             };
 
@@ -156,12 +156,17 @@ export default function Streaming({ supabase }) {
 
     return (
         <>
-            {/* SINKRONISASI NAVBAR TERBARU */}
             <Navbar isScrolled={isScrolled} supabase={supabase} />
 
             <div className="pt-24 pb-20 max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 min-h-screen relative">
-                <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-8">
-                    <div className="xl:col-span-8 flex flex-col gap-4">
+
+                {/* SETTING GRID: lg:grid-cols-12, Kolom Kiri span-8 (2/3), Kanan span-4 (1/3) */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+
+                    {/* WADAH UTAMA KIRI (lg:col-span-8) */}
+                    <div className="lg:col-span-8 flex flex-col gap-4">
+
+                        {/* WADAH PLAYER VIDEO */}
                         <div className={`w-full ${currentVideoUrl || !isVipUnlocked ? 'aspect-video' : 'min-h-[400px] max-h-[80vh]'} bg-zinc-950 rounded-[1.5rem] overflow-hidden relative flex items-center justify-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-none`}>
                             {!isVipUnlocked ? (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center p-8 bg-zinc-900/95 backdrop-blur-3xl z-50 text-center">
@@ -193,6 +198,7 @@ export default function Streaming({ supabase }) {
                             ) : (<div className="text-zinc-500 flex flex-col items-center p-12"><Play className="w-12 h-12 mb-2 opacity-50" /><p>Video unavailable</p></div>)}
                         </div>
 
+                        {/* WADAH SERVER & DOWNLOAD */}
                         {isVipUnlocked && (
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-900/40 p-3 sm:p-4 rounded-[1.5rem] border-none">
                                 <div className="flex items-center gap-3 relative">
@@ -223,11 +229,12 @@ export default function Streaming({ supabase }) {
                             </div>
                         )}
 
+                        {/* WADAH DESKRIPSI & INFO */}
                         <div className="bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] flex flex-col gap-5 border-none">
-                            <h1 className="text-xl sm:text-2xl font-black text-white leading-snug tracking-tight" title={video.title}>{video.title}</h1>
+                            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white leading-snug tracking-tight" title={video.title}>{video.title}</h1>
                             <div className="flex flex-wrap items-center gap-4 text-xs sm:text-[13px] text-zinc-400 font-medium">
                                 <span className="flex items-center gap-1.5"><MonitorPlay className="w-3.5 h-3.5 text-[#106EBE]" /> <strong className="text-white">{formatViews(video.views)} Views</strong></span>
-                                <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#106EBE]" /> {new Date(video.created_at).toLocaleDateString('en-US')}</span>
+                                <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#106EBE]" /> {new Date(video.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                                 {video.duration && video.duration !== 'EMPTY' && <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#106EBE]" /> {video.duration}</span>}
                                 {video.size && video.size !== 'EMPTY' && <span className="flex items-center gap-1.5"><HardDrive className="w-3.5 h-3.5 text-[#106EBE]" /> {video.size}</span>}
                                 {video.type && video.type !== 'EMPTY' && <span className="flex items-center gap-1.5"><FolderArchive className="w-3.5 h-3.5 text-[#106EBE]" /> {video.type}</span>}
@@ -244,6 +251,7 @@ export default function Streaming({ supabase }) {
                             </div>
                         </div>
 
+                        {/* WADAH KOMENTAR */}
                         <div className="bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] w-full border-none">
                             <Komentar videoId={video.id} onCommentSuccess={() => {
                                 setHasCommented(true);
@@ -253,31 +261,53 @@ export default function Streaming({ supabase }) {
                         </div>
                     </div>
 
-                    <div className="xl:col-span-4 flex flex-col gap-4 w-full">
-                        <div className="bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] flex flex-col gap-5 border-none">
-                            <h3 className="text-lg font-black text-white flex items-center gap-2 mb-1">
-                                <LayoutGrid className="w-5 h-5 text-[#106EBE]" /> Related Videos
+                    {/* WADAH SIDEBAR KANAN (lg:col-span-4) */}
+                    <div className="lg:col-span-4 flex flex-col gap-4 w-full">
+
+                        {/* WADAH RELATED VIDEOS */}
+                        <div className="bg-zinc-900/40 p-4 sm:p-5 rounded-[1.5rem] flex flex-col gap-4 border-none">
+                            <h3 className="text-[16px] font-black text-white flex items-center gap-2 mb-1">
+                                <LayoutGrid className="w-4 h-4 text-[#106EBE]" /> Related Videos
                             </h3>
-                            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+
+                            {/* LAYOUT LIST */}
+                            <div className="flex flex-col gap-4 border-none">
                                 {relatedVideos.map((item) => (
-                                    <div key={item.id} onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer flex flex-col gap-2">
-                                        <div className="relative aspect-video w-full rounded-[4px] overflow-hidden bg-zinc-900 border-none shrink-0">
+                                    <div key={item.id} onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer flex items-start gap-3 border-none">
+
+                                        {/* Thumbnail Sisi Kiri */}
+                                        <div className="relative w-36 sm:w-40 aspect-video rounded-[6px] overflow-hidden bg-zinc-900 border-none shrink-0 shadow-md">
                                             <img src={getImageUrl(item.img)} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
-                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
-                                                <Play className="w-8 h-8 text-white/90 fill-current drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300" />
-                                            </div>
-                                            <div className="absolute bottom-1.5 left-1.5 bg-black/80 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
-                                                <Eye className="w-2.5 h-2.5" /> {formatViews(item.views)}
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
+                                                <div className="w-8 h-8 bg-[#106EBE] rounded-full flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(16,110,190,0.6)] border-none">
+                                                    <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+                                                </div>
                                             </div>
                                             {item.duration && item.duration !== 'EMPTY' && (
-                                                <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
-                                                    <Clock className="w-2.5 h-2.5" /> {item.duration}
+                                                <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
+                                                    {item.duration}
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="px-0.5 text-center">
-                                            <h4 className="font-bold text-[11px] sm:text-xs text-zinc-300 group-hover:text-white transition-colors line-clamp-2 leading-snug" title={item.title}>{item.title}</h4>
+
+                                        {/* Teks Sisi Kanan */}
+                                        <div className="flex flex-col flex-1 min-w-0 border-none pt-0.5">
+                                            <h4 className="font-bold text-[12px] sm:text-[13px] text-zinc-100 group-hover:text-[#0FFCBE] transition-colors line-clamp-2 leading-snug mb-1" title={item.title}>
+                                                {item.title}
+                                            </h4>
+
+                                            {/* Tanggal Upload */}
+                                            <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-medium text-zinc-500 mb-1 border-none">
+                                                <Clock className="w-3 h-3 text-[#106EBE]" />
+                                                {new Date(item.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                            </div>
+
+                                            {/* Total Views */}
+                                            <div className="flex items-center gap-1.5 font-medium text-zinc-500 text-[10px] sm:text-[11px] border-none">
+                                                <MonitorPlay className="w-3 h-3 text-[#106EBE]" /> {formatViews(item.views)} views
+                                            </div>
                                         </div>
+
                                     </div>
                                 ))}
                             </div>
