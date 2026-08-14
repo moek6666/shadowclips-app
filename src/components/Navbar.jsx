@@ -66,42 +66,35 @@ export default function Navbar({ isScrolled, supabase }) {
 
                     {/* LEFT SIDE: Logo & Main Menu */}
                     <div className="flex items-center gap-8 lg:gap-12">
-                        {/* LOGO */}
-                        <a href="/" className="flex items-center gap-2.5 z-50">
-                            <svg
-                                viewBox="0 0 100 100"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="w-10 h-10 sm:w-12 sm:h-12 drop-shadow-[0_0_12px_rgba(16,110,190,0.8)] shrink-0"
-                            >
-                                <polygon points="50,5 89,27.5 89,72.5 50,95 11,72.5 11,27.5" stroke="#106EBE" strokeWidth="8" strokeLinejoin="round" />
-                                <polygon points="50,18 78,34 78,66 50,82 22,66 22,34" stroke="#106EBE" strokeWidth="3.5" strokeLinejoin="round" opacity="0.9" />
-                                <polygon points="43,36 64,50 43,64" stroke="#106EBE" strokeWidth="3" strokeLinejoin="round" fill="rgba(16, 110, 190, 0.3)" />
-                            </svg>
 
-                            <div className="flex flex-col justify-center">
-                                <span className="text-xl sm:text-[22px] font-black tracking-tighter text-white leading-none mb-1">
+                        {/* LOGO BARU: Menggunakan Image URL Statis (Tanpa animasi mengambang) */}
+                        <a href="/" className="flex items-center gap-3 z-50">
+                            <img
+                                src="https://simp6.cuckcapital.cr/images4/c4bd145d-8c52-441d-b2c3-02401523f129.png"
+                                alt="ShadowClips Logo"
+                                className="w-10 h-10 sm:w-12 sm:h-12 object-contain shrink-0"
+                            />
+
+                            <div className="flex items-center">
+                                <span className="text-[22px] sm:text-[26px] font-black tracking-tighter text-white leading-none">
                                     Shadow<span className="text-[#106EBE]">Clips</span>
-                                </span>
-                                <span className="text-[9px] sm:text-[10px] font-bold tracking-[0.22em] text-[#A0B3C6] uppercase ml-[1px] leading-none">
-                                    www.shadowclips.asia
                                 </span>
                             </div>
                         </a>
 
                         {/* DESKTOP MENU */}
                         <div className="hidden md:flex gap-6 text-sm font-bold z-50">
-                            <a href="/" className={`flex items-center gap-1.5 group transition-colors ${pathname === '/' ? 'text-[#106EBE]' : 'text-zinc-400 hover:text-[#0FFCBE]'}`}>
-                                <Home className={`w-4 h-4 transition-colors ${pathname === '/' ? 'text-[#106EBE]' : 'text-[#106EBE] group-hover:text-[#0FFCBE]'}`} /> Home
+                            <a href="/" className={`flex items-center gap-1.5 transition-colors ${pathname === '/' ? 'text-[#106EBE]' : 'text-zinc-400 hover:text-[#0FFCBE]'}`}>
+                                <Home className="w-4 h-4" /> Home
                             </a>
-                            <a href="/jelajahi" className={`flex items-center gap-1.5 group transition-colors ${pathname === '/jelajahi' ? 'text-[#106EBE]' : 'text-zinc-400 hover:text-[#0FFCBE]'}`}>
-                                <Compass className={`w-4 h-4 transition-colors ${pathname === '/jelajahi' ? 'text-[#106EBE]' : 'text-[#106EBE] group-hover:text-[#0FFCBE]'}`} /> Explore
+                            <a href="/jelajahi" className={`flex items-center gap-1.5 transition-colors ${pathname === '/jelajahi' ? 'text-[#106EBE]' : 'text-zinc-400 hover:text-[#0FFCBE]'}`}>
+                                <Compass className="w-4 h-4" /> Explore
                             </a>
-                            <a href="/populer" className={`flex items-center gap-1.5 group transition-colors ${pathname === '/populer' ? 'text-[#106EBE]' : 'text-zinc-400 hover:text-[#0FFCBE]'}`}>
-                                <Flame className={`w-4 h-4 transition-colors ${pathname === '/populer' ? 'text-[#106EBE]' : 'text-[#106EBE] group-hover:text-[#0FFCBE]'}`} /> Trending
+                            <a href="/populer" className={`flex items-center gap-1.5 transition-colors ${pathname === '/populer' ? 'text-[#106EBE]' : 'text-zinc-400 hover:text-[#0FFCBE]'}`}>
+                                <Flame className="w-4 h-4" /> Trending
                             </a>
-                            <a href="/koleksi" className={`flex items-center gap-1.5 group transition-colors ${pathname === '/koleksi' ? 'text-[#106EBE]' : 'text-zinc-400 hover:text-[#0FFCBE]'}`}>
-                                <FolderOpen className={`w-4 h-4 transition-colors ${pathname === '/koleksi' ? 'text-[#106EBE]' : 'text-[#106EBE] group-hover:text-[#0FFCBE]'}`} /> Library
+                            <a href="/koleksi" className={`flex items-center gap-1.5 transition-colors ${pathname === '/koleksi' ? 'text-[#106EBE]' : 'text-zinc-400 hover:text-[#0FFCBE]'}`}>
+                                <FolderOpen className="w-4 h-4" /> Library
                             </a>
                         </div>
                     </div>
@@ -110,7 +103,7 @@ export default function Navbar({ isScrolled, supabase }) {
                     <div className="flex items-center gap-3">
                         {/* Fake Input to Trigger Search Modal (Desktop) */}
                         <div
-                            className="hidden md:flex relative group cursor-text z-50"
+                            className="hidden md:flex relative cursor-text z-50 group"
                             onClick={() => setShowSearchModal(true)}
                         >
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-hover:text-[#0FFCBE] transition-colors w-4 h-4" />
@@ -130,9 +123,9 @@ export default function Navbar({ isScrolled, supabase }) {
 
                             <button
                                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                                className="text-zinc-300"
+                                className="text-zinc-300 hover:text-[#0FFCBE] transition-colors"
                             >
-                                {isMobileMenuOpen ? <X className="w-6 h-6 hover:text-[#0FFCBE] transition-colors" /> : <Menu className="w-6 h-6 hover:text-[#0FFCBE] transition-colors" />}
+                                {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                             </button>
                         </div>
                     </div>
@@ -141,17 +134,17 @@ export default function Navbar({ isScrolled, supabase }) {
                 {/* MOBILE DROPDOWN */}
                 <div className={`md:hidden absolute top-0 left-0 w-full bg-gradient-to-r from-zinc-950 via-zinc-950 to-[#106EBE]/10 backdrop-blur-xl transition-all duration-300 overflow-hidden ${isMobileMenuOpen ? 'max-h-[400px] pt-24 pb-6 px-4 shadow-[0_10px_30px_rgba(16,110,190,0.1)]' : 'max-h-0'}`}>
                     <div className="flex flex-col gap-4 text-base font-bold px-2 mt-2">
-                        <a href="/" className={`flex items-center gap-2 group transition-colors ${pathname === '/' ? 'text-[#106EBE]' : 'text-zinc-400 hover:text-[#0FFCBE]'}`}>
-                            <Home className={`w-5 h-5 transition-colors ${pathname === '/' ? 'text-[#106EBE]' : 'text-[#106EBE] group-hover:text-[#0FFCBE]'}`} /> Home
+                        <a href="/" className={`flex items-center gap-2 transition-colors ${pathname === '/' ? 'text-[#106EBE]' : 'text-zinc-400 hover:text-[#0FFCBE]'}`}>
+                            <Home className="w-5 h-5" /> Home
                         </a>
-                        <a href="/jelajahi" className={`flex items-center gap-2 group transition-colors ${pathname === '/jelajahi' ? 'text-[#106EBE]' : 'text-zinc-400 hover:text-[#0FFCBE]'}`}>
-                            <Compass className={`w-5 h-5 transition-colors ${pathname === '/jelajahi' ? 'text-[#106EBE]' : 'text-[#106EBE] group-hover:text-[#0FFCBE]'}`} /> Explore
+                        <a href="/jelajahi" className={`flex items-center gap-2 transition-colors ${pathname === '/jelajahi' ? 'text-[#106EBE]' : 'text-zinc-400 hover:text-[#0FFCBE]'}`}>
+                            <Compass className="w-5 h-5" /> Explore
                         </a>
-                        <a href="/populer" className={`flex items-center gap-2 group transition-colors ${pathname === '/populer' ? 'text-[#106EBE]' : 'text-zinc-400 hover:text-[#0FFCBE]'}`}>
-                            <Flame className={`w-5 h-5 transition-colors ${pathname === '/populer' ? 'text-[#106EBE]' : 'text-[#106EBE] group-hover:text-[#0FFCBE]'}`} /> Trending
+                        <a href="/populer" className={`flex items-center gap-2 transition-colors ${pathname === '/populer' ? 'text-[#106EBE]' : 'text-zinc-400 hover:text-[#0FFCBE]'}`}>
+                            <Flame className="w-5 h-5" /> Trending
                         </a>
-                        <a href="/koleksi" className={`flex items-center gap-2 group transition-colors ${pathname === '/koleksi' ? 'text-[#106EBE]' : 'text-zinc-400 hover:text-[#0FFCBE]'}`}>
-                            <FolderOpen className={`w-5 h-5 transition-colors ${pathname === '/koleksi' ? 'text-[#106EBE]' : 'text-[#106EBE] group-hover:text-[#0FFCBE]'}`} /> Library
+                        <a href="/koleksi" className={`flex items-center gap-2 transition-colors ${pathname === '/koleksi' ? 'text-[#106EBE]' : 'text-zinc-400 hover:text-[#0FFCBE]'}`}>
+                            <FolderOpen className="w-5 h-5" /> Library
                         </a>
                     </div>
                 </div>

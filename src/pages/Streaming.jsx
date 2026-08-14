@@ -266,19 +266,20 @@ export default function Streaming({ supabase }) {
                                 <LayoutGrid className="w-4 h-4 text-[#106EBE]" /> Related Videos
                             </h3>
 
-                            {/* --- LIST RELATED VIDEOS (Gambar Diperbesar) --- */}
+                            {/* --- LIST RELATED VIDEOS --- */}
                             <div className="flex flex-col gap-4 sm:gap-5 border-none">
                                 {relatedVideos.map((item) => (
                                     <div key={item.id} onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer flex flex-row items-start gap-3 sm:gap-4 w-full border-none">
 
-                                        {/* Thumbnail Sisi Kiri (Besar Proporsional) */}
+                                        {/* Thumbnail Sisi Kiri */}
                                         <div className="relative w-40 sm:w-52 aspect-video rounded-[8px] overflow-hidden bg-zinc-900 border-none shrink-0 shadow-md">
                                             <img src={getImageUrl(item.img)} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
-                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
-                                                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#106EBE] rounded-full flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(16,110,190,0.6)] border-none">
-                                                    <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current ml-0.5" />
-                                                </div>
+
+                                            {/* PERUBAHAN DI SINI: Tombol play disamakan putih tanpa background biru */}
+                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
+                                                <Play className="w-8 h-8 text-white/90 fill-current drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300" />
                                             </div>
+
                                             {item.duration && item.duration !== 'EMPTY' && (
                                                 <div className="absolute bottom-1 right-1 sm:bottom-1.5 sm:right-1.5 bg-black/80 text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
                                                     {item.duration}
@@ -292,13 +293,11 @@ export default function Streaming({ supabase }) {
                                                 {item.title}
                                             </h4>
 
-                                            {/* Tanggal Upload */}
                                             <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-medium text-zinc-500 mb-1 border-none">
                                                 <Clock className="w-3 h-3 text-[#106EBE]" />
                                                 {new Date(item.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                                             </div>
 
-                                            {/* Total Views */}
                                             <div className="flex items-center gap-1.5 font-medium text-zinc-500 text-[10px] sm:text-[11px] border-none">
                                                 <MonitorPlay className="w-3 h-3 text-[#106EBE]" /> {formatViews(item.views)} views
                                             </div>

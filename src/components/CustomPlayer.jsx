@@ -142,6 +142,7 @@ export default function CustomPlayer({ src, poster }) {
     return (
         <div className="relative w-full h-full bg-black rounded-xl overflow-hidden shadow-[0_0_40px_rgba(16,110,190,0.15)] group shadowclips-plyr-wrapper">
 
+            {/* PERUBAHAN DI SINI: Modifikasi CSS khusus class .plyr__control--overlaid agar background hilang dan icon menjadi putih besar seperti Jelajahi.jsx */}
             <style dangerouslySetInnerHTML={{
                 __html: `
                 .shadowclips-plyr-wrapper {
@@ -161,13 +162,27 @@ export default function CustomPlayer({ src, poster }) {
                     width: 100%;
                     background: #000;
                 }
-                .plyr__control--overlaid {
+                
+                /* Ini adalah CSS untuk Tombol Play Besar di tengah Plyr */
+                .shadowclips-plyr-wrapper .plyr__control--overlaid {
+                    background: transparent !important;
                     position: absolute !important;
                     top: 50% !important;
                     left: 50% !important;
-                    transform: translate(-50%, -50%) scale(1.2) !important;
+                    transform: translate(-50%, -50%) scale(2.5) !important;
                     margin: 0 !important;
-                    box-shadow: 0 0 25px rgba(16, 110, 190, 0.5) !important;
+                    box-shadow: none !important;
+                    color: rgba(255, 255, 255, 0.9) !important;
+                    transition: all 0.3s ease !important;
+                }
+                .shadowclips-plyr-wrapper .plyr__control--overlaid:hover,
+                .shadowclips-plyr-wrapper .plyr__control--overlaid[aria-expanded=true] {
+                    background: transparent !important;
+                    color: #fff !important;
+                    transform: translate(-50%, -50%) scale(2.8) !important;
+                }
+                .shadowclips-plyr-wrapper .plyr__control--overlaid svg {
+                    filter: drop-shadow(0px 8px 16px rgba(0,0,0,0.6)) !important;
                 }
             `}} />
 

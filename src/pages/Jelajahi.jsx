@@ -143,10 +143,9 @@ export default function Jelajahi({ supabase }) {
                                                 />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90 transition-opacity duration-300"></div>
 
-                                                <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75 group-hover:scale-100">
-                                                    <div className="w-20 h-20 bg-[#106EBE]/90 backdrop-blur-md rounded-full flex items-center justify-center text-white shadow-[0_0_40px_rgba(16,110,190,0.8)] border-none">
-                                                        <Play className="w-8 h-8 fill-current ml-2" />
-                                                    </div>
+                                                {/* PERUBAHAN DI SINI: Ikon Play dibuat putih seragam dengan card kecil */}
+                                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
+                                                    <Play className="w-14 h-14 md:w-16 md:h-16 text-white/90 fill-current drop-shadow-2xl scale-75 group-hover:scale-100 transition-transform duration-300" />
                                                 </div>
 
                                                 <div className="absolute bottom-0 left-0 right-0 p-5 md:p-8 z-30 transform transition-transform duration-300 group-hover:-translate-y-2">
