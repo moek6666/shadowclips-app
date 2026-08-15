@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Play, ShieldCheck, ThumbsUp, MessageSquare, Unlock, Download, HelpCircle } from 'lucide-react';
+import { Play, ShieldCheck, ThumbsUp, MessageSquare, Unlock, Download, Users, Lightbulb } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 export default function Tutorial({ supabase }) {
     const [isScrolled, setIsScrolled] = useState(false);
     const [searchInput, setSearchInput] = useState('');
+    const [activeTab, setActiveTab] = useState('guide');
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -13,95 +14,143 @@ export default function Tutorial({ supabase }) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    const tabs = [
+        { id: 'guide', label: 'Access Guide', icon: <Unlock className="w-5 h-5" /> },
+        { id: 'concept', label: 'Why Login?', icon: <Lightbulb className="w-5 h-5" /> }
+    ];
+
     return (
         <>
             <Navbar searchInput={searchInput} setSearchInput={setSearchInput} isScrolled={isScrolled} supabase={supabase} />
 
             <div className="pt-32 pb-24 max-w-[1440px] mx-auto px-4 sm:px-8 min-h-screen">
 
-                {/* Header Section (Tanpa Garis Pembatas) */}
-                <div className="mb-14">
-                    <h1 className="text-3xl sm:text-5xl font-black text-white mb-4 tracking-tight">How to Unlock Exclusive Contents</h1>
-                    <p className="text-zinc-400 text-base sm:text-lg max-w-2xl">A quick step-by-step guide to unlocking premium videos and high-speed download links on ShadowClips.</p>
+                {/* Header Section */}
+                <div className="mb-10 sm:mb-14">
+                    <h1 className="text-3xl sm:text-5xl font-black text-white mb-4 tracking-tight">
+                        {activeTab === 'guide' ? 'How to Unlock Exclusive Contents' : 'Our Community Philosophy'}
+                    </h1>
+                    <p className="text-zinc-400 text-base sm:text-lg max-w-2xl">
+                        {activeTab === 'guide'
+                            ? 'A quick step-by-step guide to unlocking premium videos and high-speed download links on ShadowClips.'
+                            : 'Understanding why we use an engagement-based unlock system instead of paid subscriptions.'}
+                    </p>
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-12 lg:gap-20">
+                <div className="flex flex-col md:flex-row gap-10 lg:gap-20">
 
-                    {/* Sidebar / Menu Kiri (Tanpa Box & Border) */}
+                    {/* Sidebar / Menu Kiri (Ultra-Minimalist Tab) */}
                     <div className="w-full md:w-48 flex-shrink-0">
-                        <div className="sticky top-32">
-                            <button className="flex items-center gap-3 text-left font-bold text-white transition-all group">
-                                <HelpCircle className="w-5 h-5 text-[#106EBE] group-hover:scale-110 transition-transform" />
-                                <span className="tracking-wide">Access Guide</span>
-                            </button>
+                        <div className="flex flex-row md:flex-col gap-6 md:gap-8 sticky top-32 overflow-x-auto hide-scrollbar pb-2 md:pb-0 border-b border-zinc-800/50 md:border-none">
+                            {tabs.map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex items-center gap-3 text-left font-bold transition-all group whitespace-nowrap ${activeTab === tab.id ? 'text-white' : 'text-zinc-600 hover:text-zinc-300'
+                                        }`}
+                                >
+                                    <span className={`${activeTab === tab.id ? 'text-[#106EBE]' : 'text-zinc-600 group-hover:text-zinc-400'} transition-colors`}>
+                                        {tab.icon}
+                                    </span>
+                                    <span className="tracking-wide text-sm sm:text-base">{tab.label}</span>
+                                </button>
+                            ))}
                         </div>
                     </div>
 
-                    {/* Konten Utama Bahasa Inggris (Desain Tipografi Premium, Tanpa Container) */}
-                    <div className="flex-1 relative">
-                        <div className="animate-in fade-in duration-500 relative z-10 max-w-3xl">
+                    {/* Konten Utama */}
+                    <div className="flex-1 relative min-h-[400px]">
 
-                            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-12 flex items-center gap-3">
-                                <Unlock className="w-7 h-7 text-[#106EBE]" /> Unlock Tutorial
-                            </h2>
+                        {/* TAB 1: ACCESS GUIDE */}
+                        {activeTab === 'guide' && (
+                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-10 max-w-3xl">
+                                <div className="flex flex-col gap-12 sm:gap-14">
 
-                            <div className="flex flex-col gap-12 sm:gap-14">
-
-                                {/* Step 1 */}
-                                <div className="flex gap-6 sm:gap-8 group">
-                                    <div className="text-5xl sm:text-6xl font-black text-zinc-800 transition-colors duration-500 group-hover:text-[#106EBE] tracking-tighter leading-none mt-1 select-none">
-                                        01
+                                    <div className="flex gap-6 sm:gap-8 group">
+                                        <div className="text-5xl sm:text-6xl font-black text-zinc-800 transition-colors duration-500 group-hover:text-[#106EBE] tracking-tighter leading-none mt-1 select-none">
+                                            01
+                                        </div>
+                                        <div className="pt-2">
+                                            <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 tracking-tight">Sign In Securely</h3>
+                                            <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
+                                                To interact with our premium content, you must first log in using your Google account. It's fast, secure, and requires no registration.
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div className="pt-2">
-                                        <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 tracking-tight">Sign In Securely</h3>
-                                        <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
-                                            To interact with our premium content, you must first log in using your Google account. It's fast, secure, and requires no registration.
-                                        </p>
+
+                                    <div className="flex gap-6 sm:gap-8 group">
+                                        <div className="text-5xl sm:text-6xl font-black text-zinc-800 transition-colors duration-500 group-hover:text-[#106EBE] tracking-tighter leading-none mt-1 select-none">
+                                            02
+                                        </div>
+                                        <div className="pt-2">
+                                            <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 tracking-tight flex items-center flex-wrap gap-2">
+                                                Like & Comment
+                                                <span className="flex items-center gap-1.5 ml-1 text-zinc-600"><ThumbsUp className="w-5 h-5" /> <MessageSquare className="w-5 h-5" /></span>
+                                            </h3>
+                                            <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
+                                                Show some love to the creators! Click the <strong className="text-zinc-200 font-semibold">Like</strong> button and leave a meaningful <strong className="text-zinc-200 font-semibold">Comment</strong> in the discussion section below the locked video.
+                                            </p>
+                                        </div>
                                     </div>
+
+                                    <div className="flex gap-6 sm:gap-8 group">
+                                        <div className="text-5xl sm:text-6xl font-black text-zinc-800 transition-colors duration-500 group-hover:text-[#106EBE] tracking-tighter leading-none mt-1 select-none">
+                                            03
+                                        </div>
+                                        <div className="pt-2">
+                                            <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 tracking-tight flex items-center flex-wrap gap-2">
+                                                Enjoy Stream & Downloads
+                                                <span className="flex items-center gap-1.5 ml-1 text-zinc-600"><Play className="w-5 h-5" /> <Download className="w-5 h-5" /></span>
+                                            </h3>
+                                            <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
+                                                Once you have successfully liked and posted a comment, the exclusive video player and the high-speed download links will instantly unlock for you to enjoy.
+                                            </p>
+                                        </div>
+                                    </div>
+
                                 </div>
-
-                                {/* Step 2 */}
-                                <div className="flex gap-6 sm:gap-8 group">
-                                    <div className="text-5xl sm:text-6xl font-black text-zinc-800 transition-colors duration-500 group-hover:text-[#106EBE] tracking-tighter leading-none mt-1 select-none">
-                                        02
-                                    </div>
-                                    <div className="pt-2">
-                                        <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 tracking-tight flex items-center flex-wrap gap-2">
-                                            Like & Comment
-                                            <span className="flex items-center gap-1.5 ml-1 text-zinc-600"><ThumbsUp className="w-5 h-5" /> <MessageSquare className="w-5 h-5" /></span>
-                                        </h3>
-                                        <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
-                                            Show some love to the creators! Click the <strong className="text-zinc-200 font-semibold">Like</strong> button and leave a meaningful <strong className="text-zinc-200 font-semibold">Comment</strong> in the discussion section below the locked video.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Step 3 */}
-                                <div className="flex gap-6 sm:gap-8 group">
-                                    <div className="text-5xl sm:text-6xl font-black text-zinc-800 transition-colors duration-500 group-hover:text-[#106EBE] tracking-tighter leading-none mt-1 select-none">
-                                        03
-                                    </div>
-                                    <div className="pt-2">
-                                        <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 tracking-tight flex items-center flex-wrap gap-2">
-                                            Enjoy Stream & Downloads
-                                            <span className="flex items-center gap-1.5 ml-1 text-zinc-600"><Play className="w-5 h-5" /> <Download className="w-5 h-5" /></span>
-                                        </h3>
-                                        <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
-                                            Once you have successfully liked and posted a comment, the exclusive video player and the high-speed download links will instantly unlock for you to enjoy.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Pesan Keamanan (Tanpa Background/Border, Hanya Icon & Text) */}
-                                <div className="mt-8 pt-8 flex items-start gap-4 text-zinc-500 border-t border-zinc-800/50">
-                                    <ShieldCheck className="w-6 h-6 shrink-0 mt-0.5" />
-                                    <p className="text-sm leading-relaxed">
-                                        <strong className="text-zinc-300 font-medium">Community First:</strong> We use this system to prevent bots and build a real, active community. Your engagement helps us keep the platform alive!
-                                    </p>
-                                </div>
-
                             </div>
-                        </div>
+                        )}
+
+                        {/* TAB 2: WHY LOGIN / CONCEPT */}
+                        {activeTab === 'concept' && (
+                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-10 max-w-3xl">
+                                <div className="flex flex-col gap-10 sm:gap-12 pt-2">
+
+                                    <div>
+                                        <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 tracking-tight">No Paywalls, Just Engagement</h3>
+                                        <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
+                                            We believe that premium content should be accessible to everyone. Instead of charging monthly subscription fees or forcing you through endless annoying ads, we use an engagement-based system. Your interaction is your currency.
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 tracking-tight flex items-center gap-2">
+                                            Building an Authentic Community
+                                        </h3>
+                                        <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
+                                            By requiring a secure Google login to leave a comment, we effectively filter out bots, spam, and malicious actors. This ensures that every discussion on ShadowClips is authentic, safe, and driven by real human beings.
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 tracking-tight">Supporting the Ecosystem</h3>
+                                        <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
+                                            Every like and thoughtful comment you leave directly supports the platform's algorithm. It motivates our curators and creators to keep delivering high-quality, exclusive videos consistently without compromising your experience.
+                                        </p>
+                                    </div>
+
+                                    <div className="mt-4 pt-8 flex items-start gap-4 text-zinc-500 border-t border-zinc-800/50">
+                                        <Users className="w-6 h-6 shrink-0 mt-0.5" />
+                                        <p className="text-sm leading-relaxed">
+                                            <strong className="text-zinc-300 font-medium">Privacy First:</strong> We only use your Google profile for basic authentication (Name & Avatar). We do not have access to your personal emails, passwords, or private data.
+                                        </p>
+                                    </div>
+
+                                </div>
+                            </div>
+                        )}
+
                     </div>
                 </div>
             </div>
