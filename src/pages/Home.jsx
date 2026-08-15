@@ -2,14 +2,10 @@ import React, { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import { Play, Eye, Clock, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 
-import { SiOnlyfans, SiTelegram } from 'react-icons/si';
-import { FaCrown, FaVideo, FaFire, FaBan, FaRandom, FaFilm, FaMask } from 'react-icons/fa';
-import { FaClapperboard } from 'react-icons/fa6';
-import { BiSolidCategory } from 'react-icons/bi';
-import { MdLiveTv } from 'react-icons/md';
-
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import ExoclickBanner from '../components/ExoclickBanner';
+import ExoclickNative from '../components/ExoclickNative'; // <-- IMPORT IKLAN NATIVE BARU
 
 const ITEMS_PER_PAGE = 24;
 
@@ -84,7 +80,6 @@ export default function Home({ supabase }) {
 
     return (
         <>
-            {/* SINKRONISASI NAVBAR TERBARU */}
             <Navbar isScrolled={isScrolled} supabase={supabase} />
 
             <main className="max-w-[1440px] mx-auto px-4 sm:px-8 relative z-20 pb-10 pt-32 min-h-screen animate-in fade-in zoom-in-95 slide-in-from-bottom-8 duration-700 ease-out">
@@ -112,7 +107,7 @@ export default function Home({ supabase }) {
                             </div>
                         ))
                     ) : videos.length > 0 ? (
-                        videos.map((video) => (
+                        videos.map((video, index) => (
                             <React.Fragment key={video.id}>
                                 <div onClick={() => window.location.href = `/streaming/${video.slug || video.id}`} className="group cursor-pointer flex flex-col gap-2">
 
@@ -141,6 +136,11 @@ export default function Home({ supabase }) {
                                     </div>
 
                                 </div>
+
+                                {/* Iklan Banner Exoclick (Tetap di tengah grid) */}
+                                {index === 11 && (
+                                    <ExoclickBanner key={`ad-banner-${index}`} />
+                                )}
                             </React.Fragment>
                         ))
                     ) : (
@@ -151,6 +151,7 @@ export default function Home({ supabase }) {
                     )}
                 </div>
 
+                {/* PAGINASI (NAVIGASI ANGKA) */}
                 {!isLoading && totalPages > 1 && (
                     <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mt-20">
                         {currentPage > 1 && (
@@ -170,6 +171,9 @@ export default function Home({ supabase }) {
                         )}
                     </div>
                 )}
+
+                {/* IKLAN NATIVE EXOCLICK (Di Bawah Navigasi Angka) */}
+                <ExoclickNative />
 
             </main>
             <Footer />

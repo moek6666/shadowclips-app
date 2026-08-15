@@ -69,9 +69,10 @@ export default function App() {
             {/* FLOATING TUTORIAL BUTTON (Gradient Ultra-Minimalist) */}
             <a
                 href="/tutorial"
-                className={`fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-50 bg-gradient-to-r from-zinc-900 to-[#106EBE]/20 backdrop-blur-xl p-2.5 pr-5 rounded-full flex items-center gap-3 transition-all duration-500 hover:scale-105 group ${showFloatingAd ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}
+                className={`fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-50 bg-gradient-to-r from-zinc-900 to-[#106EBE]/20 backdrop-blur-xl p-2.5 pr-5 rounded-full flex items-center gap-3 transition-all duration-500 hover:scale-105 group border-none outline-none focus:outline-none focus:ring-0 ${showFloatingAd ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}
+                style={{ border: 'none', outline: 'none' }}
             >
-                <div className="bg-[#106EBE] p-2.5 rounded-full group-hover:bg-[#0FFCBE] transition-colors flex items-center justify-center">
+                <div className="bg-[#106EBE] p-2.5 rounded-full group-hover:bg-[#0FFCBE] transition-colors flex items-center justify-center border-none outline-none">
                     <svg className="w-5 h-5 text-white group-hover:text-zinc-900 transition-colors relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
