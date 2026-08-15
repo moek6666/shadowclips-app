@@ -66,7 +66,7 @@ export default function CustomPlayer({ src, poster }) {
             ads: {
                 enabled: true,
                 // Kode VAST Iklan Anda Tetap Berjalan Aman
-                tagUrl: 'https://direct-league.com/djmJFkzGd.GUNhv/ZYGOUA/ceMmd9/u/ZWUJlBkYPDT/cuypO/DDcG5iNcTGMwtSNpzBIM4/N/z/kD1/NJyzZCsza/W/1ipVdzDS0/xH',
+                tagUrl: 'https://s.magsrv.com/v1/vast.php?idz=6002940',
             }
         };
 
