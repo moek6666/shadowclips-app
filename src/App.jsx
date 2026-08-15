@@ -3,7 +3,6 @@ import React, { useState, useEffect, Suspense, lazy } from 'react';
 // 1. IMPORT KOMPONEN GLOBAL
 import AgeVerification from './components/AgeVerification';
 import AntiAdBlock from './components/AntiAdBlock';
-import SliderAd from './components/SliderAd';
 
 // 2. CODE SPLITTING / LAZY LOADING HALAMAN
 const Home = lazy(() => import('./pages/Home'));
@@ -44,10 +43,9 @@ export default function App() {
         });
     }, []);
 
-    // Deteksi scroll untuk menampilkan iklan melayang
+    // Deteksi scroll untuk menampilkan tombol bantuan
     useEffect(() => {
         const handleScroll = () => {
-            // Iklan akan muncul jika user sudah scroll lebih dari 200px ke bawah
             setShowFloatingAd(window.scrollY > 200);
         };
 
@@ -67,9 +65,8 @@ export default function App() {
 
             <AgeVerification />
             <AntiAdBlock />
-            <SliderAd />
 
-            {/* FLOATING TUTORIAL BUTTON (Hanya Gradient, Tanpa Border, Tanpa Glow, Muncul saat Scroll) */}
+            {/* FLOATING TUTORIAL BUTTON (Gradient Ultra-Minimalist) */}
             <a
                 href="/tutorial"
                 className={`fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-50 bg-gradient-to-r from-zinc-900 to-[#106EBE]/20 backdrop-blur-xl p-2.5 pr-5 rounded-full flex items-center gap-3 transition-all duration-500 hover:scale-105 group ${showFloatingAd ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}
