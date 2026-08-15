@@ -66,7 +66,7 @@ export default function App() {
             <AgeVerification />
             <AntiAdBlock />
 
-            {/* FLOATING TUTORIAL BUTTON (Gradient Ultra-Minimalist) */}
+            {/* FLOATING TUTORIAL BUTTON ASLI */}
             <a
                 href="/tutorial"
                 className={`fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-50 bg-gradient-to-r from-zinc-900 to-[#106EBE]/20 backdrop-blur-xl p-2.5 pr-5 rounded-full flex items-center gap-3 transition-all duration-500 hover:scale-105 group border-none outline-none focus:outline-none focus:ring-0 ${showFloatingAd ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}
@@ -84,7 +84,7 @@ export default function App() {
                 </div>
             </a>
 
-            {/* 3. ROUTING DENGAN SUSPENSE */}
+            {/* ROUTING ASLI */}
             <Suspense fallback={
                 <div className="min-h-screen bg-[#121212] flex items-center justify-center">
                     <div className="w-14 h-14 border-4 border-zinc-800 border-t-[#106EBE] rounded-full animate-spin shadow-[0_0_20px_rgba(16,110,190,0.5)]"></div>
