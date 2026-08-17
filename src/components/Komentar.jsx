@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient';
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import { Turnstile } from '@marsidev/react-turnstile';
 import {
-    Loader2, Send, MessageSquare, ChevronDown,
+    Loader2, Send, MessageSquare, ChevronDown, Smile,
     Bold, Italic, Code, Link as LinkIcon, Quote, X, LogOut, BadgeCheck
 } from 'lucide-react';
 
@@ -44,7 +44,6 @@ function Komentar({ videoId, onCommentSuccess }) {
 
     const isLoggedIn = Boolean(formData.email && formData.picture);
 
-    // FETCH DATA KOMENTAR & ADMIN
     useEffect(() => {
         const fetchData = async () => {
             if (!videoId) return;
@@ -102,7 +101,6 @@ function Komentar({ videoId, onCommentSuccess }) {
         }
     };
 
-    // MODIFIKASI: Mengizinkan klik reply meskipun belum login
     const handleReplyClick = (comment) => {
         setReplyTo(comment);
         setCaptchaToken(null);
@@ -175,6 +173,16 @@ function Komentar({ videoId, onCommentSuccess }) {
         setTimeout(() => textareaRef.current.focus(), 0);
     };
 
+    const insertEmoji = (emojiCode) => {
+        if (!textareaRef.current) return;
+        const start = textareaRef.current.selectionStart;
+        const text = formData.content;
+        const newText = text.substring(0, start) + emojiCode + text.substring(start);
+
+        setFormData(prev => ({ ...prev, content: newText }));
+        setTimeout(() => textareaRef.current.focus(), 0);
+    };
+
     const parseMarkdown = (text) => {
         if (!text) return '';
 
@@ -188,6 +196,23 @@ function Komentar({ videoId, onCommentSuccess }) {
         html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-[#106EBE] hover:underline">$1</a>');
         html = html.replace(/^&gt; (.*$)/gm, '<blockquote class="border-l-2 border-[#106EBE] pl-3 my-1 text-zinc-400 italic bg-zinc-900/30 py-1">$1</blockquote>');
         html = html.replace(/\n/g, '<br/>');
+
+        const animatedEmojis = {
+            ':keren:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Smiling%20Face%20with%20Sunglasses.png',
+            ':love:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Smiling%20Face%20with%20Heart-Eyes.png',
+            ':api:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Fire.png',
+            ':ketawa:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Rolling%20on%20the%20Floor%20Laughing.png',
+            ':roket:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Rocket.png',
+            ':nangis:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Loudly%20Crying%20Face.png',
+            ':jempol:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Hand%20gestures/Thumbs%20Up.png'
+        };
+
+        html = html.replace(/(:[a-zA-Z0-9_]+:)/g, (match) => {
+            if (animatedEmojis[match]) {
+                return `<img src="${animatedEmojis[match]}" alt="${match}" title="${match}" class="inline-block w-6 h-6 sm:w-7 sm:h-7 align-bottom drop-shadow-md hover:scale-125 transition-transform duration-300 border-none select-none" draggable="false" />`;
+            }
+            return match;
+        });
 
         return html;
     };
@@ -264,15 +289,11 @@ function Komentar({ videoId, onCommentSuccess }) {
     const mainComments = comments.filter(c => !c.parent_id);
     const getReplies = (parentId) => comments.filter(c => c.parent_id === parentId).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
-    // ==========================================
-    // FUNGSI UNTUK RENDER FORM (SEKARANG SELALU TAMPIL)
-    // ==========================================
     const renderAuthOrForm = (isInline = false) => {
         return (
             <div className={`bg-zinc-800/60 rounded-[1.5rem] overflow-hidden shadow-lg transition-all duration-500 border-none ${isInline ? 'mt-3 mb-2 border border-[#106EBE]/20' : 'mb-10'}`}>
                 <form onSubmit={handleSubmit} className="animate-in fade-in duration-300 border-none">
 
-                    {/* HEADER FORM: Info User (Jika Login) / Info Guest (Jika Belum Login) */}
                     <div className="flex items-center justify-between px-4 sm:px-5 py-4 bg-zinc-900/40 border-none">
                         {isLoggedIn ? (
                             <>
@@ -310,13 +331,36 @@ function Komentar({ videoId, onCommentSuccess }) {
                         )}
                     </div>
 
-                    {/* FORMATTING TOOLBAR (Tetap sama) */}
-                    <div className="flex flex-wrap items-center gap-4 px-4 sm:px-5 py-3 bg-zinc-800/80 text-zinc-300 border-none overflow-x-auto custom-scrollbar">
+                    <div className="flex flex-wrap items-center gap-4 px-4 sm:px-5 py-3 bg-zinc-800/80 text-zinc-300 border-none overflow-visible">
                         <button type="button" onClick={() => insertFormat('bold')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Bold"><Bold className="w-4 h-4" /></button>
                         <button type="button" onClick={() => insertFormat('italic')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Italic"><Italic className="w-4 h-4" /></button>
                         <button type="button" onClick={() => insertFormat('code')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Code"><Code className="w-4 h-4" /></button>
                         <button type="button" onClick={() => insertFormat('link')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Link"><LinkIcon className="w-4 h-4" /></button>
                         <button type="button" onClick={() => insertFormat('quote')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Quote"><Quote className="w-4 h-4" /></button>
+
+                        <div className="h-4 w-[1px] bg-zinc-600 mx-1 shrink-0"></div>
+
+                        {/* ========================================== */}
+                        {/* PERBAIKAN STABILITAS HOVER DROPDOWN EMOJI */}
+                        {/* ========================================== */}
+                        <div className="relative flex items-center group/emoji h-full py-1">
+                            <button type="button" className="hover:text-[#0FFCBE] transition-colors outline-none border-none shrink-0" title="Insert 3D Emoji">
+                                <Smile className="w-4 h-4" />
+                            </button>
+
+                            {/* Kotak ini sekarang menggunakan "pt-2" (padding-top) sebagai jembatan tak terlihat */}
+                            <div className="absolute top-full left-0 pt-2 hidden group-hover/emoji:block z-50 min-w-max animate-in fade-in zoom-in-95 duration-200">
+                                <div className="flex items-center gap-2.5 bg-zinc-900/95 backdrop-blur-xl p-2.5 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] border border-zinc-700/50">
+                                    <button type="button" onClick={() => insertEmoji(':keren:')} className="hover:scale-125 transition-transform"><img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Smiling%20Face%20with%20Sunglasses.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Keren" /></button>
+                                    <button type="button" onClick={() => insertEmoji(':love:')} className="hover:scale-125 transition-transform"><img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Smiling%20Face%20with%20Heart-Eyes.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Love" /></button>
+                                    <button type="button" onClick={() => insertEmoji(':api:')} className="hover:scale-125 transition-transform"><img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Fire.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Api" /></button>
+                                    <button type="button" onClick={() => insertEmoji(':ketawa:')} className="hover:scale-125 transition-transform"><img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Rolling%20on%20the%20Floor%20Laughing.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Ketawa" /></button>
+                                    <button type="button" onClick={() => insertEmoji(':roket:')} className="hover:scale-125 transition-transform"><img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Rocket.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Roket" /></button>
+                                    <button type="button" onClick={() => insertEmoji(':nangis:')} className="hover:scale-125 transition-transform"><img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Loudly%20Crying%20Face.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Nangis" /></button>
+                                    <button type="button" onClick={() => insertEmoji(':jempol:')} className="hover:scale-125 transition-transform"><img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Hand%20gestures/Thumbs%20Up.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Jempol" /></button>
+                                </div>
+                            </div>
+                        </div>
 
                         {replyTo && (
                             <div className="ml-auto flex items-center gap-2 bg-[#106EBE]/20 text-[#106EBE] px-3 py-1 rounded-lg border-none shrink-0">
@@ -326,14 +370,13 @@ function Komentar({ videoId, onCommentSuccess }) {
                         )}
                     </div>
 
-                    {/* TEXTAREA (Tetap sama, bisa diketik kapan saja) */}
                     <div className="relative bg-zinc-900/40 border-none">
                         <textarea
                             ref={textareaRef}
                             name="content"
                             value={formData.content}
                             onChange={handleInputChange}
-                            placeholder="Type your comment here..."
+                            placeholder="Type your comment here... Use the smile icon for 3D emojis!"
                             className={`w-full bg-transparent px-4 sm:px-5 py-5 text-[13px] sm:text-[14px] text-white placeholder-zinc-500 focus:outline-none resize-y border-none ${isInline ? 'min-h-[100px]' : 'min-h-[140px]'}`}
                             required
                         />
@@ -342,7 +385,6 @@ function Komentar({ videoId, onCommentSuccess }) {
                         </div>
                     </div>
 
-                    {/* FOOTER: Menampilkan Captcha & Submit JIKA Login, atau Tombol Google Login JIKA Belum */}
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-zinc-800/80 border-none relative">
                         {isLoggedIn ? (
                             <>
@@ -405,11 +447,8 @@ function Komentar({ videoId, onCommentSuccess }) {
 
     return (
         <div className="w-full mt-6 mb-8 font-sans">
-
-            {/* Tampilkan form/login utama HANYA jika tidak sedang mereply (membalas) */}
             {!replyTo && renderAuthOrForm(false)}
 
-            {/* KOMENTAR HEADER */}
             <div className="flex items-center justify-between mb-8 pb-2 border-none">
                 <div className="flex items-center gap-2 border-none">
                     <MessageSquare className="w-5 h-5 text-white" />
@@ -421,7 +460,6 @@ function Komentar({ videoId, onCommentSuccess }) {
                 </div>
             </div>
 
-            {/* LIST KOMENTAR */}
             <div className="flex flex-col gap-6 border-none">
                 {mainComments.length > 0 ? (
                     mainComments.map((comment) => {
@@ -445,7 +483,6 @@ function Komentar({ videoId, onCommentSuccess }) {
                                         )}
                                     </div>
 
-                                    {/* MENGUBAH BACKGROUND MENJADI GRADIENT KHUSUS ADMIN, TANPA RING/BORDER */}
                                     <div className={`flex-1 min-w-0 flex flex-col p-4 sm:p-5 rounded-[1.2rem] sm:rounded-[1.5rem] border-none ${isAdmin ? 'bg-gradient-to-br from-zinc-800/80 to-[#106EBE]/20 shadow-[0_5px_20px_rgba(16,110,190,0.15)]' : 'bg-zinc-800/60'}`}>
                                         <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
                                             <span className={`text-[13px] sm:text-[14px] font-bold flex items-center gap-1.5 ${isAdmin ? 'text-[#0FFCBE]' : 'text-white'}`}>
@@ -468,7 +505,6 @@ function Komentar({ videoId, onCommentSuccess }) {
                                     </div>
                                 </div>
 
-                                {/* FORM INLINE MUNCUL DI SINI JIKA MEREPLY KOMENTAR UTAMA */}
                                 {replyTo && replyTo.id === comment.id && (
                                     <div className="ml-10 sm:ml-16 animate-in slide-in-from-top-2 fade-in duration-300 border-none">
                                         {renderAuthOrForm(true)}
@@ -498,7 +534,6 @@ function Komentar({ videoId, onCommentSuccess }) {
                                                             )}
                                                         </div>
 
-                                                        {/* MENGUBAH BACKGROUND MENJADI GRADIENT KHUSUS ADMIN PADA BALASAN */}
                                                         <div className={`flex-1 min-w-0 flex flex-col p-3 sm:p-4 rounded-xl sm:rounded-[1.2rem] border-none ${isReplyAdmin ? 'bg-gradient-to-br from-zinc-800/60 to-[#106EBE]/15 shadow-[0_5px_15px_rgba(16,110,190,0.1)]' : 'bg-zinc-800/40'}`}>
                                                             <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
                                                                 <span className={`text-[11px] sm:text-[13px] font-bold ${isReplyAdmin ? 'text-[#0FFCBE]' : 'text-white'}`}>
@@ -516,7 +551,6 @@ function Komentar({ videoId, onCommentSuccess }) {
                                                         </div>
                                                     </div>
 
-                                                    {/* FORM INLINE MUNCUL DI SINI JIKA MEREPLY BALASAN (REPLY TO REPLY) */}
                                                     {replyTo && replyTo.id === reply.id && (
                                                         <div className="ml-10 sm:ml-13 animate-in slide-in-from-top-2 fade-in duration-300 border-none">
                                                             {renderAuthOrForm(true)}
