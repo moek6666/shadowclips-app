@@ -66,13 +66,11 @@ function Komentar({ videoId, onCommentSuccess }) {
             }
 
             if (!commentsError && commentsData) {
-                // PERBAIKAN 1: Mencegah komentar nyangkut di LocalStorage selamanya
                 const localPending = JSON.parse(localStorage.getItem(`shadowclips_pending_${videoId}`) || '[]');
                 const now = new Date();
 
                 const validPending = localPending.filter(pending => {
                     const isApproved = commentsData.some(approved => approved.content === pending.content && approved.name === pending.name);
-                    // Hapus otomatis dari cache lokal jika usia komentar lebih dari 2 jam
                     const isExpired = (now - new Date(pending.created_at)) > (2 * 60 * 60 * 1000);
                     return !isApproved && !isExpired;
                 });
@@ -84,13 +82,11 @@ function Komentar({ videoId, onCommentSuccess }) {
 
         fetchData();
 
-        // PERBAIKAN 2: Supabase Realtime (Hapus otomatis di UI jika dihapus di Supabase)
         const channel = supabase
             .channel(`public:comments:${videoId}`)
             .on('postgres_changes',
                 { event: 'DELETE', schema: 'public', table: 'comments' },
                 (payload) => {
-                    // Otomatis menghilangkan komentar dari state saat dihapus dari database
                     setComments(currentComments => currentComments.filter(c => c.id !== payload.old.id));
                 }
             )
@@ -220,14 +216,17 @@ function Komentar({ videoId, onCommentSuccess }) {
         html = html.replace(/^&gt; (.*$)/gm, '<blockquote class="border-l-2 border-[#106EBE] pl-3 my-1 text-zinc-400 italic bg-zinc-900/30 py-1">$1</blockquote>');
         html = html.replace(/\n/g, '<br/>');
 
+        // ==========================================
+        // PERBAIKAN: MENGGUNAKAN GOOGLE NOTO ANIMATED EMOJI (STABIL & WEBP)
+        // ==========================================
         const animatedEmojis = {
-            ':keren:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Smiling%20Face%20with%20Sunglasses.png',
-            ':love:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Smiling%20Face%20with%20Heart-Eyes.png',
-            ':api:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Fire.png',
-            ':ketawa:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Rolling%20on%20the%20Floor%20Laughing.png',
-            ':roket:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Rocket.png',
-            ':nangis:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Loudly%20Crying%20Face.png',
-            ':jempol:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Hand%20gestures/Thumbs%20Up.png'
+            ':keren:': 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f60e/512.webp',
+            ':love:': 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f60d/512.webp',
+            ':api:': 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f525/512.webp',
+            ':ketawa:': 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f923/512.webp',
+            ':roket:': 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.webp',
+            ':nangis:': 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f62d/512.webp',
+            ':jempol:': 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f44d/512.webp'
         };
 
         html = html.replace(/(:[a-zA-Z0-9_]+:)/g, (match) => {
@@ -370,13 +369,14 @@ function Komentar({ videoId, onCommentSuccess }) {
 
                             <div className="absolute top-full left-0 pt-2 hidden group-hover/emoji:block z-50 min-w-max animate-in fade-in zoom-in-95 duration-200">
                                 <div className="flex items-center gap-2.5 bg-zinc-900/95 backdrop-blur-xl p-2.5 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] border border-zinc-700/50">
-                                    <button type="button" onClick={() => insertEmoji(':keren:')} className="hover:scale-125 transition-transform"><img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Smiling%20Face%20with%20Sunglasses.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Keren" /></button>
-                                    <button type="button" onClick={() => insertEmoji(':love:')} className="hover:scale-125 transition-transform"><img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Smiling%20Face%20with%20Heart-Eyes.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Love" /></button>
-                                    <button type="button" onClick={() => insertEmoji(':api:')} className="hover:scale-125 transition-transform"><img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Fire.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Api" /></button>
-                                    <button type="button" onClick={() => insertEmoji(':ketawa:')} className="hover:scale-125 transition-transform"><img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Rolling%20on%20the%20Floor%20Laughing.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Ketawa" /></button>
-                                    <button type="button" onClick={() => insertEmoji(':roket:')} className="hover:scale-125 transition-transform"><img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Rocket.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Roket" /></button>
-                                    <button type="button" onClick={() => insertEmoji(':nangis:')} className="hover:scale-125 transition-transform"><img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Loudly%20Crying%20Face.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Nangis" /></button>
-                                    <button type="button" onClick={() => insertEmoji(':jempol:')} className="hover:scale-125 transition-transform"><img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Hand%20gestures/Thumbs%20Up.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Jempol" /></button>
+                                    {/* PERBAIKAN: MENGGUNAKAN GOOGLE NOTO ANIMATED EMOJI UNTUK DROPDOWN */}
+                                    <button type="button" onClick={() => insertEmoji(':keren:')} className="hover:scale-125 transition-transform"><img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f60e/512.webp" className="w-6 h-6 sm:w-7 sm:h-7" alt="Keren" /></button>
+                                    <button type="button" onClick={() => insertEmoji(':love:')} className="hover:scale-125 transition-transform"><img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f60d/512.webp" className="w-6 h-6 sm:w-7 sm:h-7" alt="Love" /></button>
+                                    <button type="button" onClick={() => insertEmoji(':api:')} className="hover:scale-125 transition-transform"><img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f525/512.webp" className="w-6 h-6 sm:w-7 sm:h-7" alt="Api" /></button>
+                                    <button type="button" onClick={() => insertEmoji(':ketawa:')} className="hover:scale-125 transition-transform"><img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f923/512.webp" className="w-6 h-6 sm:w-7 sm:h-7" alt="Ketawa" /></button>
+                                    <button type="button" onClick={() => insertEmoji(':roket:')} className="hover:scale-125 transition-transform"><img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.webp" className="w-6 h-6 sm:w-7 sm:h-7" alt="Roket" /></button>
+                                    <button type="button" onClick={() => insertEmoji(':nangis:')} className="hover:scale-125 transition-transform"><img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f62d/512.webp" className="w-6 h-6 sm:w-7 sm:h-7" alt="Nangis" /></button>
+                                    <button type="button" onClick={() => insertEmoji(':jempol:')} className="hover:scale-125 transition-transform"><img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f44d/512.webp" className="w-6 h-6 sm:w-7 sm:h-7" alt="Jempol" /></button>
                                 </div>
                             </div>
                         </div>
