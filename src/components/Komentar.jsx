@@ -66,16 +66,39 @@ function Komentar({ videoId, onCommentSuccess }) {
             }
 
             if (!commentsError && commentsData) {
+                // PERBAIKAN 1: Mencegah komentar nyangkut di LocalStorage selamanya
                 const localPending = JSON.parse(localStorage.getItem(`shadowclips_pending_${videoId}`) || '[]');
-                const validPending = localPending.filter(
-                    pending => !commentsData.some(approved => approved.content === pending.content && approved.name === pending.name)
-                );
+                const now = new Date();
+
+                const validPending = localPending.filter(pending => {
+                    const isApproved = commentsData.some(approved => approved.content === pending.content && approved.name === pending.name);
+                    // Hapus otomatis dari cache lokal jika usia komentar lebih dari 2 jam
+                    const isExpired = (now - new Date(pending.created_at)) > (2 * 60 * 60 * 1000);
+                    return !isApproved && !isExpired;
+                });
 
                 localStorage.setItem(`shadowclips_pending_${videoId}`, JSON.stringify(validPending));
                 setComments([...validPending, ...commentsData]);
             }
         };
+
         fetchData();
+
+        // PERBAIKAN 2: Supabase Realtime (Hapus otomatis di UI jika dihapus di Supabase)
+        const channel = supabase
+            .channel(`public:comments:${videoId}`)
+            .on('postgres_changes',
+                { event: 'DELETE', schema: 'public', table: 'comments' },
+                (payload) => {
+                    // Otomatis menghilangkan komentar dari state saat dihapus dari database
+                    setComments(currentComments => currentComments.filter(c => c.id !== payload.old.id));
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, [videoId]);
 
     const timeAgo = (dateString) => {
@@ -340,15 +363,11 @@ function Komentar({ videoId, onCommentSuccess }) {
 
                         <div className="h-4 w-[1px] bg-zinc-600 mx-1 shrink-0"></div>
 
-                        {/* ========================================== */}
-                        {/* PERBAIKAN STABILITAS HOVER DROPDOWN EMOJI */}
-                        {/* ========================================== */}
                         <div className="relative flex items-center group/emoji h-full py-1">
                             <button type="button" className="hover:text-[#0FFCBE] transition-colors outline-none border-none shrink-0" title="Insert 3D Emoji">
                                 <Smile className="w-4 h-4" />
                             </button>
 
-                            {/* Kotak ini sekarang menggunakan "pt-2" (padding-top) sebagai jembatan tak terlihat */}
                             <div className="absolute top-full left-0 pt-2 hidden group-hover/emoji:block z-50 min-w-max animate-in fade-in zoom-in-95 duration-200">
                                 <div className="flex items-center gap-2.5 bg-zinc-900/95 backdrop-blur-xl p-2.5 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] border border-zinc-700/50">
                                     <button type="button" onClick={() => insertEmoji(':keren:')} className="hover:scale-125 transition-transform"><img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Smiling%20Face%20with%20Sunglasses.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Keren" /></button>
