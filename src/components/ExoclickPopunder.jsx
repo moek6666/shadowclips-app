@@ -9,14 +9,14 @@ export default function ExoclickPopunder() {
         window.ad_chrome_enabled = true;
         window.ad_new_tab = true;
 
-        // 1. UBAH FREKUENSI MENJADI 0
-        window.ad_frequency_period = 0;
-        window.ad_frequency_count = 0;
+        // --- JEDA 1 MENIT (SWEET SPOT) ---
+        window.ad_frequency_period = 1;
+        window.ad_frequency_count = 1;
         window.ad_trigger_method = 1;
         window.ad_trigger_delay = 0;
 
-        // 2. MATIKAN CAPPING SECARA PAKSA DI KODE
-        window.ad_capping_enabled = false;
+        // --- CAPPING AKTIF ---
+        window.ad_capping_enabled = true;
 
         window.ad_tcf_enabled = true;
         window.ad_agego_cross_site_enabled = true;
