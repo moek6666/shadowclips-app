@@ -145,7 +145,13 @@ export default function Streaming({ supabase }) {
 
     const isDirectVideo = currentVideoUrl && typeof currentVideoUrl === 'string' && (currentVideoUrl.toLowerCase().includes('.mp4') || currentVideoUrl.toLowerCase().includes('.webm') || currentVideoUrl.toLowerCase().includes('.m3u8'));
     const isDeepFake = video.category && typeof video.category === 'string' && video.category.toLowerCase() === 'deepfake';
+
+    // ==========================================
+    // LOGIKA PEMOTONGAN GAMBAR PERTAMA DI SINI
+    // ==========================================
     const imageList = video.img ? String(video.img).split(',').map(img => img.trim()) : [];
+    const galleryImages = imageList.slice(1); // Mengambil gambar indeks ke-1 sampai habis (membuang cover/gambar pertama)
+
     const hasDownloadLink = video.embed_url && video.embed_url.trim() !== '' && video.embed_url !== 'EMPTY';
 
     const serverOptions = [];
@@ -181,13 +187,28 @@ export default function Streaming({ supabase }) {
                                 ) : (
                                     <iframe key={currentVideoUrl} src={currentVideoUrl} className="w-full h-full object-contain border-none" frameBorder="0" allowFullScreen title={video.title}></iframe>
                                 )
-                            ) : isDeepFake && imageList.length > 0 ? (
-                                <div className="w-full h-full overflow-y-auto p-4 sm:p-6 custom-scrollbar" onContextMenu={(e) => e.preventDefault()}>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
-                                        {imageList.map((imgUrl, idx) => (
-                                            <div key={idx} onClick={() => setSelectedImage(imgUrl)} className="relative group cursor-pointer aspect-[3/4] rounded-[4px] overflow-hidden bg-zinc-900 shadow-lg border-none">
-                                                <img src={imgUrl} alt="Gallery" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 select-none" draggable="false" />
-                                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><ZoomIn className="w-6 h-6 text-white" /></div>
+                            ) : isDeepFake && galleryImages.length > 0 ? (
+                                /* Hanya memuat gambar dari variabel `galleryImages` */
+                                <div className="w-full h-full overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar bg-zinc-950/40" onContextMenu={(e) => e.preventDefault()}>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                                        {galleryImages.map((imgUrl, idx) => (
+                                            <div
+                                                key={idx}
+                                                onClick={() => setSelectedImage(imgUrl)}
+                                                className="relative group cursor-pointer aspect-[3/4] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800/80 shadow-lg hover:shadow-[0_8px_30px_rgba(0,0,0,0.6)] transition-all duration-500"
+                                            >
+                                                <img
+                                                    src={imgUrl}
+                                                    alt={`Gallery Image ${idx + 2}`}
+                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 select-none"
+                                                    draggable="false"
+                                                    loading="lazy"
+                                                />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-500">
+                                                    <div className="bg-white/10 backdrop-blur-md p-3 sm:p-4 rounded-full transform scale-50 group-hover:scale-100 transition-transform duration-500 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+                                                        <ZoomIn className="w-6 h-6 sm:w-8 sm:h-8 text-white drop-shadow-md" />
+                                                    </div>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
@@ -275,7 +296,6 @@ export default function Streaming({ supabase }) {
                                         <div className="relative w-40 sm:w-52 aspect-video rounded-[8px] overflow-hidden bg-zinc-900 border-none shrink-0 shadow-md">
                                             <img src={getImageUrl(item.img)} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
 
-                                            {/* PERUBAHAN DI SINI: Tombol play disamakan putih tanpa background biru */}
                                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
                                                 <Play className="w-8 h-8 text-white/90 fill-current drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300" />
                                             </div>
