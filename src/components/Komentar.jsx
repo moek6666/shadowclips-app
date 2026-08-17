@@ -216,9 +216,6 @@ function Komentar({ videoId, onCommentSuccess }) {
         html = html.replace(/^&gt; (.*$)/gm, '<blockquote class="border-l-2 border-[#106EBE] pl-3 my-1 text-zinc-400 italic bg-zinc-900/30 py-1">$1</blockquote>');
         html = html.replace(/\n/g, '<br/>');
 
-        // ==========================================
-        // PERBAIKAN: MENGGUNAKAN JSDELIVR CDN (ANTI DIBLOKIR ISP INDONESIA)
-        // ==========================================
         const animatedEmojis = {
             ':keren:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Smilies/Smiling%20Face%20with%20Sunglasses.png',
             ':love:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Smilies/Smiling%20Face%20with%20Heart-Eyes.png',
@@ -255,6 +252,12 @@ function Komentar({ videoId, onCommentSuccess }) {
 
         const targetParentId = replyTo ? (replyTo.parent_id || replyTo.id) : null;
 
+        // ==========================================
+        // PERUBAHAN: CEK STATUS ADMIN & BYPASS PENDING
+        // ==========================================
+        const isAdmin = adminEmails.includes(formData.email);
+        const statusKomentar = isAdmin ? 'approved' : 'pending';
+
         const { error } = await supabase
             .from('comments')
             .insert({
@@ -263,7 +266,8 @@ function Komentar({ videoId, onCommentSuccess }) {
                 email: formData.email,
                 avatar_url: formData.picture || null,
                 content: formData.content,
-                parent_id: targetParentId
+                parent_id: targetParentId,
+                status: statusKomentar // Menggunakan status dinamis yang telah dicek
             });
 
         setIsSubmitting(false);
@@ -274,25 +278,34 @@ function Komentar({ videoId, onCommentSuccess }) {
             if (turnstileRef.current) turnstileRef.current.reset();
             setCaptchaToken(null);
         } else {
-            const newPendingComment = {
+            // Tampilkan notifikasi yang berbeda jika admin
+            if (isAdmin) {
+                setNotification({ type: 'success', message: 'Komentar Admin langsung ditayangkan!' });
+                setTimeout(() => setNotification(null), 3000);
+            }
+
+            const newCommentData = {
                 id: `temp-${Date.now()}`,
                 name: formData.name,
                 email: formData.email,
                 avatar_url: formData.picture,
                 content: formData.content,
                 created_at: new Date().toISOString(),
-                status: 'pending',
+                status: statusKomentar, // Memasukkan status lokal sesuai hak akses
                 parent_id: targetParentId
             };
 
-            setComments(prev => [newPendingComment, ...prev]);
+            setComments(prev => [newCommentData, ...prev]);
 
             localStorage.setItem('shadowclips_user_name', formData.name);
             localStorage.setItem('shadowclips_user_email', formData.email);
             if (formData.picture) localStorage.setItem('shadowclips_user_picture', formData.picture);
 
-            const existingPending = JSON.parse(localStorage.getItem(`shadowclips_pending_${videoId}`) || '[]');
-            localStorage.setItem(`shadowclips_pending_${videoId}`, JSON.stringify([newPendingComment, ...existingPending]));
+            // Hanya simpan ke local pending storage jika user biasa (bukan admin)
+            if (!isAdmin) {
+                const existingPending = JSON.parse(localStorage.getItem(`shadowclips_pending_${videoId}`) || '[]');
+                localStorage.setItem(`shadowclips_pending_${videoId}`, JSON.stringify([newCommentData, ...existingPending]));
+            }
 
             setFormData(prev => ({ ...prev, content: '' }));
             setReplyTo(null);
