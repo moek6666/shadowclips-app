@@ -66,18 +66,13 @@ export default function Navbar({ isScrolled, supabase }) {
 
                     {/* LEFT SIDE: Logo & Main Menu */}
                     <div className="flex items-center gap-8 lg:gap-12">
-                        {/* LOGO */}
+                        {/* LOGO BARU DARI SUPABASE (Ukuran Lebih Besar Lagi) */}
                         <a href="/" className="flex items-center gap-2.5 z-50">
-                            <svg
-                                viewBox="0 0 100 100"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="w-10 h-10 sm:w-12 sm:h-12 drop-shadow-[0_0_12px_rgba(16,110,190,0.8)] shrink-0"
-                            >
-                                <polygon points="50,5 89,27.5 89,72.5 50,95 11,72.5 11,27.5" stroke="#106EBE" strokeWidth="8" strokeLinejoin="round" />
-                                <polygon points="50,18 78,34 78,66 50,82 22,66 22,34" stroke="#106EBE" strokeWidth="3.5" strokeLinejoin="round" opacity="0.9" />
-                                <polygon points="43,36 64,50 43,64" stroke="#106EBE" strokeWidth="3" strokeLinejoin="round" fill="rgba(16, 110, 190, 0.3)" />
-                            </svg>
+                            <img
+                                src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/shadow.webp"
+                                alt="ShadowClips Logo"
+                                className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 object-contain"
+                            />
 
                             <div className="flex flex-col justify-center">
                                 <span className="text-xl sm:text-[22px] font-black tracking-tighter text-white leading-none mb-1">
