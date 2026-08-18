@@ -146,11 +146,8 @@ export default function Streaming({ supabase }) {
     const isDirectVideo = currentVideoUrl && typeof currentVideoUrl === 'string' && (currentVideoUrl.toLowerCase().includes('.mp4') || currentVideoUrl.toLowerCase().includes('.webm') || currentVideoUrl.toLowerCase().includes('.m3u8'));
     const isDeepFake = video.category && typeof video.category === 'string' && video.category.toLowerCase() === 'deepfake';
 
-    // ==========================================
-    // LOGIKA PEMOTONGAN GAMBAR PERTAMA DI SINI
-    // ==========================================
     const imageList = video.img ? String(video.img).split(',').map(img => img.trim()) : [];
-    const galleryImages = imageList.slice(1); // Mengambil gambar indeks ke-1 sampai habis (membuang cover/gambar pertama)
+    const galleryImages = imageList.slice(1);
 
     const hasDownloadLink = video.embed_url && video.embed_url.trim() !== '' && video.embed_url !== 'EMPTY';
 
@@ -188,7 +185,6 @@ export default function Streaming({ supabase }) {
                                     <iframe key={currentVideoUrl} src={currentVideoUrl} className="w-full h-full object-contain border-none" frameBorder="0" allowFullScreen title={video.title}></iframe>
                                 )
                             ) : isDeepFake && galleryImages.length > 0 ? (
-                                /* Hanya memuat gambar dari variabel `galleryImages` */
                                 <div className="w-full h-full overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar bg-zinc-950/40" onContextMenu={(e) => e.preventDefault()}>
                                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                                         {galleryImages.map((imgUrl, idx) => (
@@ -216,14 +212,13 @@ export default function Streaming({ supabase }) {
                             ) : (<div className="text-zinc-500 flex flex-col items-center p-12"><Play className="w-12 h-12 mb-2 opacity-50" /><p>Video unavailable</p></div>)}
                         </div>
 
-                        {/* --- SIDE-BY-SIDE MOBILE DI SINI --- */}
                         {isVipUnlocked && (
                             <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 bg-zinc-900/40 p-2.5 sm:p-4 rounded-[1.5rem] border-none">
                                 <div className="flex items-center gap-2 relative min-w-0">
                                     <span className="text-zinc-500 text-[10px] sm:text-xs font-bold uppercase tracking-wider mr-1 hidden sm:block">Server:</span>
                                     {serverOptions.length > 1 ? (
                                         <div className="relative min-w-0">
-                                            <button onClick={() => setIsServerDropdownOpen(!isServerDropdownOpen)} className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-[13px] font-bold transition-all bg-[#106EBE] text-white shadow-[0_5px_15px_rgba(16,110,190,0.3)] border-none relative z-[101] max-w-full">
+                                            <button onClick={() => window.setIsServerDropdownOpen(!isServerDropdownOpen)} className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-[13px] font-bold transition-all bg-[#106EBE] text-white shadow-[0_5px_15px_rgba(16,110,190,0.3)] border-none relative z-[101] max-w-full">
                                                 <Server className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
                                                 <span className="truncate max-w-[70px] sm:max-w-none">{activeServerLabel}</span>
                                                 <ChevronDown className={`w-3 h-3 sm:w-3.5 sm:h-3.5 transition-transform duration-300 ml-0.5 shrink-0 ${isServerDropdownOpen ? 'rotate-180' : ''}`} />
@@ -279,7 +274,6 @@ export default function Streaming({ supabase }) {
                         </div>
                     </div>
 
-                    {/* WADAH SIDEBAR KANAN (lg:col-span-4) */}
                     <div className="lg:col-span-4 flex flex-col gap-4 w-full">
 
                         <div className="bg-zinc-900/40 p-3 sm:p-5 rounded-[1.5rem] flex flex-col gap-3 sm:gap-4 border-none">
@@ -287,12 +281,10 @@ export default function Streaming({ supabase }) {
                                 <LayoutGrid className="w-4 h-4 text-[#106EBE]" /> Related Videos
                             </h3>
 
-                            {/* --- LIST RELATED VIDEOS --- */}
                             <div className="flex flex-col gap-4 sm:gap-5 border-none">
                                 {relatedVideos.map((item) => (
                                     <div key={item.id} onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer flex flex-row items-start gap-3 sm:gap-4 w-full border-none">
 
-                                        {/* Thumbnail Sisi Kiri */}
                                         <div className="relative w-40 sm:w-52 aspect-video rounded-[8px] overflow-hidden bg-zinc-900 border-none shrink-0 shadow-md">
                                             <img src={getImageUrl(item.img)} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
 
@@ -307,7 +299,6 @@ export default function Streaming({ supabase }) {
                                             )}
                                         </div>
 
-                                        {/* Teks Sisi Kanan */}
                                         <div className="flex flex-col flex-1 min-w-0 border-none pt-0.5 sm:pt-1">
                                             <h4 className="font-bold text-[12px] sm:text-[14px] text-zinc-100 group-hover:text-[#0FFCBE] transition-colors line-clamp-2 leading-snug mb-1.5" title={item.title}>
                                                 {item.title}
@@ -341,19 +332,24 @@ export default function Streaming({ supabase }) {
             )}
 
             {isDownloadModalOpen && (
-                <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/95 backdrop-blur-xl animate-in fade-in duration-500 border-none">
+                <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-500 border-none">
                     <div className="w-full max-w-xl flex flex-col items-center text-center animate-in slide-in-from-bottom-10 duration-500 relative border-none">
+
+                        {/* ==========================================
+                            PERBAIKAN: LOGO SEKARANG MENGGUNAKAN GAMBAR RESMI SINKRON DENGAN NAVBAR
+                           ========================================== */}
                         <div className="flex items-center justify-center gap-3 sm:gap-4 mb-8 w-full border-none">
-                            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 sm:w-16 sm:h-16 drop-shadow-[0_0_12px_rgba(16,110,190,0.8)] shrink-0 border-none">
-                                <polygon points="50,5 89,27.5 89,72.5 50,95 11,72.5 11,27.5" stroke="#106EBE" strokeWidth="8" strokeLinejoin="round" />
-                                <polygon points="50,18 78,34 78,66 50,82 22,66 22,34" stroke="#106EBE" strokeWidth="3.5" strokeLinejoin="round" opacity="0.9" />
-                                <polygon points="43,36 64,50 43,64" stroke="#106EBE" strokeWidth="3" strokeLinejoin="round" fill="rgba(16, 110, 190, 0.3)" />
-                            </svg>
+                            <img
+                                src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/shadow.webp"
+                                alt="ShadowClips Logo"
+                                className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 object-contain"
+                            />
                             <div className="flex flex-col justify-center text-left border-none">
                                 <span className="text-2xl sm:text-4xl font-black tracking-tighter text-white leading-none mb-1 border-none">Shadow<span className="text-[#106EBE]">Clips</span></span>
                                 <span className="text-[10px] sm:text-[12px] font-bold tracking-[0.22em] text-[#A0B3C6] uppercase ml-[1px] leading-none border-none">www.shadowclips.asia</span>
                             </div>
                         </div>
+
                         <div className="space-y-4 mb-10 w-full px-2 border-none">
                             <p className="text-zinc-300 text-base md:text-lg leading-relaxed md:leading-loose border-none">ShadowClips never sells or charges a single penny for this file. We provide this link 100% free for entertainment purposes.<br /><span className="text-zinc-500 text-sm mt-2 block border-none">Please be aware of any scams claiming to represent us.</span></p>
                         </div>
