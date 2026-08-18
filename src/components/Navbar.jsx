@@ -88,18 +88,32 @@ export default function Navbar({ isScrolled, supabase }) {
 
     return (
         <>
+            {/* CSS KHUSUS UNTUK ANIMASI LOGO MELAYANG */}
+            <style>{`
+                @keyframes floatLogo {
+                    0% { transform: translateY(0px); }
+                    50% { transform: translateY(-6px); }
+                    100% { transform: translateY(0px); }
+                }
+                .animate-float-logo {
+                    animation: floatLogo 3s ease-in-out infinite;
+                }
+            `}</style>
+
             <nav className={`fixed top-0 w-full z-40 transition-all duration-300 ${isScrolled ? 'bg-gradient-to-r from-zinc-950 via-zinc-950 to-[#106EBE]/10 backdrop-blur-md py-3' : 'bg-gradient-to-b from-zinc-950/90 to-transparent py-5'}`}>
                 <div className="max-w-[1440px] mx-auto px-4 sm:px-8 flex justify-between items-center">
 
                     <div className="flex items-center gap-8 lg:gap-12">
+                        {/* HAPUS CLASS "group" DI SINI AGAR HOVER TEKS HILANG */}
                         <a href="/" className="flex items-center gap-2.5 z-50">
                             <img
                                 src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/shadow.webp"
                                 alt="ShadowClips Logo"
-                                className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 object-contain"
+                                className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 object-contain animate-float-logo"
                             />
 
                             <div className="flex flex-col justify-center">
+                                {/* HAPUS EFEK HOVER PADA TEKS SHADOWCLIPS */}
                                 <span className="text-xl sm:text-[22px] font-black tracking-tighter text-white leading-none mb-1">
                                     Shadow<span className="text-[#106EBE]">Clips</span>
                                 </span>

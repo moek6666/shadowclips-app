@@ -50,7 +50,10 @@ export default function Streaming({ supabase }) {
             const processVideo = async (vidData) => {
                 setVideo(vidData);
                 document.title = `${vidData.title} | ShadowClips`;
+
+                // SISTEM PENAMBAHAN VIEWS TETAP BERJALAN DI SINI
                 await supabase.rpc('increment_views', { vid_id: vidData.id });
+
                 setLikes(vidData.likes || 0);
 
                 const userLiked = localStorage.getItem(`shadowclips_liked_${vidData.id}`);
@@ -218,7 +221,6 @@ export default function Streaming({ supabase }) {
                                     <span className="text-zinc-500 text-[10px] sm:text-xs font-bold uppercase tracking-wider mr-1 hidden sm:block">Server:</span>
                                     {serverOptions.length > 1 ? (
                                         <div className="relative min-w-0">
-                                            {/* PERBAIKAN: Menghapus "window." di bawah ini */}
                                             <button onClick={() => setIsServerDropdownOpen(!isServerDropdownOpen)} className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-[13px] font-bold transition-all bg-[#106EBE] text-white shadow-[0_5px_15px_rgba(16,110,190,0.3)] border-none relative z-[101] max-w-full">
                                                 <Server className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
                                                 <span className="truncate max-w-[70px] sm:max-w-none">{activeServerLabel}</span>
@@ -248,7 +250,11 @@ export default function Streaming({ supabase }) {
                         <div className="bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] flex flex-col gap-5 border-none">
                             <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white leading-snug tracking-tight" title={video.title}>{video.title}</h1>
                             <div className="flex flex-wrap items-center gap-4 text-xs sm:text-[13px] text-zinc-400 font-medium">
+
+                                {/* VIEWS DI-HIDDEN (DIKOMENTARI)
                                 <span className="flex items-center gap-1.5"><MonitorPlay className="w-3.5 h-3.5 text-[#106EBE]" /> <strong className="text-white">{formatViews(video.views)} Views</strong></span>
+                                */}
+
                                 <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#106EBE]" /> {new Date(video.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                                 {video.duration && video.duration !== 'EMPTY' && <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#106EBE]" /> {video.duration}</span>}
                                 {video.size && video.size !== 'EMPTY' && <span className="flex items-center gap-1.5"><HardDrive className="w-3.5 h-3.5 text-[#106EBE]" /> {video.size}</span>}
@@ -310,9 +316,11 @@ export default function Streaming({ supabase }) {
                                                 {new Date(item.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                                             </div>
 
+                                            {/* VIEWS DI RELATED VIDEOS DI-HIDDEN (DIKOMENTARI)
                                             <div className="flex items-center gap-1.5 font-medium text-zinc-500 text-[10px] sm:text-[11px] border-none">
                                                 <MonitorPlay className="w-3 h-3 text-[#106EBE]" /> {formatViews(item.views)} views
                                             </div>
+                                            */}
                                         </div>
 
                                     </div>

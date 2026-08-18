@@ -97,7 +97,6 @@ export default function Jelajahi({ supabase }) {
 
     return (
         <>
-            {/* SINKRONISASI NAVBAR TERBARU */}
             <Navbar isScrolled={true} supabase={supabase} />
 
             <main className="max-w-[1440px] mx-auto px-4 sm:px-8 pt-32 pb-24 overflow-hidden">
@@ -115,7 +114,7 @@ export default function Jelajahi({ supabase }) {
                             return (
                                 <section key={kategori} className="relative">
                                     <div
-                                        onClick={() => window.location.href = `/kategori/${encodeURIComponent(kategori)}`}
+                                        onClick={() => window.location.href = `/category/${encodeURIComponent(kategori)}`}
                                         className="flex items-center justify-between mb-5 md:mb-6 group cursor-pointer"
                                     >
                                         <div className="flex items-center gap-2 md:gap-3">
@@ -143,7 +142,6 @@ export default function Jelajahi({ supabase }) {
                                                 />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90 transition-opacity duration-300"></div>
 
-                                                {/* PERUBAHAN DI SINI: Ikon Play dibuat putih seragam dengan card kecil */}
                                                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
                                                     <Play className="w-14 h-14 md:w-16 md:h-16 text-white/90 fill-current drop-shadow-2xl scale-75 group-hover:scale-100 transition-transform duration-300" />
                                                 </div>
@@ -153,9 +151,11 @@ export default function Jelajahi({ supabase }) {
                                                         <span className="bg-[#106EBE] text-white px-2.5 py-1.5 rounded-[3px] uppercase tracking-widest shadow-[0_0_15px_rgba(16,110,190,0.5)]">
                                                             LATEST CONTENT
                                                         </span>
+                                                        {/* VIEWS DI-HIDDEN
                                                         <span className="flex items-center gap-1 text-zinc-300 bg-black/50 backdrop-blur-md px-2.5 py-1.5 rounded-[3px]">
                                                             <Eye className="w-3.5 h-3.5 text-[#0FFCBE]" /> {formatViews(heroVideo.views)} Views
                                                         </span>
+                                                        */}
                                                     </div>
                                                     <h3 className="text-xl md:text-3xl lg:text-4xl font-bold text-white group-hover:text-[#0FFCBE] transition-colors line-clamp-2 drop-shadow-lg leading-tight md:leading-tight">
                                                         {heroVideo.title}
@@ -183,9 +183,11 @@ export default function Jelajahi({ supabase }) {
                                                                 <Play className="w-8 h-8 text-white/90 fill-current drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300" />
                                                             </div>
 
+                                                            {/* VIEWS DI-HIDDEN
                                                             <div className="absolute bottom-1.5 left-1.5 bg-black/80 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
                                                                 <Eye className="w-2.5 h-2.5" /> {formatViews(video.views)}
                                                             </div>
+                                                            */}
 
                                                             {video.duration && video.duration !== 'EMPTY' && (
                                                                 <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">

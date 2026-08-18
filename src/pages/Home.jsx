@@ -142,9 +142,11 @@ export default function Home({ supabase }) {
                                                 <Play className="w-12 h-12 text-white/90 fill-current drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300" />
                                             </div>
 
+                                            {/* VIEWS DI-HIDDEN (DIKOMENTARI) SEMENTARA AGAR TIDAK TAMPIL
                                             <div className="absolute bottom-1.5 left-1.5 bg-black/80 text-white text-[10px] md:text-[11px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
                                                 <Eye className="w-3 h-3 md:w-3.5 md:h-3.5" /> {formatViews(video.views)}
                                             </div>
+                                            */}
 
                                             {video.duration && video.duration !== 'EMPTY' && (
                                                 <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[10px] md:text-[11px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
