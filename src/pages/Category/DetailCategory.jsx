@@ -6,6 +6,7 @@ import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 
 const getImageUrl = (imgString) => imgString ? imgString.split(',')[0].trim() : '';
+
 const formatViews = (views) => {
     if (!views) return '0';
     return Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(views);
@@ -37,7 +38,7 @@ export default function DetailCategory({ supabase }) {
 
         // Membuat huruf pertama setiap kata jadi kapital untuk judul Tab Browser
         const displayTitle = currentCategory.replace(/\b\w/g, char => char.toUpperCase());
-        document.title = `${displayTitle} - Premium Site | ShadowClips`;
+        document.title = `${displayTitle} | ShadowClips`;
     }, []);
 
     const fetchCategoryVideos = async (catName) => {
@@ -57,14 +58,9 @@ export default function DetailCategory({ supabase }) {
         <>
             <Navbar isScrolled={isScrolled} supabase={supabase} />
 
-            <div className="pt-28 pb-20 max-w-[1440px] mx-auto px-4 sm:px-8 min-h-screen flex flex-col">
-                {/* Menampilkan HANYA Nama Kategori (Tanpa tulisan "Kategori:") */}
-                <div className="mb-6">
-                    <h1 className="text-2xl md:text-3xl font-black text-[#106EBE] uppercase tracking-wide">
-                        {categoryName}
-                    </h1>
-                </div>
+            <div className="pt-32 pb-20 max-w-[1440px] mx-auto px-4 sm:px-8 min-h-screen flex flex-col">
 
+                {/* GRID VIDEO LANGSUNG (JUDUL KATEGORI DIHAPUS TOTAL) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-y-8 md:gap-x-6 flex-grow">
                     {loading ? (
                         Array.from({ length: 8 }).map((_, i) => (
@@ -107,8 +103,8 @@ export default function DetailCategory({ supabase }) {
                             </div>
                         ))
                     ) : (
-                        <div className="col-span-full py-20 text-center text-zinc-500 flex flex-col items-center border-none">
-                            <Search className="w-12 h-12 mb-4 opacity-20" />
+                        <div className="col-span-full py-32 text-center text-zinc-500 flex flex-col items-center border-none">
+                            <Search className="w-16 h-16 mb-4 opacity-20" />
                             <p className="text-lg">Belum ada video di dalam kategori ini.</p>
                         </div>
                     )}
