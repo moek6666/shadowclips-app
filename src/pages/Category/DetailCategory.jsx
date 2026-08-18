@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import { Play, Eye, Clock, Search } from 'lucide-react';
 
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import Navbar from '../../components/Navbar';
+import Footer from '../../components/Footer';
 
 const getImageUrl = (imgString) => imgString ? imgString.split(',')[0].trim() : '';
 const formatViews = (views) => {
@@ -23,11 +23,21 @@ export default function DetailCategory({ supabase }) {
 
     useEffect(() => {
         const pathParts = window.location.pathname.split('/');
-        const currentCategory = decodeURIComponent(pathParts[2] || '');
-        if (!currentCategory) { window.location.href = '/'; return; }
+        let currentCategory = decodeURIComponent(pathParts[2] || '');
+
+        if (!currentCategory) {
+            window.location.href = '/';
+            return;
+        }
+
+        // Mengubah tanda strip (-) di URL menjadi spasi agar cocok dengan database
+        currentCategory = currentCategory.replace(/-/g, ' ');
 
         setCategoryName(currentCategory);
-        document.title = `Kategori: ${currentCategory} | ShadowClips`;
+
+        // Membuat huruf pertama setiap kata jadi kapital untuk judul Tab Browser
+        const displayTitle = currentCategory.replace(/\b\w/g, char => char.toUpperCase());
+        document.title = `${displayTitle} - Premium Site | ShadowClips`;
     }, []);
 
     const fetchCategoryVideos = async (catName) => {
@@ -45,10 +55,16 @@ export default function DetailCategory({ supabase }) {
 
     return (
         <>
-            {/* SINKRONISASI NAVBAR TERBARU */}
             <Navbar isScrolled={isScrolled} supabase={supabase} />
 
             <div className="pt-28 pb-20 max-w-[1440px] mx-auto px-4 sm:px-8 min-h-screen flex flex-col">
+                {/* Menampilkan HANYA Nama Kategori (Tanpa tulisan "Kategori:") */}
+                <div className="mb-6">
+                    <h1 className="text-2xl md:text-3xl font-black text-[#106EBE] uppercase tracking-wide">
+                        {categoryName}
+                    </h1>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-y-8 md:gap-x-6 flex-grow">
                     {loading ? (
                         Array.from({ length: 8 }).map((_, i) => (

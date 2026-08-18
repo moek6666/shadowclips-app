@@ -3,7 +3,7 @@ import React, { useState, useEffect, Suspense, lazy } from 'react';
 // 1. IMPORT KOMPONEN GLOBAL
 import AgeVerification from './components/AgeVerification';
 import AntiAdBlock from './components/AntiAdBlock';
-import ExoclickPopunder from './components/ExoclickPopunder'; // <--- IMPORT POPUNDER BARU
+import ExoclickPopunder from './components/ExoclickPopunder';
 
 // 2. CODE SPLITTING / LAZY LOADING HALAMAN
 const Home = lazy(() => import('./pages/Home'));
@@ -12,7 +12,7 @@ const Populer = lazy(() => import('./pages/Populer'));
 const LegalPages = lazy(() => import('./pages/LegalPages'));
 const Koleksi = lazy(() => import('./pages/Koleksi'));
 const DetailKoleksi = lazy(() => import('./pages/DetailKoleksi'));
-const DetailCategory = lazy(() => import('./pages/DetailCategory'));
+const DetailCategory = lazy(() => import('./pages/Category/DetailCategory'));
 const Jelajahi = lazy(() => import('./pages/Jelajahi'));
 const Tutorial = lazy(() => import('./pages/Tutorial'));
 
@@ -67,7 +67,7 @@ export default function App() {
             {/* --- KOMPONEN GLOBAL TAK TERLIHAT --- */}
             <AgeVerification />
             <AntiAdBlock />
-            <ExoclickPopunder /> {/* <--- POPUNDER DIEKSEKUSI DI SINI SECARA GLOBAL */}
+            <ExoclickPopunder />
 
             {/* FLOATING TUTORIAL BUTTON - HANYA MUNCUL DI HALAMAN STREAMING */}
             {pathname.startsWith('/streaming/') && (
@@ -107,7 +107,7 @@ export default function App() {
                     <Koleksi supabase={supabase} />
                 ) : pathname.startsWith('/koleksi/') ? (
                     <DetailKoleksi supabase={supabase} />
-                ) : pathname.startsWith('/kategori/') ? (
+                ) : pathname.startsWith('/category/') ? (
                     <DetailCategory supabase={supabase} />
                 ) : pathname === '/jelajahi' ? (
                     <Jelajahi supabase={supabase} />
