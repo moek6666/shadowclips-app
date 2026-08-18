@@ -218,7 +218,8 @@ export default function Streaming({ supabase }) {
                                     <span className="text-zinc-500 text-[10px] sm:text-xs font-bold uppercase tracking-wider mr-1 hidden sm:block">Server:</span>
                                     {serverOptions.length > 1 ? (
                                         <div className="relative min-w-0">
-                                            <button onClick={() => window.setIsServerDropdownOpen(!isServerDropdownOpen)} className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-[13px] font-bold transition-all bg-[#106EBE] text-white shadow-[0_5px_15px_rgba(16,110,190,0.3)] border-none relative z-[101] max-w-full">
+                                            {/* PERBAIKAN: Menghapus "window." di bawah ini */}
+                                            <button onClick={() => setIsServerDropdownOpen(!isServerDropdownOpen)} className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-[13px] font-bold transition-all bg-[#106EBE] text-white shadow-[0_5px_15px_rgba(16,110,190,0.3)] border-none relative z-[101] max-w-full">
                                                 <Server className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
                                                 <span className="truncate max-w-[70px] sm:max-w-none">{activeServerLabel}</span>
                                                 <ChevronDown className={`w-3 h-3 sm:w-3.5 sm:h-3.5 transition-transform duration-300 ml-0.5 shrink-0 ${isServerDropdownOpen ? 'rotate-180' : ''}`} />
@@ -335,9 +336,6 @@ export default function Streaming({ supabase }) {
                 <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-500 border-none">
                     <div className="w-full max-w-xl flex flex-col items-center text-center animate-in slide-in-from-bottom-10 duration-500 relative border-none">
 
-                        {/* ==========================================
-                            PERBAIKAN: LOGO SEKARANG MENGGUNAKAN GAMBAR RESMI SINKRON DENGAN NAVBAR
-                           ========================================== */}
                         <div className="flex items-center justify-center gap-3 sm:gap-4 mb-8 w-full border-none">
                             <img
                                 src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/shadow.webp"
