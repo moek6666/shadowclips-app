@@ -11,10 +11,12 @@ const Streaming = lazy(() => import('./pages/Streaming'));
 const Populer = lazy(() => import('./pages/Populer'));
 const LegalPages = lazy(() => import('./pages/LegalPages'));
 const Koleksi = lazy(() => import('./pages/Koleksi'));
-const DetailKoleksi = lazy(() => import('./pages/DetailKoleksi'));
-const DetailCategory = lazy(() => import('./pages/Category/DetailCategory'));
 const Jelajahi = lazy(() => import('./pages/Jelajahi'));
 const Tutorial = lazy(() => import('./pages/Tutorial'));
+
+// ROUTING FOLDER BARU
+const DetailCategory = lazy(() => import('./pages/Category/DetailCategory'));
+const DetailKoleksi = lazy(() => import('./pages/colection/DetailKoleksi'));
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;

@@ -2,57 +2,15 @@ import React, { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import { Play, Eye, Clock, Search } from 'lucide-react';
 
-import { SiOnlyfans, SiTelegram } from 'react-icons/si';
-import { FaCrown, FaVideo, FaFire, FaBan, FaRandom, FaFilm, FaMask } from 'react-icons/fa';
-import { FaClapperboard } from 'react-icons/fa6';
-import { BiSolidCategory } from 'react-icons/bi';
-import { MdLiveTv } from 'react-icons/md';
-
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+// IMPORT NAIK DUA TINGKAT KARENA BERADA DI DALAM FOLDER BARU
+import Navbar from '../../components/Navbar';
+import Footer from '../../components/Footer';
 
 const getImageUrl = (imgString) => imgString ? imgString.split(',')[0].trim() : '';
+
 const formatViews = (views) => {
     if (!views) return '0';
     return Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(views);
-};
-
-const getCategoryIcon = (category) => {
-    if (!category) return <BiSolidCategory className="w-3.5 h-3.5 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors shrink-0" />;
-
-    const name = category.toString().toLowerCase();
-    const iconClasses = "w-3.5 h-3.5 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors shrink-0";
-
-    if (name.includes('onlyfans')) return <SiOnlyfans className={iconClasses} />;
-    if (name.includes('telegram')) return <SiTelegram className={iconClasses} />;
-    if (name.includes('movie') || name.includes('scene')) return <FaClapperboard className={iconClasses} />;
-    if (name.includes('live')) return <MdLiveTv className={iconClasses} />;
-    if (name.includes('deepfake')) return <FaMask className={iconClasses} />;
-
-    if (name.includes('kbj') || name.includes('korean')) {
-        return (
-            <div className="relative shrink-0 flex items-center justify-center">
-                <FaVideo className={iconClasses} />
-                <span className="absolute -bottom-1 -right-1 bg-zinc-800 border-none text-white text-[5px] font-black px-[2px] rounded-[1px] shadow-sm group-hover:text-[#0FFCBE] transition-colors leading-none">KR</span>
-            </div>
-        );
-    }
-
-    if (name.includes('jav') || name.includes('jepang') || name.includes('film')) {
-        return (
-            <div className="relative shrink-0 flex items-center justify-center">
-                <FaFilm className={iconClasses} />
-                <span className="absolute -bottom-1 -right-1 bg-zinc-800 border-none text-white text-[5px] font-black px-[2px] rounded-[1px] shadow-sm group-hover:text-[#0FFCBE] transition-colors leading-none">JP</span>
-            </div>
-        );
-    }
-
-    if (name.includes('exclusive') || name.includes('eksklusif')) return <FaCrown className={iconClasses} />;
-    if (name.includes('viral')) return <FaFire className={iconClasses} />;
-    if (name.includes('random') || name.includes('acak')) return <FaRandom className={iconClasses} />;
-    if (name.includes('banned')) return <FaBan className={iconClasses} />;
-
-    return <BiSolidCategory className={iconClasses} />;
 };
 
 const extractSingleLabel = (rawLabels) => {
@@ -76,14 +34,21 @@ export default function DetailKoleksi({ supabase }) {
 
     useEffect(() => {
         const pathParts = window.location.pathname.split('/');
-        const rawUrlLabel = decodeURIComponent(pathParts[2] || '');
+        let rawUrlLabel = decodeURIComponent(pathParts[2] || '');
 
         if (!rawUrlLabel) { window.location.href = '/koleksi'; return; }
 
+        // PERBAIKAN SEO: Mengubah tanda hubung (-) dari URL kembali menjadi spasi untuk pencarian DB
+        rawUrlLabel = rawUrlLabel.replace(/-/g, ' ');
+
         const cleanUrlLabel = extractSingleLabel(rawUrlLabel);
+
+        // Kapitalisasi awal kata untuk SEO title
         const displayTitle = cleanUrlLabel.replace(/\b\w/g, c => c.toUpperCase());
+
         setLabelName(displayTitle);
         setTargetLabelSearch(cleanUrlLabel.toLowerCase());
+
         document.title = `${displayTitle} | ShadowClips`;
     }, []);
 
@@ -114,9 +79,11 @@ export default function DetailKoleksi({ supabase }) {
 
     return (
         <>
-            <Navbar searchInput={searchInput} setSearchInput={setSearchInput} isScrolled={isScrolled} />
+            <Navbar searchInput={searchInput} setSearchInput={setSearchInput} isScrolled={isScrolled} supabase={supabase} />
 
             <div className="pt-28 pb-20 max-w-[1440px] mx-auto px-4 sm:px-8 min-h-screen flex flex-col">
+
+                {/* TAMPILAN POLOSAN (HANYA GRID) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-y-8 md:gap-x-6 flex-grow">
                     {loading ? (
                         Array.from({ length: 8 }).map((_, i) => (

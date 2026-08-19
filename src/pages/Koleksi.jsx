@@ -13,6 +13,11 @@ const extractSingleLabel = (rawLabels) => {
     return str && str.toUpperCase() !== 'EMPTY' ? str : '';
 };
 
+// FUNGSI BARU: Pembuat slug SEO (mengubah spasi menjadi - dan menjadikannya huruf kecil)
+const createLabelSlug = (labelName) => {
+    return labelName.toLowerCase().trim().replace(/\s+/g, '-');
+};
+
 export default function Koleksi({ supabase }) {
     const [isScrolled, setIsScrolled] = useState(false);
 
@@ -77,7 +82,8 @@ export default function Koleksi({ supabase }) {
                                 <div
                                     key={index}
                                     onClick={() => {
-                                        window.location.href = `/koleksi/${encodeURIComponent(col.name)}`;
+                                        // PERBAIKAN SEO: Menggunakan slug tanda hubung (-), menggantikan encodeURIComponent
+                                        window.location.href = `/koleksi/${createLabelSlug(col.name)}`;
                                     }}
                                     className="group relative aspect-[4/3] rounded-[4px] overflow-hidden cursor-pointer shadow-lg transition-transform duration-300 hover:-translate-y-1 bg-zinc-900 border-none"
                                 >
