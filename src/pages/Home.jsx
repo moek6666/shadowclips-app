@@ -33,20 +33,6 @@ export default function Home({ supabase }) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // EKSEKUSI SCRIPT IKLAN
-    useEffect(() => {
-        if (!document.querySelector('script[src="https://a.magsrv.com/ad-provider.js"]')) {
-            const script = document.createElement('script');
-            script.src = "https://a.magsrv.com/ad-provider.js";
-            script.async = true;
-            script.type = "application/javascript";
-            document.body.appendChild(script);
-        }
-
-        window.AdProvider = window.AdProvider || [];
-        window.AdProvider.push({ "serve": {} });
-    }, [currentPage]);
-
     const handlePageChange = (page) => {
         setCurrentPage(page);
         const newUrl = new URL(window.location);
@@ -82,13 +68,41 @@ export default function Home({ supabase }) {
     const videos = swrData?.data || [];
     const totalPages = swrData?.totalPages || 0;
 
-    const getPageNumbers = () => {
+    // PERBAIKAN LOGIKA IKLAN: Dieksekusi SETELAH loading video selesai
+    useEffect(() => {
+        if (!isLoading && videos.length > 0) {
+            if (!document.querySelector('script[src="https://a.magsrv.com/ad-provider.js"]')) {
+                const script = document.createElement('script');
+                script.src = "https://a.magsrv.com/ad-provider.js";
+                script.async = true;
+                script.type = "application/javascript";
+                document.body.appendChild(script);
+            }
+
+            // Memberikan sedikit jeda agar DOM (grid) benar-benar sudah tergambar
+            const timer = setTimeout(() => {
+                window.AdProvider = window.AdProvider || [];
+                window.AdProvider.push({ "serve": {} });
+            }, 150);
+
+            return () => clearTimeout(timer);
+        }
+    }, [isLoading, videos.length, currentPage]);
+
+    // LOGIKA PAGINASI (Blok 5 Angka, Ellipsis ..., Total Halaman)
+    const getPaginationLogic = () => {
         const maxVisiblePages = 5;
         const currentBlock = Math.ceil(currentPage / maxVisiblePages);
         const startPage = (currentBlock - 1) * maxVisiblePages + 1;
         const endPage = Math.min(startPage + maxVisiblePages - 1, totalPages);
-        return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
+
+        return {
+            pageArray: Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i),
+            showEllipsis: endPage < totalPages
+        };
     };
+
+    const { pageArray, showEllipsis } = getPaginationLogic();
 
     return (
         <>
@@ -110,6 +124,7 @@ export default function Home({ supabase }) {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-y-8 md:gap-x-6">
+
                     {isLoading ? (
                         Array.from({ length: 12 }).map((_, i) => (
                             <div key={i} className="animate-pulse flex flex-col gap-2">
@@ -125,7 +140,8 @@ export default function Home({ supabase }) {
 
                             return (
                                 <React.Fragment key={video.id}>
-                                    {/* Jika posisi di tengah, tampilkan Iklan dengan col-span-full agar membelah grid */}
+
+                                    {/* KEMBALI KE TENGAH: Iklan diletakkan di tengah grid video */}
                                     {isMiddle && (
                                         <div className="col-span-full flex justify-center w-full my-4 bg-transparent" style={{ border: 'none' }}>
                                             <ins className="eas6a97888e2" data-zoneid="6002932" data-sub="123450000"></ins>
@@ -142,7 +158,8 @@ export default function Home({ supabase }) {
                                                 <Play className="w-12 h-12 text-white/90 fill-current drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300" />
                                             </div>
 
-                                            {/* VIEWS DI-HIDDEN (DIKOMENTARI) SEMENTARA AGAR TIDAK TAMPIL
+                                            {/* VIEWS DI-HIDDEN (DIKOMENTARI) SEMENTARA */}
+                                            {/* 
                                             <div className="absolute bottom-1.5 left-1.5 bg-black/80 text-white text-[10px] md:text-[11px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
                                                 <Eye className="w-3 h-3 md:w-3.5 md:h-3.5" /> {formatViews(video.views)}
                                             </div>
@@ -173,12 +190,12 @@ export default function Home({ supabase }) {
                     )}
                 </div>
 
-                {/* IKLAN BARU: DI BAWAH CONTAINER MAX LIMIT CARD SATU BARIS */}
+                {/* IKLAN BAWAH: DI BAWAH CONTAINER MAX LIMIT CARD SATU BARIS */}
                 <div className="w-full flex justify-center my-10 bg-transparent" style={{ border: 'none' }}>
                     <ins className="eas6a97888e20" data-zoneid="6002934" data-sub="123450000"></ins>
                 </div>
 
-                {/* PAGINASI NAVIGASI */}
+                {/* PAGINASI NAVIGASI YANG SUDAH DIUPDATE (1 2 3 4 5 ... MaxPage) */}
                 {!isLoading && totalPages > 1 && (
                     <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mt-10">
                         {currentPage > 1 && (
@@ -186,11 +203,24 @@ export default function Home({ supabase }) {
                                 <ChevronLeft className="w-4 h-4" /> Prev
                             </button>
                         )}
-                        {getPageNumbers().map((num) => (
+
+                        {/* Render Angka Halaman Blok Ini */}
+                        {pageArray.map((num) => (
                             <button key={num} onClick={() => handlePageChange(num)} className={`w-10 h-10 flex items-center justify-center rounded-full font-bold text-sm transition-all ${currentPage === num ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.5)]' : 'text-white hover:bg-zinc-800 hover:text-[#0FFCBE]'}`}>
                                 {num}
                             </button>
                         ))}
+
+                        {/* Render Titik-Titik dan Total Halaman Jika Masih Ada Halaman Sisa */}
+                        {showEllipsis && (
+                            <>
+                                <span className="text-zinc-500 font-bold px-1 sm:px-2">...</span>
+                                <button onClick={() => handlePageChange(totalPages)} className="w-10 h-10 flex items-center justify-center rounded-full font-bold text-sm transition-all text-white hover:bg-zinc-800 hover:text-[#0FFCBE]">
+                                    {totalPages}
+                                </button>
+                            </>
+                        )}
+
                         {currentPage < totalPages && (
                             <button onClick={() => handlePageChange(currentPage + 1)} className="px-4 h-10 flex items-center justify-center gap-1 rounded-full font-bold text-sm transition-all text-white hover:bg-zinc-800 hover:text-[#0FFCBE]">
                                 Next <ChevronRight className="w-4 h-4" />
