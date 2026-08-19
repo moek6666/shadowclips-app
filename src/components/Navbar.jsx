@@ -82,13 +82,12 @@ export default function Navbar({ isScrolled, supabase }) {
         setDebouncedSearch('');
     };
 
-    const generateCategorySlug = (categoryName) => {
-        return categoryName.toLowerCase().replace(/\s+/g, '-');
+    const generateSeoSlug = (categoryName) => {
+        return categoryName.toLowerCase().trim().replace(/\s+/g, '-');
     };
 
     return (
         <>
-            {/* CSS KHUSUS UNTUK ANIMASI LOGO MELAYANG */}
             <style>{`
                 @keyframes floatLogo {
                     0% { transform: translateY(0px); }
@@ -104,16 +103,14 @@ export default function Navbar({ isScrolled, supabase }) {
                 <div className="max-w-[1440px] mx-auto px-4 sm:px-8 flex justify-between items-center">
 
                     <div className="flex items-center gap-8 lg:gap-12">
-                        {/* HAPUS CLASS "group" DI SINI AGAR HOVER TEKS HILANG */}
                         <a href="/" className="flex items-center gap-2.5 z-50">
                             <img
                                 src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/shadow.webp"
                                 alt="ShadowClips Logo"
-                                className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 object-contain animate-float-logo"
+                                className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 object-contain animate-float-logo drop-shadow-[0_0_8px_rgba(16,110,190,0.5)]"
                             />
 
                             <div className="flex flex-col justify-center">
-                                {/* HAPUS EFEK HOVER PADA TEKS SHADOWCLIPS */}
                                 <span className="text-xl sm:text-[22px] font-black tracking-tighter text-white leading-none mb-1">
                                     Shadow<span className="text-[#106EBE]">Clips</span>
                                 </span>
@@ -138,7 +135,7 @@ export default function Navbar({ isScrolled, supabase }) {
                             </a>
 
                             <div className="relative group cursor-pointer py-2 ml-2">
-                                <div className={`flex items-center gap-1.5 transition-colors ${pathname.startsWith('/category') ? 'text-zinc-400 hover:text-[#0FFCBE]' : 'text-zinc-400 hover:text-[#0FFCBE]'}`}>
+                                <div className={`flex items-center gap-1.5 transition-colors ${pathname.startsWith('/category') ? 'text-[#106EBE]' : 'text-zinc-400 hover:text-[#0FFCBE]'}`}>
                                     <Crown className="w-4 h-4 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors" /> Premium Site <ChevronDown className="w-3 h-3 group-hover:rotate-180 transition-transform duration-300" />
                                 </div>
 
@@ -147,7 +144,7 @@ export default function Navbar({ isScrolled, supabase }) {
                                 <div className="absolute top-[calc(100%+0.5rem)] left-0 w-56 bg-zinc-900/95 backdrop-blur-xl rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 flex flex-col py-2 z-50 overflow-hidden transform origin-top-left scale-95 group-hover:scale-100">
                                     {premiumCategories.length > 0 ? (
                                         premiumCategories.map((cat, idx) => (
-                                            <a key={idx} href={`/category/${generateCategorySlug(cat)}`} className="px-4 py-2.5 text-[13px] font-bold text-zinc-300 hover:text-[#0FFCBE] hover:bg-zinc-800/50 transition-colors flex items-center gap-2">
+                                            <a key={idx} href={`/category/${generateSeoSlug(cat)}`} className="px-4 py-2.5 text-[13px] font-bold text-zinc-300 hover:text-[#0FFCBE] hover:bg-zinc-800/50 transition-colors flex items-center gap-2">
                                                 <div className="w-1.5 h-1.5 rounded-full bg-[#106EBE]"></div> {cat}
                                             </a>
                                         ))
@@ -218,7 +215,7 @@ export default function Navbar({ isScrolled, supabase }) {
                             <div className={`flex flex-col ml-7 overflow-hidden transition-all duration-300 ${isMobilePremiumOpen ? 'max-h-[500px] mt-2 opacity-100' : 'max-h-0 opacity-0'}`}>
                                 {premiumCategories.length > 0 ? (
                                     premiumCategories.map((cat, idx) => (
-                                        <a key={idx} href={`/category/${generateCategorySlug(cat)}`} className="py-2.5 text-sm text-zinc-400 hover:text-[#0FFCBE] transition-colors pl-4">
+                                        <a key={idx} href={`/category/${generateSeoSlug(cat)}`} className="py-2.5 text-sm text-zinc-400 hover:text-[#0FFCBE] transition-colors pl-4">
                                             {cat}
                                         </a>
                                     ))

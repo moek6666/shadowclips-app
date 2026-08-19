@@ -64,13 +64,14 @@ export default function AgeVerification() {
 
                 <div className="relative z-10">
 
-                    {/* UPDATE LOGO KE VERSI DOUBLE HEXAGON TERBARU */}
                     <div className="flex items-center justify-center gap-3 sm:gap-4 mb-8 w-full">
+                        {/* LOGO BARU (SVG HEXAGON) KONSISTEN DENGAN NAVBAR */}
                         <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 sm:w-16 sm:h-16 drop-shadow-[0_0_12px_rgba(16,110,190,0.8)] shrink-0">
                             <polygon points="50,5 89,27.5 89,72.5 50,95 11,72.5 11,27.5" stroke="#106EBE" strokeWidth="8" strokeLinejoin="round" />
                             <polygon points="50,18 78,34 78,66 50,82 22,66 22,34" stroke="#106EBE" strokeWidth="3.5" strokeLinejoin="round" opacity="0.9" />
                             <polygon points="43,36 64,50 43,64" stroke="#106EBE" strokeWidth="3" strokeLinejoin="round" fill="rgba(16, 110, 190, 0.3)" />
                         </svg>
+
                         <div className="flex flex-col justify-center text-left">
                             <span className="text-2xl sm:text-4xl font-black tracking-tighter text-white leading-none mb-1">
                                 Shadow<span className="text-[#106EBE]">Clips</span>
