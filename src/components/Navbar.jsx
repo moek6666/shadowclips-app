@@ -99,7 +99,8 @@ export default function Navbar({ isScrolled, supabase }) {
                 }
             `}</style>
 
-            <nav className={`fixed top-0 w-full z-40 transition-all duration-300 ${isScrolled ? 'bg-gradient-to-r from-zinc-950 via-zinc-950 to-[#106EBE]/10 backdrop-blur-md py-3' : 'bg-gradient-to-b from-zinc-950/90 to-transparent py-5'}`}>
+            {/* PERBAIKAN: Ubah z-40 menjadi z-[60] di bawah ini agar tidak tertimpa overlay video */}
+            <nav className={`fixed top-0 w-full z-[60] transition-all duration-300 ${isScrolled ? 'bg-gradient-to-r from-zinc-950 via-zinc-950 to-[#106EBE]/10 backdrop-blur-md py-3' : 'bg-gradient-to-b from-zinc-950/90 to-transparent py-5'}`}>
                 <div className="max-w-[1440px] mx-auto px-4 sm:px-8 flex justify-between items-center">
 
                     <div className="flex items-center gap-8 lg:gap-12">
