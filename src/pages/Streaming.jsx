@@ -51,7 +51,6 @@ export default function Streaming({ supabase }) {
                 setVideo(vidData);
                 document.title = `${vidData.title} | ShadowClips`;
 
-                // SISTEM PENAMBAHAN VIEWS TETAP BERJALAN DI SINI
                 await supabase.rpc('increment_views', { vid_id: vidData.id });
 
                 setLikes(vidData.likes || 0);
@@ -61,7 +60,10 @@ export default function Streaming({ supabase }) {
                 const userCommented = localStorage.getItem(`shadowclips_commented_${vidData.id}`);
                 if (userCommented) setHasCommented(true);
 
-                const isVipContent = String(vidData.category).toLowerCase().includes('exclusive') || String(vidData.category).toLowerCase().includes('vip');
+                // PERBAIKAN LOGIKA VIP LOCKED: Hanya untuk "exclusive" dan "deepfake exclusive"
+                const categoryStr = String(vidData.category || '').toLowerCase().trim();
+                const isVipContent = categoryStr === 'exclusive' || categoryStr === 'deepfake exclusive';
+
                 if (isVipContent) {
                     if (userLiked && userCommented) setIsVipUnlocked(true);
                     else setIsVipUnlocked(false);
@@ -112,7 +114,11 @@ export default function Streaming({ supabase }) {
             localStorage.removeItem(`shadowclips_liked_${video.id}`);
         } else {
             localStorage.setItem(`shadowclips_liked_${video.id}`, 'true');
-            const isVipContent = String(video.category).toLowerCase().includes('exclusive') || String(video.category).toLowerCase().includes('vip');
+
+            // PERBAIKAN LOGIKA VIP PADA TOMBOL LIKE
+            const categoryStr = String(video.category || '').toLowerCase().trim();
+            const isVipContent = categoryStr === 'exclusive' || categoryStr === 'deepfake exclusive';
+
             if (isVipContent && hasCommented) setIsVipUnlocked(true);
         }
         await supabase.rpc('update_likes', { vid_id: video.id, new_likes: newLikesCount });
@@ -251,9 +257,7 @@ export default function Streaming({ supabase }) {
                             <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white leading-snug tracking-tight" title={video.title}>{video.title}</h1>
                             <div className="flex flex-wrap items-center gap-4 text-xs sm:text-[13px] text-zinc-400 font-medium">
 
-                                {/* VIEWS DI-HIDDEN (DIKOMENTARI)
-                                <span className="flex items-center gap-1.5"><MonitorPlay className="w-3.5 h-3.5 text-[#106EBE]" /> <strong className="text-white">{formatViews(video.views)} Views</strong></span>
-                                */}
+                                {/* VIEWS DI-HIDDEN */}
 
                                 <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#106EBE]" /> {new Date(video.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                                 {video.duration && video.duration !== 'EMPTY' && <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#106EBE]" /> {video.duration}</span>}
@@ -275,7 +279,11 @@ export default function Streaming({ supabase }) {
                         <div className="bg-zinc-900/40 p-2 sm:p-6 rounded-[1.5rem] w-full border-none overflow-hidden">
                             <Komentar videoId={video.id} onCommentSuccess={() => {
                                 setHasCommented(true);
-                                const isVipContent = String(video?.category).toLowerCase().includes('exclusive') || String(video?.category).toLowerCase().includes('vip');
+
+                                // PERBAIKAN LOGIKA VIP PADA KOMENTAR
+                                const categoryStr = String(video?.category || '').toLowerCase().trim();
+                                const isVipContent = categoryStr === 'exclusive' || categoryStr === 'deepfake exclusive';
+
                                 if (isVipContent && hasLiked) setIsVipUnlocked(true);
                             }} />
                         </div>
@@ -316,11 +324,6 @@ export default function Streaming({ supabase }) {
                                                 {new Date(item.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                                             </div>
 
-                                            {/* VIEWS DI RELATED VIDEOS DI-HIDDEN (DIKOMENTARI)
-                                            <div className="flex items-center gap-1.5 font-medium text-zinc-500 text-[10px] sm:text-[11px] border-none">
-                                                <MonitorPlay className="w-3 h-3 text-[#106EBE]" /> {formatViews(item.views)} views
-                                            </div>
-                                            */}
                                         </div>
 
                                     </div>
