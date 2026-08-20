@@ -18,6 +18,17 @@ export default function Streaming({ supabase }) {
     const [relatedVideos, setRelatedVideos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isScrolled, setIsScrolled] = useState(false);
+
+    // PEMBUATAN DEVICE ID UNIK (Hanya dibuat 1x per perangkat)
+    const [deviceId] = useState(() => {
+        let id = localStorage.getItem('shadowclips_device_id');
+        if (!id) {
+            id = 'device_' + Math.random().toString(36).substr(2, 9) + Date.now();
+            localStorage.setItem('shadowclips_device_id', id);
+        }
+        return id;
+    });
+
     const [activeServer, setActiveServer] = useState('main');
     const [isServerDropdownOpen, setIsServerDropdownOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
@@ -30,11 +41,43 @@ export default function Streaming({ supabase }) {
     const [isVipUnlocked, setIsVipUnlocked] = useState(true);
     const [hasCommented, setHasCommented] = useState(false);
 
+    // STATE KHUSUS PENYIMPAN URL RAHASIA DARI SERVER
+    const [secureUrls, setSecureUrls] = useState({ main: '', alt: '', alt2: '' });
+
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    const checkVipAccess = async (videoId, currentCommented) => {
+        // Bertanya ke Server Supabase: Boleh minta URL videonya?
+        const { data: vipData, error } = await supabase.rpc('get_vip_video_urls', {
+            p_video_id: videoId,
+            p_device_id: deviceId,
+            p_has_commented: currentCommented
+        });
+
+        if (!error && vipData) {
+            setHasLiked(vipData.has_liked);
+
+            if (vipData.status === 'UNLOCKED') {
+                setIsVipUnlocked(true);
+                setSecureUrls({
+                    main: vipData.main || '',
+                    alt: vipData.alt || '',
+                    alt2: vipData.alt2 || ''
+                });
+            } else {
+                setIsVipUnlocked(false);
+                setSecureUrls({ main: '', alt: '', alt2: '' });
+            }
+        }
+
+        // Tetap tarik total angka likes keseluruhan untuk tampilan
+        const { data: currentVideo } = await supabase.from('videos').select('likes').eq('id', videoId).single();
+        if (currentVideo) setLikes(currentVideo.likes || 0);
+    };
 
     useEffect(() => {
         const fetchVideoDetails = async () => {
@@ -44,7 +87,8 @@ export default function Streaming({ supabase }) {
             const slug = decodeURIComponent(pathParts[2] || '');
             if (!slug) { window.location.href = '/'; return; }
 
-            let query = supabase.from('videos').select('*').eq('slug', slug);
+            // Sengaja tidak mengambil trailer_url agar tidak bocor di Network Tab
+            let query = supabase.from('videos').select('id, title, category, img, sinopsis, created_at, duration, size, type, source, embed_url, url_download, slug').eq('slug', slug);
             const { data, error } = await query.single();
 
             const processVideo = async (vidData) => {
@@ -53,37 +97,27 @@ export default function Streaming({ supabase }) {
 
                 await supabase.rpc('increment_views', { vid_id: vidData.id });
 
-                setLikes(vidData.likes || 0);
+                const userCommented = localStorage.getItem(`shadowclips_commented_${vidData.id}`) === 'true';
+                setHasCommented(userCommented);
 
-                const userLiked = localStorage.getItem(`shadowclips_liked_${vidData.id}`);
-                if (userLiked) setHasLiked(true);
-                const userCommented = localStorage.getItem(`shadowclips_commented_${vidData.id}`);
-                if (userCommented) setHasCommented(true);
+                // Jalankan validasi keamanan Backend
+                await checkVipAccess(vidData.id, userCommented);
 
-                // PERBAIKAN LOGIKA VIP LOCKED: Hanya untuk "exclusive" dan "deepfake exclusive"
-                const categoryStr = String(vidData.category || '').toLowerCase().trim();
-                const isVipContent = categoryStr === 'exclusive' || categoryStr === 'deepfake exclusive';
-
-                if (isVipContent) {
-                    if (userLiked && userCommented) setIsVipUnlocked(true);
-                    else setIsVipUnlocked(false);
-                } else setIsVipUnlocked(true);
-
-                const { data: relatedData } = await supabase.from('videos').select('*').eq('category', vidData.category).neq('id', vidData.id).limit(10).order('created_at', { ascending: false });
+                const { data: relatedData } = await supabase.from('videos').select('id, title, category, img, created_at, duration, slug, views').eq('category', vidData.category).neq('id', vidData.id).limit(10).order('created_at', { ascending: false });
                 if (relatedData) setRelatedVideos(relatedData);
             };
 
             if (!error && data) {
                 await processVideo(data);
             } else {
-                const { data: fallbackData } = await supabase.from('videos').select('*').eq('id', slug).single();
+                const { data: fallbackData } = await supabase.from('videos').select('id, title, category, img, sinopsis, created_at, duration, size, type, source, embed_url, url_download, slug').eq('id', slug).single();
                 if (fallbackData) await processVideo(fallbackData);
                 else window.location.href = '/';
             }
             setLoading(false);
         };
         fetchVideoDetails();
-    }, [supabase]);
+    }, [supabase, deviceId]);
 
     useEffect(() => {
         if (selectedImage || isDownloadModalOpen) document.body.style.overflow = 'hidden';
@@ -106,22 +140,22 @@ export default function Streaming({ supabase }) {
 
     const handleLike = async () => {
         if (!supabase || !video) return;
-        const newLikesCount = hasLiked ? (likes > 0 ? likes - 1 : 0) : likes + 1;
-        setLikes(newLikesCount);
-        setHasLiked(!hasLiked);
 
-        if (hasLiked) {
-            localStorage.removeItem(`shadowclips_liked_${video.id}`);
-        } else {
-            localStorage.setItem(`shadowclips_liked_${video.id}`, 'true');
+        // Update UI seketika agar terasa responsif
+        const newHasLiked = !hasLiked;
+        setHasLiked(newHasLiked);
+        setLikes(prev => newHasLiked ? prev + 1 : Math.max(prev - 1, 0));
 
-            // PERBAIKAN LOGIKA VIP PADA TOMBOL LIKE
-            const categoryStr = String(video.category || '').toLowerCase().trim();
-            const isVipContent = categoryStr === 'exclusive' || categoryStr === 'deepfake exclusive';
+        // Panggil fungsi anti-spam di Database
+        const { data: newTotalLikes } = await supabase.rpc('toggle_user_like', {
+            p_video_id: video.id,
+            p_device_id: deviceId
+        });
 
-            if (isVipContent && hasCommented) setIsVipUnlocked(true);
-        }
-        await supabase.rpc('update_likes', { vid_id: video.id, new_likes: newLikesCount });
+        if (newTotalLikes !== null) setLikes(newTotalLikes);
+
+        // Periksa ulang gembok VIP ke server
+        await checkVipAccess(video.id, hasCommented);
     };
 
     const handleShare = async () => {
@@ -134,9 +168,10 @@ export default function Streaming({ supabase }) {
     if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-12 h-12 border-4 border-t-[#106EBE] border-zinc-800 rounded-full animate-spin"></div></div>;
     if (!video) return null;
 
-    const hasMain = video.trailer_url && video.trailer_url !== 'EMPTY' && String(video.trailer_url).trim() !== '';
-    const hasAlternativeServer = video.alternative_server && video.alternative_server !== 'EMPTY' && String(video.alternative_server).trim() !== '';
-    const hasAlternativeServer2 = video.alternative_server2 && video.alternative_server2 !== 'EMPTY' && String(video.alternative_server2).trim() !== '';
+    // Membaca URL yang dikirim dari Backend
+    const hasMain = secureUrls.main && secureUrls.main !== 'EMPTY' && String(secureUrls.main).trim() !== '';
+    const hasAlternativeServer = secureUrls.alt && secureUrls.alt !== 'EMPTY' && String(secureUrls.alt).trim() !== '';
+    const hasAlternativeServer2 = secureUrls.alt2 && secureUrls.alt2 !== 'EMPTY' && String(secureUrls.alt2).trim() !== '';
 
     let effectiveServer = activeServer;
     if (effectiveServer === 'main' && !hasMain) {
@@ -148,9 +183,9 @@ export default function Streaming({ supabase }) {
     }
 
     let currentVideoUrl = '';
-    if (effectiveServer === 'main' && hasMain) currentVideoUrl = video.trailer_url;
-    if (effectiveServer === 'alt' && hasAlternativeServer) currentVideoUrl = video.alternative_server;
-    if (effectiveServer === 'alt2' && hasAlternativeServer2) currentVideoUrl = video.alternative_server2;
+    if (effectiveServer === 'main' && hasMain) currentVideoUrl = secureUrls.main;
+    if (effectiveServer === 'alt' && hasAlternativeServer) currentVideoUrl = secureUrls.alt;
+    if (effectiveServer === 'alt2' && hasAlternativeServer2) currentVideoUrl = secureUrls.alt2;
 
     const isDirectVideo = currentVideoUrl && typeof currentVideoUrl === 'string' && (currentVideoUrl.toLowerCase().includes('.mp4') || currentVideoUrl.toLowerCase().includes('.webm') || currentVideoUrl.toLowerCase().includes('.m3u8'));
     const isDeepFake = video.category && typeof video.category === 'string' && video.category.toLowerCase() === 'deepfake';
@@ -256,9 +291,6 @@ export default function Streaming({ supabase }) {
                         <div className="bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] flex flex-col gap-5 border-none">
                             <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white leading-snug tracking-tight" title={video.title}>{video.title}</h1>
                             <div className="flex flex-wrap items-center gap-4 text-xs sm:text-[13px] text-zinc-400 font-medium">
-
-                                {/* VIEWS DI-HIDDEN */}
-
                                 <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#106EBE]" /> {new Date(video.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                                 {video.duration && video.duration !== 'EMPTY' && <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#106EBE]" /> {video.duration}</span>}
                                 {video.size && video.size !== 'EMPTY' && <span className="flex items-center gap-1.5"><HardDrive className="w-3.5 h-3.5 text-[#106EBE]" /> {video.size}</span>}
@@ -277,14 +309,11 @@ export default function Streaming({ supabase }) {
                         </div>
 
                         <div className="bg-zinc-900/40 p-2 sm:p-6 rounded-[1.5rem] w-full border-none overflow-hidden">
-                            <Komentar videoId={video.id} onCommentSuccess={() => {
+                            <Komentar videoId={video.id} onCommentSuccess={async () => {
                                 setHasCommented(true);
-
-                                // PERBAIKAN LOGIKA VIP PADA KOMENTAR
-                                const categoryStr = String(video?.category || '').toLowerCase().trim();
-                                const isVipContent = categoryStr === 'exclusive' || categoryStr === 'deepfake exclusive';
-
-                                if (isVipContent && hasLiked) setIsVipUnlocked(true);
+                                localStorage.setItem(`shadowclips_commented_${video?.id}`, 'true');
+                                // Periksa ulang gembok setelah komentar
+                                await checkVipAccess(video.id, true);
                             }} />
                         </div>
                     </div>
