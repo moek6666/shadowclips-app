@@ -68,7 +68,6 @@ export default function Home({ supabase }) {
     const videos = swrData?.data || [];
     const totalPages = swrData?.totalPages || 0;
 
-    // PERBAIKAN LOGIKA IKLAN: Dieksekusi SETELAH loading video selesai
     useEffect(() => {
         if (!isLoading && videos.length > 0) {
             if (!document.querySelector('script[src="https://a.magsrv.com/ad-provider.js"]')) {
@@ -79,7 +78,6 @@ export default function Home({ supabase }) {
                 document.body.appendChild(script);
             }
 
-            // Memberikan sedikit jeda agar DOM (grid) benar-benar sudah tergambar
             const timer = setTimeout(() => {
                 window.AdProvider = window.AdProvider || [];
                 window.AdProvider.push({ "serve": {} });
@@ -89,7 +87,6 @@ export default function Home({ supabase }) {
         }
     }, [isLoading, videos.length, currentPage]);
 
-    // LOGIKA PAGINASI (Blok 5 Angka, Ellipsis ..., Total Halaman)
     const getPaginationLogic = () => {
         const maxVisiblePages = 5;
         const currentBlock = Math.ceil(currentPage / maxVisiblePages);
@@ -112,13 +109,13 @@ export default function Home({ supabase }) {
 
                 <div className="mb-10 text-center md:text-left animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-4xl">
                     {currentPage === 1 ? (
-                        <h1 className="text-zinc-400 text-sm md:text-base leading-relaxed">
-                            <strong className="text-white font-black text-lg md:text-xl tracking-tight mr-2">Shadow<span className="text-[#106EBE]">Clips</span></strong>
+                        <h1 className="text-zinc-600 dark:text-zinc-400 text-sm md:text-base leading-relaxed transition-colors">
+                            <strong className="text-zinc-900 dark:text-white font-black text-lg md:text-xl tracking-tight mr-2 transition-colors">Shadow<span className="text-[#106EBE]">Clips</span></strong>
                             is an exclusive, viral, comprehensive, and updated video streaming hub. Enjoy unlimited premium entertainment collections with the best viewing quality every day.
                         </h1>
                     ) : (
-                        <h1 className="text-zinc-400 text-sm md:text-base leading-relaxed">
-                            <strong className="text-white font-black text-lg md:text-xl tracking-tight mr-2">Shadow<span className="text-[#106EBE]">Clips</span></strong> Page {currentPage}
+                        <h1 className="text-zinc-600 dark:text-zinc-400 text-sm md:text-base leading-relaxed transition-colors">
+                            <strong className="text-zinc-900 dark:text-white font-black text-lg md:text-xl tracking-tight mr-2 transition-colors">Shadow<span className="text-[#106EBE]">Clips</span></strong> Page {currentPage}
                         </h1>
                     )}
                 </div>
@@ -128,42 +125,31 @@ export default function Home({ supabase }) {
                     {isLoading ? (
                         Array.from({ length: 12 }).map((_, i) => (
                             <div key={i} className="animate-pulse flex flex-col gap-2">
-                                <div className="aspect-video bg-zinc-800/50 rounded-[4px]"></div>
-                                <div className="h-4 bg-zinc-800/50 rounded w-full"></div>
-                                <div className="h-4 bg-zinc-800/50 rounded w-2/3 mx-auto"></div>
+                                <div className="aspect-video bg-zinc-200 dark:bg-zinc-800/50 rounded-[4px] transition-colors"></div>
+                                <div className="h-4 bg-zinc-200 dark:bg-zinc-800/50 rounded w-full transition-colors"></div>
+                                <div className="h-4 bg-zinc-200 dark:bg-zinc-800/50 rounded w-2/3 mx-auto transition-colors"></div>
                             </div>
                         ))
                     ) : videos.length > 0 ? (
                         videos.map((video, index) => {
-                            // Hitung posisi tengah persis dari jumlah video yang ada
                             const isMiddle = index === Math.floor(videos.length / 2);
 
                             return (
                                 <React.Fragment key={video.id}>
-
-                                    {/* KEMBALI KE TENGAH: Iklan diletakkan di tengah grid video */}
                                     {isMiddle && (
                                         <div className="col-span-full flex justify-center w-full my-4 bg-transparent" style={{ border: 'none' }}>
                                             <ins className="eas6a97888e2" data-zoneid="6002932" data-sub="123450000"></ins>
                                         </div>
                                     )}
 
-                                    {/* Card Video */}
                                     <div onClick={() => window.location.href = `/streaming/${video.slug || video.id}`} className="group cursor-pointer flex flex-col gap-2">
 
-                                        <div className="relative aspect-video rounded-[4px] overflow-hidden bg-zinc-900 border-none">
+                                        <div className="relative aspect-video rounded-[4px] overflow-hidden bg-zinc-100 dark:bg-zinc-900 border-none transition-colors">
                                             <img src={getImageUrl(video.img)} alt={video.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
 
                                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
                                                 <Play className="w-12 h-12 text-white/90 fill-current drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300" />
                                             </div>
-
-                                            {/* VIEWS DI-HIDDEN (DIKOMENTARI) SEMENTARA */}
-                                            {/* 
-                                            <div className="absolute bottom-1.5 left-1.5 bg-black/80 text-white text-[10px] md:text-[11px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
-                                                <Eye className="w-3 h-3 md:w-3.5 md:h-3.5" /> {formatViews(video.views)}
-                                            </div>
-                                            */}
 
                                             {video.duration && video.duration !== 'EMPTY' && (
                                                 <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[10px] md:text-[11px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
@@ -173,7 +159,7 @@ export default function Home({ supabase }) {
                                         </div>
 
                                         <div className="px-1 text-center">
-                                            <h3 className="font-bold text-[13px] md:text-[14px] text-zinc-300 group-hover:text-white transition-colors line-clamp-2 leading-snug" title={video.title}>
+                                            <h3 className="font-bold text-[13px] md:text-[14px] text-zinc-800 dark:text-zinc-300 group-hover:text-black dark:group-hover:text-white transition-colors line-clamp-2 leading-snug" title={video.title}>
                                                 {video.title}
                                             </h3>
                                         </div>
@@ -190,39 +176,35 @@ export default function Home({ supabase }) {
                     )}
                 </div>
 
-                {/* IKLAN BAWAH: DI BAWAH CONTAINER MAX LIMIT CARD SATU BARIS */}
                 <div className="w-full flex justify-center my-10 bg-transparent" style={{ border: 'none' }}>
                     <ins className="eas6a97888e20" data-zoneid="6002934" data-sub="123450000"></ins>
                 </div>
 
-                {/* PAGINASI NAVIGASI YANG SUDAH DIUPDATE (1 2 3 4 5 ... MaxPage) */}
                 {!isLoading && totalPages > 1 && (
                     <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mt-10">
                         {currentPage > 1 && (
-                            <button onClick={() => handlePageChange(currentPage - 1)} className="px-4 h-10 flex items-center justify-center gap-1 rounded-full font-bold text-sm transition-all text-white hover:bg-zinc-800 hover:text-[#0FFCBE]">
+                            <button onClick={() => handlePageChange(currentPage - 1)} className="px-4 h-10 flex items-center justify-center gap-1 rounded-full font-bold text-sm transition-all text-zinc-700 dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-[#0FFCBE]">
                                 <ChevronLeft className="w-4 h-4" /> Prev
                             </button>
                         )}
 
-                        {/* Render Angka Halaman Blok Ini */}
                         {pageArray.map((num) => (
-                            <button key={num} onClick={() => handlePageChange(num)} className={`w-10 h-10 flex items-center justify-center rounded-full font-bold text-sm transition-all ${currentPage === num ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.5)]' : 'text-white hover:bg-zinc-800 hover:text-[#0FFCBE]'}`}>
+                            <button key={num} onClick={() => handlePageChange(num)} className={`w-10 h-10 flex items-center justify-center rounded-full font-bold text-sm transition-all ${currentPage === num ? 'bg-[#106EBE] text-white shadow-[0_0_15px_rgba(16,110,190,0.5)]' : 'text-zinc-700 dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-[#0FFCBE]'}`}>
                                 {num}
                             </button>
                         ))}
 
-                        {/* Render Titik-Titik dan Total Halaman Jika Masih Ada Halaman Sisa */}
                         {showEllipsis && (
                             <>
                                 <span className="text-zinc-500 font-bold px-1 sm:px-2">...</span>
-                                <button onClick={() => handlePageChange(totalPages)} className="w-10 h-10 flex items-center justify-center rounded-full font-bold text-sm transition-all text-white hover:bg-zinc-800 hover:text-[#0FFCBE]">
+                                <button onClick={() => handlePageChange(totalPages)} className="w-10 h-10 flex items-center justify-center rounded-full font-bold text-sm transition-all text-zinc-700 dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-[#0FFCBE]">
                                     {totalPages}
                                 </button>
                             </>
                         )}
 
                         {currentPage < totalPages && (
-                            <button onClick={() => handlePageChange(currentPage + 1)} className="px-4 h-10 flex items-center justify-center gap-1 rounded-full font-bold text-sm transition-all text-white hover:bg-zinc-800 hover:text-[#0FFCBE]">
+                            <button onClick={() => handlePageChange(currentPage + 1)} className="px-4 h-10 flex items-center justify-center gap-1 rounded-full font-bold text-sm transition-all text-zinc-700 dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-[#0FFCBE]">
                                 Next <ChevronRight className="w-4 h-4" />
                             </button>
                         )}

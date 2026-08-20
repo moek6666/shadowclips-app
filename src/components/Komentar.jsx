@@ -7,9 +7,6 @@ import {
     Bold, Italic, Code, Link as LinkIcon, Quote, X, LogOut, BadgeCheck
 } from 'lucide-react';
 
-// ==========================================
-// WADAH GOOGLE OAUTH PROVIDER
-// ==========================================
 export default function KomentarWrapper(props) {
     return (
         <GoogleOAuthProvider clientId="584667592518-5j301svkhtkoij6dudhscof5ucj4ge16.apps.googleusercontent.com">
@@ -18,9 +15,6 @@ export default function KomentarWrapper(props) {
     );
 }
 
-// ==========================================
-// KOMPONEN UTAMA KOMENTAR
-// ==========================================
 function Komentar({ videoId, onCommentSuccess }) {
     const [comments, setComments] = useState([]);
     const [adminEmails, setAdminEmails] = useState([]);
@@ -209,11 +203,12 @@ function Komentar({ videoId, onCommentSuccess }) {
             '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
         }[tag] || tag));
 
-        html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>');
-        html = html.replace(/\*(.*?)\*/g, '<em class="italic text-zinc-300">$1</em>');
-        html = html.replace(/`(.*?)`/g, '<code class="bg-zinc-900/60 px-1.5 py-0.5 rounded text-[#0FFCBE] text-[12px] font-mono">$1</code>');
+        // Inject classes for Light & Dark mode support in Markdown elements
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-zinc-900 dark:text-white font-bold">$1</strong>');
+        html = html.replace(/\*(.*?)\*/g, '<em class="italic text-zinc-600 dark:text-zinc-300">$1</em>');
+        html = html.replace(/`(.*?)`/g, '<code class="bg-zinc-200 dark:bg-zinc-900/60 px-1.5 py-0.5 rounded text-[#106EBE] dark:text-[#0FFCBE] text-[12px] font-mono">$1</code>');
         html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-[#106EBE] hover:underline">$1</a>');
-        html = html.replace(/^&gt; (.*$)/gm, '<blockquote class="border-l-2 border-[#106EBE] pl-3 my-1 text-zinc-400 italic bg-zinc-900/30 py-1">$1</blockquote>');
+        html = html.replace(/^&gt; (.*$)/gm, '<blockquote class="border-l-2 border-[#106EBE] pl-3 my-1 text-zinc-500 dark:text-zinc-400 italic bg-zinc-100 dark:bg-zinc-900/30 py-1">$1</blockquote>');
         html = html.replace(/\n/g, '<br/>');
 
         const animatedEmojis = {
@@ -251,10 +246,6 @@ function Komentar({ videoId, onCommentSuccess }) {
         setNotification(null);
 
         const targetParentId = replyTo ? (replyTo.parent_id || replyTo.id) : null;
-
-        // ==========================================
-        // PERUBAHAN: CEK STATUS ADMIN & BYPASS PENDING
-        // ==========================================
         const isAdmin = adminEmails.includes(formData.email);
         const statusKomentar = isAdmin ? 'approved' : 'pending';
 
@@ -267,7 +258,7 @@ function Komentar({ videoId, onCommentSuccess }) {
                 avatar_url: formData.picture || null,
                 content: formData.content,
                 parent_id: targetParentId,
-                status: statusKomentar // Menggunakan status dinamis yang telah dicek
+                status: statusKomentar
             });
 
         setIsSubmitting(false);
@@ -278,7 +269,6 @@ function Komentar({ videoId, onCommentSuccess }) {
             if (turnstileRef.current) turnstileRef.current.reset();
             setCaptchaToken(null);
         } else {
-            // Tampilkan notifikasi yang berbeda jika admin
             if (isAdmin) {
                 setNotification({ type: 'success', message: 'Komentar Admin langsung ditayangkan!' });
                 setTimeout(() => setNotification(null), 3000);
@@ -291,7 +281,7 @@ function Komentar({ videoId, onCommentSuccess }) {
                 avatar_url: formData.picture,
                 content: formData.content,
                 created_at: new Date().toISOString(),
-                status: statusKomentar, // Memasukkan status lokal sesuai hak akses
+                status: statusKomentar,
                 parent_id: targetParentId
             };
 
@@ -301,7 +291,6 @@ function Komentar({ videoId, onCommentSuccess }) {
             localStorage.setItem('shadowclips_user_email', formData.email);
             if (formData.picture) localStorage.setItem('shadowclips_user_picture', formData.picture);
 
-            // Hanya simpan ke local pending storage jika user biasa (bukan admin)
             if (!isAdmin) {
                 const existingPending = JSON.parse(localStorage.getItem(`shadowclips_pending_${videoId}`) || '[]');
                 localStorage.setItem(`shadowclips_pending_${videoId}`, JSON.stringify([newCommentData, ...existingPending]));
@@ -326,10 +315,10 @@ function Komentar({ videoId, onCommentSuccess }) {
 
     const renderAuthOrForm = (isInline = false) => {
         return (
-            <div className={`bg-zinc-800/60 rounded-[1.5rem] overflow-hidden shadow-lg transition-all duration-500 border-none ${isInline ? 'mt-3 mb-2 border border-[#106EBE]/20' : 'mb-10'}`}>
+            <div className={`bg-white dark:bg-zinc-800/60 rounded-[1.5rem] overflow-hidden shadow-lg transition-all duration-500 border-none ${isInline ? 'mt-3 mb-2 border border-zinc-200 dark:border-[#106EBE]/20' : 'mb-10 border border-zinc-200 dark:border-transparent'}`}>
                 <form onSubmit={handleSubmit} className="animate-in fade-in duration-300 border-none">
 
-                    <div className="flex items-center justify-between px-4 sm:px-5 py-4 bg-zinc-900/40 border-none">
+                    <div className="flex items-center justify-between px-4 sm:px-5 py-4 bg-zinc-50 dark:bg-zinc-900/40 border-b border-zinc-200 dark:border-transparent">
                         {isLoggedIn ? (
                             <>
                                 <div className="flex items-center gap-3">
@@ -339,49 +328,49 @@ function Komentar({ videoId, onCommentSuccess }) {
                                             className="w-10 h-10 rounded-full shadow-md object-cover border-none" referrerPolicy="no-referrer"
                                         />
                                         {adminEmails.includes(formData.email) && (
-                                            <div className="absolute -bottom-1 -right-1 bg-zinc-900 rounded-full p-0.5">
-                                                <BadgeCheck className="w-4 h-4 text-[#0FFCBE] fill-[#106EBE]" />
+                                            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5">
+                                                <BadgeCheck className="w-4 h-4 text-[#106EBE] dark:text-[#0FFCBE] fill-white dark:fill-[#106EBE]" />
                                             </div>
                                         )}
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className="text-[13px] sm:text-[14px] font-bold text-white leading-tight flex items-center gap-1.5">{formData.name}</span>
-                                        <span className="text-[10px] sm:text-[11px] font-medium text-zinc-400 truncate max-w-[150px] sm:max-w-none">{formData.email}</span>
+                                        <span className="text-[13px] sm:text-[14px] font-bold text-zinc-900 dark:text-white leading-tight flex items-center gap-1.5 transition-colors">{formData.name}</span>
+                                        <span className="text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400 truncate max-w-[150px] sm:max-w-none transition-colors">{formData.email}</span>
                                     </div>
                                 </div>
-                                <button type="button" onClick={handleLogout} className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-zinc-300 hover:text-red-400 transition-colors outline-none bg-zinc-800/80 hover:bg-zinc-800 px-3 py-1.5 rounded-lg border-none shrink-0">
+                                <button type="button" onClick={handleLogout} className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-zinc-600 dark:text-zinc-300 hover:text-red-500 dark:hover:text-red-400 transition-colors outline-none bg-zinc-200 dark:bg-zinc-800/80 hover:bg-zinc-300 dark:hover:bg-zinc-800 px-3 py-1.5 rounded-lg border-none shrink-0">
                                     <LogOut className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Logout
                                 </button>
                             </>
                         ) : (
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-500 shadow-md border-none">
+                                <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-zinc-500 shadow-md border-none transition-colors">
                                     <MessageSquare className="w-5 h-5" />
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-[13px] sm:text-[14px] font-bold text-zinc-300 leading-tight">Guest Mode</span>
-                                    <span className="text-[10px] sm:text-[11px] font-medium text-zinc-500">Sign in is required to post a comment</span>
+                                    <span className="text-[13px] sm:text-[14px] font-bold text-zinc-800 dark:text-zinc-300 leading-tight transition-colors">Guest Mode</span>
+                                    <span className="text-[10px] sm:text-[11px] font-medium text-zinc-500 transition-colors">Sign in is required to post a comment</span>
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-4 px-4 sm:px-5 py-3 bg-zinc-800/80 text-zinc-300 border-none overflow-visible">
-                        <button type="button" onClick={() => insertFormat('bold')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Bold"><Bold className="w-4 h-4" /></button>
-                        <button type="button" onClick={() => insertFormat('italic')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Italic"><Italic className="w-4 h-4" /></button>
-                        <button type="button" onClick={() => insertFormat('code')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Code"><Code className="w-4 h-4" /></button>
-                        <button type="button" onClick={() => insertFormat('link')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Link"><LinkIcon className="w-4 h-4" /></button>
-                        <button type="button" onClick={() => insertFormat('quote')} className="hover:text-white transition-colors outline-none border-none shrink-0" title="Quote"><Quote className="w-4 h-4" /></button>
+                    <div className="flex flex-wrap items-center gap-4 px-4 sm:px-5 py-3 bg-zinc-100 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-300 border-b border-zinc-200 dark:border-transparent overflow-visible transition-colors">
+                        <button type="button" onClick={() => insertFormat('bold')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Bold"><Bold className="w-4 h-4" /></button>
+                        <button type="button" onClick={() => insertFormat('italic')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Italic"><Italic className="w-4 h-4" /></button>
+                        <button type="button" onClick={() => insertFormat('code')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Code"><Code className="w-4 h-4" /></button>
+                        <button type="button" onClick={() => insertFormat('link')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Link"><LinkIcon className="w-4 h-4" /></button>
+                        <button type="button" onClick={() => insertFormat('quote')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Quote"><Quote className="w-4 h-4" /></button>
 
-                        <div className="h-4 w-[1px] bg-zinc-600 mx-1 shrink-0"></div>
+                        <div className="h-4 w-[1px] bg-zinc-300 dark:bg-zinc-600 mx-1 shrink-0 transition-colors"></div>
 
                         <div className="relative flex items-center group/emoji h-full py-1">
-                            <button type="button" className="hover:text-[#0FFCBE] transition-colors outline-none border-none shrink-0" title="Insert 3D Emoji">
+                            <button type="button" className="hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors outline-none border-none shrink-0" title="Insert 3D Emoji">
                                 <Smile className="w-4 h-4" />
                             </button>
 
                             <div className="absolute top-full left-0 pt-2 hidden group-hover/emoji:block z-50 min-w-max animate-in fade-in zoom-in-95 duration-200">
-                                <div className="flex items-center gap-2.5 bg-zinc-900/95 backdrop-blur-xl p-2.5 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] border border-zinc-700/50">
+                                <div className="flex items-center gap-2.5 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl p-2.5 rounded-2xl shadow-lg dark:shadow-[0_10px_40px_rgba(0,0,0,0.8)] border border-zinc-200 dark:border-zinc-700/50">
                                     <button type="button" onClick={() => insertEmoji(':keren:')} className="hover:scale-125 transition-transform"><img src="https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Smilies/Smiling%20Face%20with%20Sunglasses.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Keren" /></button>
                                     <button type="button" onClick={() => insertEmoji(':love:')} className="hover:scale-125 transition-transform"><img src="https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Smilies/Smiling%20Face%20with%20Heart-Eyes.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Love" /></button>
                                     <button type="button" onClick={() => insertEmoji(':api:')} className="hover:scale-125 transition-transform"><img src="https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Travel%20and%20places/Fire.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Api" /></button>
@@ -394,29 +383,29 @@ function Komentar({ videoId, onCommentSuccess }) {
                         </div>
 
                         {replyTo && (
-                            <div className="ml-auto flex items-center gap-2 bg-[#106EBE]/20 text-[#106EBE] px-3 py-1 rounded-lg border-none shrink-0">
+                            <div className="ml-auto flex items-center gap-2 bg-[#106EBE]/10 dark:bg-[#106EBE]/20 text-[#106EBE] px-3 py-1 rounded-lg border-none shrink-0">
                                 <span className="text-[10px] sm:text-[11px] font-bold truncate max-w-[100px] sm:max-w-[150px]">Replying to @{replyTo.name}</span>
-                                <button type="button" onClick={cancelReply} className="hover:bg-[#106EBE]/30 rounded-full p-0.5 outline-none border-none"><X className="w-3.5 h-3.5" /></button>
+                                <button type="button" onClick={cancelReply} className="hover:bg-[#106EBE]/20 dark:hover:bg-[#106EBE]/30 rounded-full p-0.5 outline-none border-none"><X className="w-3.5 h-3.5" /></button>
                             </div>
                         )}
                     </div>
 
-                    <div className="relative bg-zinc-900/40 border-none">
+                    <div className="relative bg-white dark:bg-zinc-900/40 border-none transition-colors">
                         <textarea
                             ref={textareaRef}
                             name="content"
                             value={formData.content}
                             onChange={handleInputChange}
                             placeholder="Type your comment here... Use the smile icon for 3D emojis!"
-                            className={`w-full bg-transparent px-4 sm:px-5 py-5 text-[13px] sm:text-[14px] text-white placeholder-zinc-500 focus:outline-none resize-y border-none ${isInline ? 'min-h-[100px]' : 'min-h-[140px]'}`}
+                            className={`w-full bg-transparent px-4 sm:px-5 py-5 text-[13px] sm:text-[14px] text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none resize-y border-none transition-colors ${isInline ? 'min-h-[100px]' : 'min-h-[140px]'}`}
                             required
                         />
-                        <div className="absolute bottom-3 right-4 text-[9px] sm:text-[10px] font-medium text-zinc-500 select-none border-none">
+                        <div className="absolute bottom-3 right-4 text-[9px] sm:text-[10px] font-medium text-zinc-400 dark:text-zinc-500 select-none border-none">
                             {formData.content.length}/2000
                         </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-zinc-800/80 border-none relative">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-zinc-50 dark:bg-zinc-800/80 border-t border-zinc-200 dark:border-transparent relative transition-colors">
                         {isLoggedIn ? (
                             <>
                                 <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2 sm:gap-4 border-none">
@@ -427,13 +416,13 @@ function Komentar({ videoId, onCommentSuccess }) {
                                                 onSuccess={(token) => setCaptchaToken(token)}
                                                 onExpire={() => setCaptchaToken(null)}
                                                 onError={() => setCaptchaToken(null)}
-                                                theme="dark"
+                                                options={{ theme: 'auto' }}
                                                 ref={turnstileRef}
                                             />
                                         </div>
                                     </div>
                                     {notification && (
-                                        <span className={`text-[11px] sm:text-[12px] font-medium animate-in fade-in border-none text-center ${notification.type === 'success' ? 'text-[#0FFCBE]' : 'text-red-400'}`}>
+                                        <span className={`text-[11px] sm:text-[12px] font-medium animate-in fade-in border-none text-center ${notification.type === 'success' ? 'text-[#106EBE] dark:text-[#0FFCBE]' : 'text-red-500 dark:text-red-400'}`}>
                                             {notification.message}
                                         </span>
                                     )}
@@ -441,7 +430,7 @@ function Komentar({ videoId, onCommentSuccess }) {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting || !formData.content.trim() || !captchaToken}
-                                    className="w-full sm:w-auto bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-700 disabled:text-zinc-500 text-white px-8 py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold text-[13px] transition-all shadow-[0_5px_15px_rgba(16,110,190,0.3)] disabled:shadow-none outline-none border-none shrink-0"
+                                    className="w-full sm:w-auto bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-300 dark:disabled:bg-zinc-700 disabled:text-zinc-500 text-white px-8 py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold text-[13px] transition-all shadow-[0_5px_15px_rgba(16,110,190,0.3)] disabled:shadow-none outline-none border-none shrink-0"
                                 >
                                     {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                                     Post Comment
@@ -449,13 +438,13 @@ function Komentar({ videoId, onCommentSuccess }) {
                             </>
                         ) : (
                             <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4">
-                                <span className="text-[11px] sm:text-[12px] font-medium text-zinc-400 text-center sm:text-left flex-1">
+                                <span className="text-[11px] sm:text-[12px] font-medium text-zinc-500 dark:text-zinc-400 text-center sm:text-left flex-1">
                                     Your text is saved. Please sign in<br className="hidden sm:block" /> with Google to post your comment.
                                 </span>
                                 <button
                                     type="button"
                                     onClick={() => login()}
-                                    className="w-full sm:w-auto bg-white hover:bg-zinc-200 text-zinc-900 px-6 py-3 rounded-xl flex items-center justify-center gap-2.5 font-bold text-[13px] transition-all shadow-lg outline-none border-none shrink-0"
+                                    className="w-full sm:w-auto bg-white dark:bg-white hover:bg-zinc-100 dark:hover:bg-zinc-200 text-zinc-900 px-6 py-3 rounded-xl flex items-center justify-center gap-2.5 font-bold text-[13px] transition-all shadow-md outline-none border border-zinc-200 dark:border-transparent shrink-0"
                                 >
                                     <svg className="w-4 h-4" viewBox="0 0 24 24">
                                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -466,7 +455,7 @@ function Komentar({ videoId, onCommentSuccess }) {
                                     Sign in to Post
                                 </button>
                                 {notification && notification.type === 'error' && (
-                                    <span className="absolute -top-8 right-0 text-xs font-medium text-red-400 animate-in fade-in">{notification.message}</span>
+                                    <span className="absolute -top-8 right-0 text-xs font-medium text-red-500 dark:text-red-400 animate-in fade-in">{notification.message}</span>
                                 )}
                             </div>
                         )}
@@ -482,11 +471,11 @@ function Komentar({ videoId, onCommentSuccess }) {
 
             <div className="flex items-center justify-between mb-8 pb-2 border-none">
                 <div className="flex items-center gap-2 border-none">
-                    <MessageSquare className="w-5 h-5 text-white" />
-                    <h3 className="text-lg sm:text-xl font-black text-white tracking-tight">Comments</h3>
-                    <span className="bg-zinc-800/60 text-[#0FFCBE] text-xs sm:text-sm font-black px-2.5 py-0.5 rounded-full border-none">{comments.length}</span>
+                    <MessageSquare className="w-5 h-5 text-zinc-900 dark:text-white transition-colors" />
+                    <h3 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white tracking-tight transition-colors">Comments</h3>
+                    <span className="bg-zinc-200 dark:bg-zinc-800/60 text-[#106EBE] dark:text-[#0FFCBE] text-xs sm:text-sm font-black px-2.5 py-0.5 rounded-full border-none transition-colors">{comments.length}</span>
                 </div>
-                <div className="flex items-center gap-1 text-[11px] sm:text-xs font-bold text-zinc-400 cursor-pointer hover:text-white transition-colors border-none">
+                <div className="flex items-center gap-1 text-[11px] sm:text-xs font-bold text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition-colors border-none">
                     Newest First <ChevronDown className="w-4 h-4" />
                 </div>
             </div>
@@ -500,36 +489,36 @@ function Komentar({ videoId, onCommentSuccess }) {
                             <div key={comment.id} className="flex flex-col gap-3 border-none">
                                 <div className={`flex gap-3 sm:gap-4 group border-none ${comment.status === 'pending' ? 'opacity-60' : ''}`}>
                                     <div className="relative w-10 h-10 sm:w-12 sm:h-12 shrink-0">
-                                        <div className="w-full h-full rounded-full bg-zinc-800/60 flex items-center justify-center shadow-lg overflow-hidden border-none">
+                                        <div className="w-full h-full rounded-full bg-zinc-200 dark:bg-zinc-800/60 flex items-center justify-center shadow-md dark:shadow-lg overflow-hidden border-none transition-colors">
                                             {comment.avatar_url ? (
                                                 <img src={comment.avatar_url} alt={comment.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                             ) : (
-                                                <span className="text-zinc-300 font-black text-sm sm:text-base border-none">{getInitial(comment.name)}</span>
+                                                <span className="text-zinc-500 dark:text-zinc-300 font-black text-sm sm:text-base border-none transition-colors">{getInitial(comment.name)}</span>
                                             )}
                                         </div>
                                         {isAdmin && (
-                                            <div className="absolute -bottom-1 -right-1 bg-zinc-900 rounded-full p-0.5" title="Verified Admin">
-                                                <BadgeCheck className="w-4 h-4 sm:w-5 sm:h-5 text-[#0FFCBE] fill-[#106EBE]" />
+                                            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm" title="Verified Admin">
+                                                <BadgeCheck className="w-4 h-4 sm:w-5 sm:h-5 text-[#106EBE] dark:text-[#0FFCBE] fill-white dark:fill-[#106EBE]" />
                                             </div>
                                         )}
                                     </div>
 
-                                    <div className={`flex-1 min-w-0 flex flex-col p-4 sm:p-5 rounded-[1.2rem] sm:rounded-[1.5rem] border-none ${isAdmin ? 'bg-gradient-to-br from-zinc-800/80 to-[#106EBE]/20 shadow-[0_5px_20px_rgba(16,110,190,0.15)]' : 'bg-zinc-800/60'}`}>
+                                    <div className={`flex-1 min-w-0 flex flex-col p-4 sm:p-5 rounded-[1.2rem] sm:rounded-[1.5rem] border border-zinc-100 dark:border-transparent transition-colors ${isAdmin ? 'bg-gradient-to-br from-white dark:from-zinc-800/80 to-[#106EBE]/5 dark:to-[#106EBE]/20 shadow-sm dark:shadow-[0_5px_20px_rgba(16,110,190,0.15)]' : 'bg-white dark:bg-zinc-800/60 shadow-sm dark:shadow-none'}`}>
                                         <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
-                                            <span className={`text-[13px] sm:text-[14px] font-bold flex items-center gap-1.5 ${isAdmin ? 'text-[#0FFCBE]' : 'text-white'}`}>
+                                            <span className={`text-[13px] sm:text-[14px] font-bold flex items-center gap-1.5 ${isAdmin ? 'text-[#106EBE] dark:text-[#0FFCBE]' : 'text-zinc-900 dark:text-white'}`}>
                                                 {comment.name}
                                             </span>
-                                            <span className="text-[10px] sm:text-[11px] font-medium text-zinc-400 border-none">{timeAgo(comment.created_at)}</span>
+                                            <span className="text-[10px] sm:text-[11px] font-medium text-zinc-400 dark:text-zinc-400 border-none transition-colors">{timeAgo(comment.created_at)}</span>
                                             {comment.status === 'pending' && (
-                                                <span className="px-2 py-0.5 rounded-[4px] text-[8px] sm:text-[9px] uppercase tracking-wider font-bold bg-yellow-500/10 text-yellow-500 border-none">Awaiting Approval</span>
+                                                <span className="px-2 py-0.5 rounded-[4px] text-[8px] sm:text-[9px] uppercase tracking-wider font-bold bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 border-none transition-colors">Awaiting Approval</span>
                                             )}
                                         </div>
                                         <div
-                                            className="text-[12px] sm:text-[14px] text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none"
+                                            className="text-[12px] sm:text-[14px] text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none transition-colors"
                                             dangerouslySetInnerHTML={{ __html: parseMarkdown(comment.content) }}
                                         />
                                         <div className="flex items-center gap-4 mt-3 pt-3 border-none">
-                                            <button onClick={() => handleReplyClick(comment)} className="text-[10px] sm:text-[11px] text-zinc-400 font-bold hover:text-[#0FFCBE] transition-colors outline-none border-none">
+                                            <button onClick={() => handleReplyClick(comment)} className="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400 font-bold hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors outline-none border-none">
                                                 Reply
                                             </button>
                                         </div>
@@ -551,33 +540,33 @@ function Komentar({ videoId, onCommentSuccess }) {
                                                 <div key={reply.id} className="flex flex-col gap-3 border-none">
                                                     <div className="flex gap-2.5 sm:gap-3 group border-none">
                                                         <div className="relative w-8 h-8 sm:w-10 sm:h-10 shrink-0">
-                                                            <div className="w-full h-full rounded-full bg-zinc-800/60 flex items-center justify-center overflow-hidden shadow-sm border-none">
+                                                            <div className="w-full h-full rounded-full bg-zinc-200 dark:bg-zinc-800/60 flex items-center justify-center overflow-hidden shadow-sm border-none transition-colors">
                                                                 {reply.avatar_url ? (
                                                                     <img src={reply.avatar_url} alt={reply.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                                                 ) : (
-                                                                    <span className="text-zinc-300 font-bold text-[10px] sm:text-xs border-none">{getInitial(reply.name)}</span>
+                                                                    <span className="text-zinc-500 dark:text-zinc-300 font-bold text-[10px] sm:text-xs border-none transition-colors">{getInitial(reply.name)}</span>
                                                                 )}
                                                             </div>
                                                             {isReplyAdmin && (
-                                                                <div className="absolute -bottom-1 -right-1 bg-zinc-900 rounded-full p-0.5" title="Verified Admin">
-                                                                    <BadgeCheck className="w-3.5 h-3.5 text-[#0FFCBE] fill-[#106EBE]" />
+                                                                <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm" title="Verified Admin">
+                                                                    <BadgeCheck className="w-3.5 h-3.5 text-[#106EBE] dark:text-[#0FFCBE] fill-white dark:fill-[#106EBE]" />
                                                                 </div>
                                                             )}
                                                         </div>
 
-                                                        <div className={`flex-1 min-w-0 flex flex-col p-3 sm:p-4 rounded-xl sm:rounded-[1.2rem] border-none ${isReplyAdmin ? 'bg-gradient-to-br from-zinc-800/60 to-[#106EBE]/15 shadow-[0_5px_15px_rgba(16,110,190,0.1)]' : 'bg-zinc-800/40'}`}>
+                                                        <div className={`flex-1 min-w-0 flex flex-col p-3 sm:p-4 rounded-xl sm:rounded-[1.2rem] border border-zinc-100 dark:border-transparent transition-colors ${isReplyAdmin ? 'bg-gradient-to-br from-white dark:from-zinc-800/60 to-[#106EBE]/5 dark:to-[#106EBE]/15 shadow-sm dark:shadow-[0_5px_15px_rgba(16,110,190,0.1)]' : 'bg-zinc-50 dark:bg-zinc-800/40 shadow-sm dark:shadow-none'}`}>
                                                             <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
-                                                                <span className={`text-[11px] sm:text-[13px] font-bold ${isReplyAdmin ? 'text-[#0FFCBE]' : 'text-white'}`}>
+                                                                <span className={`text-[11px] sm:text-[13px] font-bold ${isReplyAdmin ? 'text-[#106EBE] dark:text-[#0FFCBE]' : 'text-zinc-900 dark:text-white'}`}>
                                                                     {reply.name}
                                                                 </span>
-                                                                <span className="text-[9px] sm:text-[10px] font-medium text-zinc-400 border-none">{timeAgo(reply.created_at)}</span>
+                                                                <span className="text-[9px] sm:text-[10px] font-medium text-zinc-400 dark:text-zinc-400 border-none transition-colors">{timeAgo(reply.created_at)}</span>
                                                             </div>
-                                                            <div className="text-[11px] sm:text-[13px] text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none">
+                                                            <div className="text-[11px] sm:text-[13px] text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none transition-colors">
                                                                 <span className="text-[#106EBE] font-bold mr-1 border-none">@{comment.name}</span>
                                                                 <span dangerouslySetInnerHTML={{ __html: parseMarkdown(reply.content) }} />
                                                             </div>
                                                             <div className="flex items-center gap-4 mt-3 pt-2 border-none">
-                                                                <button onClick={() => handleReplyClick(reply)} className="text-[9px] sm:text-[10px] text-zinc-400 font-bold hover:text-[#0FFCBE] transition-colors outline-none border-none">Reply</button>
+                                                                <button onClick={() => handleReplyClick(reply)} className="text-[9px] sm:text-[10px] text-zinc-500 dark:text-zinc-400 font-bold hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors outline-none border-none">Reply</button>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -596,8 +585,8 @@ function Komentar({ videoId, onCommentSuccess }) {
                         );
                     })
                 ) : (
-                    <div className="text-center py-12 text-zinc-500 bg-zinc-800/40 rounded-[1.5rem] border-none">
-                        <MessageSquare className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 opacity-20 border-none" />
+                    <div className="text-center py-12 text-zinc-400 dark:text-zinc-500 bg-white dark:bg-zinc-800/40 rounded-[1.5rem] border border-zinc-200 dark:border-transparent transition-colors shadow-sm dark:shadow-none">
+                        <MessageSquare className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 opacity-30 dark:opacity-20 border-none" />
                         <p className="text-[12px] sm:text-sm font-medium border-none">Be the first to share your thoughts!</p>
                     </div>
                 )}

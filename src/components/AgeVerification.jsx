@@ -55,9 +55,9 @@ export default function AgeVerification() {
     if (!isVisible) return null;
 
     return (
-        <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-500">
+        <div className="fixed inset-0 z-[9999] bg-white/95 dark:bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-500 transition-colors">
 
-            <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 rounded-3xl p-8 sm:p-10 max-w-md w-full relative overflow-hidden shadow-[0_15px_50px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.05)] text-center">
+            <div className="bg-gradient-to-br from-zinc-50 to-zinc-200 dark:from-zinc-900 dark:to-zinc-950 rounded-3xl p-8 sm:p-10 max-w-md w-full relative overflow-hidden shadow-[0_15px_50px_rgba(0,0,0,0.2)] dark:shadow-[0_15px_50px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.05)] text-center transition-all">
 
                 <div className="absolute -top-32 -left-32 w-64 h-64 bg-[#106EBE]/20 blur-[100px] pointer-events-none"></div>
                 <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-[#106EBE]/10 blur-[100px] pointer-events-none"></div>
@@ -65,7 +65,6 @@ export default function AgeVerification() {
                 <div className="relative z-10">
 
                     <div className="flex items-center justify-center gap-3 sm:gap-4 mb-8 w-full">
-                        {/* KEMBALI MENGGUNAKAN LOGO WEBP ORISINAL */}
                         <img
                             src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/shadow.webp"
                             alt="ShadowClips Logo"
@@ -73,21 +72,21 @@ export default function AgeVerification() {
                         />
 
                         <div className="flex flex-col justify-center text-left">
-                            <span className="text-2xl sm:text-4xl font-black tracking-tighter text-white leading-none mb-1">
+                            <span className="text-2xl sm:text-4xl font-black tracking-tighter text-zinc-900 dark:text-white leading-none mb-1 transition-colors">
                                 Shadow<span className="text-[#106EBE]">Clips</span>
                             </span>
-                            <span className="text-[10px] sm:text-[12px] font-bold tracking-[0.22em] text-[#A0B3C6] uppercase ml-[1px] leading-none">
+                            <span className="text-[10px] sm:text-[12px] font-bold tracking-[0.22em] text-[#106EBE] dark:text-[#A0B3C6] uppercase ml-[1px] leading-none transition-colors">
                                 www.shadowclips.asia
                             </span>
                         </div>
                     </div>
 
-                    <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white mb-2 flex items-center justify-center gap-2 transition-colors">
                         Age Verification
                     </h2>
 
-                    <p className="text-zinc-400 mb-6 text-sm sm:text-base leading-relaxed">
-                        This site contains exclusive age-restricted content. Please verify that you are human and <strong>18 years of age or older</strong>.
+                    <p className="text-zinc-600 dark:text-zinc-400 mb-6 text-sm sm:text-base leading-relaxed transition-colors">
+                        This site contains exclusive age-restricted content. Please verify that you are human and <strong className="text-zinc-900 dark:text-white">18 years of age or older</strong>.
                     </p>
 
                     <div className="flex justify-center mb-6 min-h-[65px]">
@@ -96,7 +95,7 @@ export default function AgeVerification() {
                             onSuccess={() => setIsHuman(true)}
                             onError={() => setIsHuman(false)}
                             onExpire={() => setIsHuman(false)}
-                            options={{ theme: 'dark' }}
+                            options={{ theme: 'auto' }}
                         />
                     </div>
 
@@ -106,7 +105,7 @@ export default function AgeVerification() {
                             disabled={!isHuman}
                             className={`w-full font-bold py-3.5 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${isHuman
                                 ? 'bg-[#106EBE] text-white shadow-[0_0_20px_rgba(16,110,190,0.4)] hover:shadow-[0_0_30px_rgba(16,110,190,0.6)] hover:bg-[#0e5c9f] hover:scale-[1.02] cursor-pointer'
-                                : 'bg-zinc-800/50 text-zinc-600 shadow-none cursor-not-allowed'
+                                : 'bg-zinc-200 dark:bg-zinc-800/50 text-zinc-400 dark:text-zinc-600 shadow-none cursor-not-allowed'
                                 }`}
                         >
                             {isHuman && <LogIn className="w-5 h-5" />}
@@ -115,13 +114,13 @@ export default function AgeVerification() {
 
                         <button
                             onClick={handleDecline}
-                            className="w-full bg-zinc-900/40 hover:bg-zinc-800 text-zinc-400 hover:text-[#0FFCBE] font-bold py-3.5 px-6 rounded-xl transition-colors"
+                            className="w-full bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-900/40 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] font-bold py-3.5 px-6 rounded-xl transition-colors"
                         >
                             I am under 18 (Exit)
                         </button>
                     </div>
 
-                    <div className="mt-6 flex items-center justify-center gap-1.5 text-[10px] text-zinc-600 uppercase tracking-widest font-bold">
+                    <div className="mt-6 flex items-center justify-center gap-1.5 text-[10px] text-zinc-500 uppercase tracking-widest font-bold">
                         <AlertTriangle className="w-3 h-3" /> 18 U.S.C. 2257 Compliant
                     </div>
                 </div>

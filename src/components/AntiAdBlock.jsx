@@ -61,23 +61,23 @@ export default function AntiAdBlock() {
     if (!isAdBlockActive) return null;
 
     return (
-        <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-4 sm:p-6 text-center animate-in fade-in duration-500">
-            <div className="relative bg-zinc-950 border border-zinc-800 p-8 sm:p-10 rounded-[2rem] max-w-md w-full shadow-[0_20px_60px_-15px_rgba(16,110,190,0.15)] overflow-hidden">
+        <div className="fixed inset-0 z-[9999] bg-white/90 dark:bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-4 sm:p-6 text-center animate-in fade-in duration-500 transition-colors">
+            <div className="relative bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-8 sm:p-10 rounded-[2rem] max-w-md w-full shadow-[0_20px_60px_-15px_rgba(16,110,190,0.15)] overflow-hidden transition-colors">
 
                 <div className="relative z-10 flex flex-col items-center">
-                    <div className="w-20 h-20 mb-6 bg-zinc-900 rounded-2xl border border-zinc-800 flex items-center justify-center transform rotate-3 shadow-lg">
+                    <div className="w-20 h-20 mb-6 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex items-center justify-center transform rotate-3 shadow-lg transition-colors">
                         <Heart className="w-10 h-10 text-[#106EBE] animate-pulse" />
                     </div>
 
-                    <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white mb-4 transition-colors">
                         Support ShadowClips
                     </h2>
 
-                    <p className="text-zinc-400 text-sm sm:text-base leading-relaxed mb-8">
+                    <p className="text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-relaxed mb-8 transition-colors">
                         We strive to provide you with free, high-quality streams.
                         However, our <span className="text-[#106EBE] font-bold">server and maintenance costs</span> rely heavily on ad support.
                         <br /><br />
-                        Please <strong className="text-zinc-200">disable your AdBlocker</strong> specifically for our site so you can continue watching. Thank you for your understanding!
+                        Please <strong className="text-zinc-900 dark:text-zinc-200 transition-colors">disable your AdBlocker</strong> specifically for our site so you can continue watching. Thank you for your understanding!
                     </p>
 
                     <button

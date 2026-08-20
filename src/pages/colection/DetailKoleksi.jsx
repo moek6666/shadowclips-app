@@ -25,7 +25,6 @@ export default function DetailKoleksi({ supabase }) {
     const [labelName, setLabelName] = useState('');
     const [targetLabelSearch, setTargetLabelSearch] = useState('');
 
-    // STATE UNTUK LOAD MORE (Awal 24)
     const [visibleCount, setVisibleCount] = useState(24);
 
     useEffect(() => {
@@ -76,21 +75,20 @@ export default function DetailKoleksi({ supabase }) {
         }
     );
 
-    // MEMOTONG ARRAY VIDEO SESUAI JUMLAH VISIBLE COUNT
     const displayedVideos = videos.slice(0, visibleCount);
 
     return (
         <>
             <Navbar searchInput={searchInput} setSearchInput={setSearchInput} isScrolled={isScrolled} supabase={supabase} />
 
-            <div className="pt-28 pb-20 max-w-[1440px] mx-auto px-4 sm:px-8 min-h-screen flex flex-col">
+            <div className="pt-28 pb-20 max-w-[1440px] mx-auto px-4 sm:px-8 min-h-screen flex flex-col transition-colors">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-y-8 md:gap-x-6 flex-grow">
                     {loading ? (
                         Array.from({ length: 8 }).map((_, i) => (
                             <div key={i} className="animate-pulse flex flex-col gap-2">
-                                <div className="aspect-video bg-zinc-800/50 rounded-[4px]"></div>
-                                <div className="h-4 bg-zinc-800/50 rounded w-full"></div>
-                                <div className="h-4 bg-zinc-800/50 rounded w-2/3 mx-auto"></div>
+                                <div className="aspect-video bg-zinc-200 dark:bg-zinc-800/50 rounded-[4px] transition-colors"></div>
+                                <div className="h-4 bg-zinc-200 dark:bg-zinc-800/50 rounded w-full transition-colors"></div>
+                                <div className="h-4 bg-zinc-200 dark:bg-zinc-800/50 rounded w-2/3 mx-auto transition-colors"></div>
                             </div>
                         ))
                     ) : videos.length > 0 ? (
@@ -98,7 +96,7 @@ export default function DetailKoleksi({ supabase }) {
                             {displayedVideos.map((item) => (
                                 <div key={item.id} onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer flex flex-col gap-2">
 
-                                    <div className="relative aspect-video rounded-[4px] overflow-hidden bg-zinc-900 border-none">
+                                    <div className="relative aspect-video rounded-[4px] overflow-hidden bg-zinc-100 dark:bg-zinc-900 border-none transition-colors">
                                         <img src={getImageUrl(item.img)} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
 
                                         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
@@ -113,7 +111,7 @@ export default function DetailKoleksi({ supabase }) {
                                     </div>
 
                                     <div className="px-1 text-center">
-                                        <h3 className="font-bold text-[13px] md:text-[14px] text-zinc-300 group-hover:text-white transition-colors line-clamp-2 leading-snug" title={item.title}>
+                                        <h3 className="font-bold text-[13px] md:text-[14px] text-zinc-800 dark:text-zinc-300 group-hover:text-black dark:group-hover:text-white transition-colors line-clamp-2 leading-snug" title={item.title}>
                                             {item.title}
                                         </h3>
                                     </div>
@@ -121,12 +119,11 @@ export default function DetailKoleksi({ supabase }) {
                                 </div>
                             ))}
 
-                            {/* TOMBOL LOAD MORE (+8) */}
                             {visibleCount < videos.length && (
                                 <div className="col-span-full flex justify-center mt-6 mb-4">
                                     <button
                                         onClick={() => setVisibleCount(prev => prev + 8)}
-                                        className="bg-zinc-800/80 hover:bg-[#106EBE] text-zinc-300 hover:text-white text-sm font-bold py-3 px-8 rounded-full transition-all duration-300 flex items-center gap-2 border-none outline-none shadow-lg hover:shadow-[0_0_15px_rgba(16,110,190,0.5)]"
+                                        className="bg-white dark:bg-zinc-800/80 hover:bg-[#106EBE] dark:hover:bg-[#106EBE] text-zinc-600 dark:text-zinc-300 hover:text-white text-sm font-bold py-3 px-8 rounded-full transition-all duration-300 flex items-center gap-2 border-none outline-none shadow-md dark:shadow-lg hover:shadow-[0_0_15px_rgba(16,110,190,0.5)]"
                                     >
                                         Load More <ChevronDown className="w-4 h-4" />
                                     </button>
@@ -134,8 +131,8 @@ export default function DetailKoleksi({ supabase }) {
                             )}
                         </>
                     ) : (
-                        <div className="col-span-full py-20 text-center text-zinc-500 flex flex-col items-center border-none">
-                            <Search className="w-12 h-12 mb-4 opacity-20" />
+                        <div className="col-span-full py-20 text-center text-zinc-400 dark:text-zinc-500 flex flex-col items-center border-none transition-colors">
+                            <Search className="w-12 h-12 mb-4 opacity-30 dark:opacity-20" />
                             <p className="text-lg">Belum ada video di dalam koleksi ini.</p>
                         </div>
                     )}

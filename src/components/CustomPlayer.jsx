@@ -47,10 +47,7 @@ export default function CustomPlayer({ src, poster }) {
 
         const videoElement = videoRef.current;
 
-        // 1. PECAH LINK TAPI JANGAN DIBUANG YANG KOSONG DULU AGAR POSISI BANGKU TIDAK BERGESER
         const rawUrls = src.split(',').map(s => s.trim());
-
-        // Cari link pertama yang benar-benar ada isinya (untuk cek apakah ini m3u8 / HLS)
         const validUrls = rawUrls.filter(url => url && url !== 'EMPTY');
         if (validUrls.length === 0) return;
 
@@ -65,7 +62,6 @@ export default function CustomPlayer({ src, poster }) {
             keyboard: { focused: true, global: true },
             ads: {
                 enabled: true,
-                // Kode VAST Iklan Anda Tetap Berjalan Aman
                 tagUrl: 'https://s.magsrv.com/v1/vast.php?idz=6002940',
             }
         };
@@ -81,32 +77,24 @@ export default function CustomPlayer({ src, poster }) {
                 playerRef.current = new Plyr(videoElement, plyrOptions);
             });
         } else {
-            // 2. LOGIKA PINTAR PEMINDAI JUMLAH LINK & POSISI KOSONG
-            // Urutan Baku (Nomor Bangku): Index 0 = 1080p, Index 1 = 720p, Index 2 = 480p, Index 3 = 360p
             const labels = [1080, 720, 480, 360];
-
             const videoSources = [];
 
-            // Periksa setiap bangku satu per satu
             rawUrls.forEach((url, index) => {
-                // Jika di bangku tersebut ada link (bukan sekadar enter/spasi), daftarkan ke Plyr
                 if (url && url !== 'EMPTY') {
                     videoSources.push({
                         src: url,
                         type: 'video/mp4',
-                        size: labels[index] || 360 // Beri label sesuai nomor bangkunya
+                        size: labels[index] || 360
                     });
                 }
             });
 
-            // Kumpulkan resolusi apa saja yang berhasil didaftarkan (Misal: cuma 720 dan 480)
-            // Lalu urutkan dari yang terbesar ke terkecil agar defaultnya selalu yang paling jernih
             const availableSizes = videoSources.map(s => s.size).sort((a, b) => b - a);
 
-            // Injeksi pengaturan kualitas agar HANYA menampilkan ukuran yang tersedia
             plyrOptions.quality = {
-                default: availableSizes[0], // Otomatis putar kualitas tertinggi yang tersedia
-                options: availableSizes,    // Sembunyikan label (misal 1080p) jika linknya tidak ada
+                default: availableSizes[0],
+                options: availableSizes,
                 forced: true
             };
 
@@ -133,8 +121,8 @@ export default function CustomPlayer({ src, poster }) {
 
     if (!src) {
         return (
-            <div className="w-full h-full bg-zinc-900 rounded-xl overflow-hidden shadow-[0_0_40px_rgba(16,110,190,0.15)] flex items-center justify-center animate-pulse border border-zinc-800">
-                <div className="w-12 h-12 border-4 border-zinc-800 border-t-[#106EBE] rounded-full animate-spin"></div>
+            <div className="w-full h-full bg-zinc-200 dark:bg-zinc-900 rounded-xl overflow-hidden shadow-[0_0_40px_rgba(16,110,190,0.15)] flex items-center justify-center animate-pulse border border-zinc-300 dark:border-zinc-800 transition-colors">
+                <div className="w-12 h-12 border-4 border-zinc-300 dark:border-zinc-800 border-t-[#106EBE] dark:border-t-[#106EBE] rounded-full animate-spin"></div>
             </div>
         );
     }
@@ -142,7 +130,6 @@ export default function CustomPlayer({ src, poster }) {
     return (
         <div className="relative w-full h-full bg-black rounded-xl overflow-hidden shadow-[0_0_40px_rgba(16,110,190,0.15)] group shadowclips-plyr-wrapper">
 
-            {/* PERUBAHAN DI SINI: Modifikasi CSS khusus class .plyr__control--overlaid agar background hilang dan icon menjadi putih besar seperti Jelajahi.jsx */}
             <style dangerouslySetInnerHTML={{
                 __html: `
                 .shadowclips-plyr-wrapper {
@@ -163,7 +150,6 @@ export default function CustomPlayer({ src, poster }) {
                     background: #000;
                 }
                 
-                /* Ini adalah CSS untuk Tombol Play Besar di tengah Plyr */
                 .shadowclips-plyr-wrapper .plyr__control--overlaid {
                     background: transparent !important;
                     position: absolute !important;

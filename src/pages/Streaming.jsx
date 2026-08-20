@@ -49,7 +49,6 @@ export default function Streaming({ supabase }) {
     }, []);
 
     const checkVipAccess = async (videoId, currentCommented, vidData) => {
-        // DETEKSI KATEGORI SUPER KETAT DAN FLEKSIBEL (Anti Spasi & Typo)
         const categoryStr = String(vidData?.category || '').toLowerCase().trim();
         const isVipContent = categoryStr.includes('exclusive');
 
@@ -62,7 +61,6 @@ export default function Streaming({ supabase }) {
         if (!error && vipData) {
             setHasLiked(vipData.has_liked);
 
-            // PENGAMANAN GANDA FRONTEND: Tolak jawaban Server jika tidak sesuai syarat Mutlak!
             if (!isVipContent) {
                 setIsVipUnlocked(true);
                 setSecureUrls({ main: vipData.main || '', alt: vipData.alt || '', alt2: vipData.alt2 || '', img: vipData.img || '' });
@@ -74,7 +72,6 @@ export default function Streaming({ supabase }) {
                 setSecureUrls({ main: '', alt: '', alt2: '', img: vipData.img || '' });
             }
         } else {
-            // FALLBACK LOKAL JIKA SERVER ERROR
             const localLiked = localStorage.getItem(`shadowclips_liked_${videoId}`) === 'true';
             setHasLiked(localLiked);
 
@@ -113,7 +110,6 @@ export default function Streaming({ supabase }) {
 
                 await supabase.rpc('increment_views', { vid_id: vidData.id });
 
-                // HANYA TERBACA TRUE JIKA BENAR-BENAR STRING 'true'
                 const userCommented = localStorage.getItem(`shadowclips_commented_${vidData.id}`) === 'true';
                 setHasCommented(userCommented);
 
@@ -178,7 +174,6 @@ export default function Streaming({ supabase }) {
             await supabase.rpc('update_likes', { vid_id: video.id, new_likes: newHasLiked ? likes + 1 : Math.max(likes - 1, 0) });
         }
 
-        // Panggil fungsi cek dengan status komentar terakhir!
         await checkVipAccess(video.id, hasCommented, video);
     };
 
@@ -189,7 +184,7 @@ export default function Streaming({ supabase }) {
         } catch (err) { console.log('Share error:', err); }
     };
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-12 h-12 border-4 border-t-[#106EBE] border-zinc-800 rounded-full animate-spin"></div></div>;
+    if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-12 h-12 border-4 border-t-[#106EBE] border-zinc-200 dark:border-zinc-800 rounded-full animate-spin"></div></div>;
     if (!video) return null;
 
     const hasMain = secureUrls.main && secureUrls.main !== 'EMPTY' && String(secureUrls.main).trim() !== '';
@@ -230,21 +225,22 @@ export default function Streaming({ supabase }) {
         <>
             <Navbar isScrolled={isScrolled} supabase={supabase} />
 
-            <div className="pt-24 pb-20 max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 min-h-screen relative">
+            <div className="pt-24 pb-20 max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 min-h-screen relative transition-colors">
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
 
                     <div className="lg:col-span-8 flex flex-col gap-4">
 
-                        <div className={`w-full ${currentVideoUrl || !isVipUnlocked || showGallery ? 'aspect-video' : 'min-h-[400px] max-h-[80vh]'} bg-zinc-950 rounded-[1.5rem] overflow-hidden relative flex items-center justify-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-none`}>
+                        {/* Player / Gallery Container - Border removed, soft shadow */}
+                        <div className={`w-full ${currentVideoUrl || !isVipUnlocked || showGallery ? 'aspect-video' : 'min-h-[400px] max-h-[80vh]'} bg-zinc-100 dark:bg-zinc-950 rounded-[1.5rem] overflow-hidden relative flex items-center justify-center shadow-md dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-none transition-colors`}>
                             {!isVipUnlocked ? (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center p-8 bg-zinc-900/95 backdrop-blur-3xl z-50 text-center">
-                                    <div className="absolute inset-0 z-[-1] opacity-20">
+                                <div className="absolute inset-0 flex flex-col items-center justify-center p-8 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-3xl z-50 text-center transition-colors">
+                                    <div className="absolute inset-0 z-[-1] opacity-10 dark:opacity-20">
                                         <img src={coverImage} className="w-full h-full object-cover blur-sm" alt="locked background" />
                                     </div>
-                                    <div className="w-20 h-20 bg-gradient-to-br from-[#106EBE] to-[#0e5c9f] rounded-3xl flex items-center justify-center shadow-[0_0_40px_rgba(16,110,190,0.6)] mb-6 transform rotate-3 hover:rotate-0 transition-transform"><Lock className="w-10 h-10 text-white" /></div>
-                                    <h2 className="text-2xl sm:text-3xl font-black text-white mb-3 tracking-tight">VIP Content Locked</h2>
-                                    <p className="text-zinc-400 text-sm sm:text-base max-w-lg leading-relaxed">This premium content is locked. Please <strong className="text-white">Like</strong> and leave a <strong className="text-white">Comment</strong> below to unlock full access immediately.</p>
+                                    <div className="w-20 h-20 bg-gradient-to-br from-[#106EBE] to-[#0e5c9f] rounded-3xl flex items-center justify-center shadow-md dark:shadow-[0_0_40px_rgba(16,110,190,0.6)] mb-6 transform rotate-3 hover:rotate-0 transition-transform"><Lock className="w-10 h-10 text-white" /></div>
+                                    <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white mb-3 tracking-tight transition-colors">VIP Content Locked</h2>
+                                    <p className="text-zinc-600 dark:text-zinc-400 text-sm sm:text-base max-w-lg leading-relaxed transition-colors">This premium content is locked. Please <strong className="text-zinc-900 dark:text-white">Like</strong> and leave a <strong className="text-zinc-900 dark:text-white">Comment</strong> below to unlock full access immediately.</p>
                                 </div>
                             ) : currentVideoUrl ? (
                                 isDirectVideo ? (
@@ -257,13 +253,13 @@ export default function Streaming({ supabase }) {
                                     <iframe key={currentVideoUrl} src={currentVideoUrl} className="w-full h-full object-contain border-none" frameBorder="0" allowFullScreen title={video.title}></iframe>
                                 )
                             ) : showGallery ? (
-                                <div className="w-full h-full overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar bg-zinc-950/40" onContextMenu={(e) => e.preventDefault()}>
+                                <div className="w-full h-full overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar bg-zinc-100 dark:bg-zinc-950/40 transition-colors" onContextMenu={(e) => e.preventDefault()}>
                                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                                         {galleryImages.map((imgUrl, idx) => (
                                             <div
                                                 key={idx}
                                                 onClick={() => setSelectedImage(imgUrl)}
-                                                className="relative group cursor-pointer aspect-[3/4] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800/80 shadow-lg hover:shadow-[0_8px_30px_rgba(0,0,0,0.6)] transition-all duration-500"
+                                                className="relative group cursor-pointer aspect-[3/4] rounded-2xl overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.6)] transition-all duration-500"
                                             >
                                                 <img
                                                     src={imgUrl}
@@ -281,44 +277,46 @@ export default function Streaming({ supabase }) {
                                         ))}
                                     </div>
                                 </div>
-                            ) : (<div className="text-zinc-500 flex flex-col items-center p-12"><Play className="w-12 h-12 mb-2 opacity-50" /><p>Video unavailable</p></div>)}
+                            ) : (<div className="text-zinc-400 dark:text-zinc-500 flex flex-col items-center p-12"><Play className="w-12 h-12 mb-2 opacity-50" /><p>Video unavailable</p></div>)}
                         </div>
 
+                        {/* Server Selection Card - borderless, shadowless, subtle background */}
                         {isVipUnlocked && (
-                            <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 bg-zinc-900/40 p-2.5 sm:p-4 rounded-[1.5rem] border-none">
+                            <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 bg-zinc-100 dark:bg-zinc-900/40 p-2.5 sm:p-4 rounded-[1.5rem] border-none shadow-none transition-colors">
                                 <div className="flex items-center gap-2 relative min-w-0">
                                     <span className="text-zinc-500 text-[10px] sm:text-xs font-bold uppercase tracking-wider mr-1 hidden sm:block">Server:</span>
                                     {serverOptions.length > 1 ? (
                                         <div className="relative min-w-0">
-                                            <button onClick={() => setIsServerDropdownOpen(!isServerDropdownOpen)} className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-[13px] font-bold transition-all bg-[#106EBE] text-white shadow-[0_5px_15px_rgba(16,110,190,0.3)] border-none relative z-[101] max-w-full">
+                                            <button onClick={() => setIsServerDropdownOpen(!isServerDropdownOpen)} className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-[13px] font-bold transition-all bg-[#106EBE] text-white shadow-md dark:shadow-[0_5px_15px_rgba(16,110,190,0.3)] border-none relative z-[101] max-w-full">
                                                 <Server className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
                                                 <span className="truncate max-w-[70px] sm:max-w-none">{activeServerLabel}</span>
                                                 <ChevronDown className={`w-3 h-3 sm:w-3.5 sm:h-3.5 transition-transform duration-300 ml-0.5 shrink-0 ${isServerDropdownOpen ? 'rotate-180' : ''}`} />
                                             </button>
                                             {isServerDropdownOpen && <div className="fixed inset-0 z-[90]" onClick={() => setIsServerDropdownOpen(false)}></div>}
-                                            <div className={`absolute top-full left-0 mt-2 w-32 sm:w-36 bg-zinc-900/95 backdrop-blur-xl rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden z-[100] flex flex-col py-1.5 transition-all duration-300 origin-top border-none ${isServerDropdownOpen ? 'opacity-100 scale-y-100 visible' : 'opacity-0 scale-y-95 invisible'}`}>
+                                            <div className={`absolute top-full left-0 mt-2 w-32 sm:w-36 bg-zinc-50 dark:bg-zinc-900/95 backdrop-blur-xl rounded-xl shadow-lg dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-none overflow-hidden z-[100] flex flex-col py-1.5 transition-all duration-300 origin-top ${isServerDropdownOpen ? 'opacity-100 scale-y-100 visible' : 'opacity-0 scale-y-95 invisible'}`}>
                                                 {serverOptions.map(option => (
-                                                    <button key={option.id} onClick={() => { setActiveServer(option.id); setIsServerDropdownOpen(false); }} className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 text-[11px] sm:text-[13px] font-bold transition-colors w-full text-left border-none ${effectiveServer === option.id ? 'text-[#0FFCBE] bg-zinc-800/50' : 'text-zinc-300 hover:text-white hover:bg-zinc-800'}`}>
+                                                    <button key={option.id} onClick={() => { setActiveServer(option.id); setIsServerDropdownOpen(false); }} className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 text-[11px] sm:text-[13px] font-bold transition-colors w-full text-left border-none ${effectiveServer === option.id ? 'text-[#106EBE] dark:text-[#0FFCBE] bg-zinc-200 dark:bg-zinc-800/50' : 'text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}>
                                                         <Server className="w-3 h-3 shrink-0" /> {option.label}
                                                     </button>
                                                 ))}
                                             </div>
                                         </div>
                                     ) : serverOptions.length === 1 ? (
-                                        <button className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-[13px] font-bold transition-all bg-[#106EBE] text-white shadow-[0_5px_15px_rgba(16,110,190,0.3)] cursor-default border-none"><Server className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" /> {serverOptions[0].label}</button>
+                                        <button className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-[13px] font-bold transition-all bg-[#106EBE] text-white shadow-md dark:shadow-[0_5px_15px_rgba(16,110,190,0.3)] cursor-default border-none"><Server className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" /> {serverOptions[0].label}</button>
                                     ) : null}
                                 </div>
                                 {hasDownloadLink && (
-                                    <button onClick={() => { setIsDownloadModalOpen(true); setModalStatus('waiting'); setModalProgress(0); }} className="flex items-center justify-center gap-1.5 bg-[#106EBE] hover:bg-[#0e5c9f] text-white px-3 sm:px-5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-[13px] font-bold transition-all shadow-[0_5px_15px_rgba(16,110,190,0.3)] border-none shrink-0">
+                                    <button onClick={() => { setIsDownloadModalOpen(true); setModalStatus('waiting'); setModalProgress(0); }} className="flex items-center justify-center gap-1.5 bg-[#106EBE] hover:bg-[#0e5c9f] text-white px-3 sm:px-5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-[13px] font-bold transition-all shadow-md dark:shadow-[0_5px_15px_rgba(16,110,190,0.3)] border-none shrink-0">
                                         <Download className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" /> Download
                                     </button>
                                 )}
                             </div>
                         )}
 
-                        <div className="bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] flex flex-col gap-5 border-none">
-                            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white leading-snug tracking-tight" title={video.title}>{video.title}</h1>
-                            <div className="flex flex-wrap items-center gap-4 text-xs sm:text-[13px] text-zinc-400 font-medium">
+                        {/* Title & Metadata Card - borderless, shadowless, subtle background */}
+                        <div className="bg-zinc-100 dark:bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] flex flex-col gap-5 border-none shadow-none transition-colors">
+                            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-zinc-900 dark:text-white leading-snug tracking-tight transition-colors" title={video.title}>{video.title}</h1>
+                            <div className="flex flex-wrap items-center gap-4 text-xs sm:text-[13px] text-zinc-500 dark:text-zinc-400 font-medium transition-colors">
                                 <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#106EBE]" /> {new Date(video.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                                 {video.duration && video.duration !== 'EMPTY' && <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#106EBE]" /> {video.duration}</span>}
                                 {video.size && video.size !== 'EMPTY' && <span className="flex items-center gap-1.5"><HardDrive className="w-3.5 h-3.5 text-[#106EBE]" /> {video.size}</span>}
@@ -327,16 +325,17 @@ export default function Streaming({ supabase }) {
                                 <SynopsisTooltip text={video.sinopsis} />
                             </div>
                             <div className="flex flex-wrap items-center gap-3 w-full pt-2">
-                                <button onClick={handleLike} className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all text-xs sm:text-sm border-none ${hasLiked ? 'bg-[#106EBE] text-white shadow-[0_5px_15px_rgba(16,110,190,0.3)]' : 'bg-zinc-800/60 text-zinc-300 hover:bg-zinc-800 hover:text-white'}`}>
+                                <button onClick={handleLike} className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all text-xs sm:text-sm border-none ${hasLiked ? 'bg-[#106EBE] text-white shadow-md dark:shadow-[0_5px_15px_rgba(16,110,190,0.3)]' : 'bg-white dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white'}`}>
                                     <Heart className={`w-4 h-4 transition-all duration-300 ${hasLiked ? 'fill-current scale-110' : ''}`} /> <span>{likes > 0 ? formatViews(likes) : 'Like'}</span>
                                 </button>
-                                <button onClick={handleShare} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all text-xs sm:text-sm bg-zinc-800/60 text-zinc-300 hover:bg-zinc-800 hover:text-white border-none">
+                                <button onClick={handleShare} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all text-xs sm:text-sm bg-white dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white border-none">
                                     <Share2 className="w-4 h-4" /> <span>Share</span>
                                 </button>
                             </div>
                         </div>
 
-                        <div className="bg-zinc-900/40 p-2 sm:p-6 rounded-[1.5rem] w-full border-none overflow-hidden">
+                        {/* Komentar Container - borderless, shadowless, subtle background */}
+                        <div className="bg-zinc-100 dark:bg-zinc-900/40 p-2 sm:p-6 rounded-[1.5rem] w-full border-none shadow-none overflow-hidden transition-colors">
                             <Komentar videoId={video.id} onCommentSuccess={async () => {
                                 setHasCommented(true);
                                 localStorage.setItem(`shadowclips_commented_${video?.id}`, 'true');
@@ -346,15 +345,17 @@ export default function Streaming({ supabase }) {
                     </div>
 
                     <div className="lg:col-span-4 flex flex-col gap-4 w-full">
-                        <div className="bg-zinc-900/40 p-3 sm:p-5 rounded-[1.5rem] flex flex-col gap-3 sm:gap-4 border-none">
-                            <h3 className="text-[15px] sm:text-[16px] font-black text-white flex items-center gap-2 mb-1 px-1">
+                        {/* Related Videos Container - borderless, shadowless, subtle background */}
+                        <div className="bg-zinc-100 dark:bg-zinc-900/40 p-3 sm:p-5 rounded-[1.5rem] flex flex-col gap-3 sm:gap-4 border-none shadow-none transition-colors">
+                            <h3 className="text-[15px] sm:text-[16px] font-black text-zinc-900 dark:text-white flex items-center gap-2 mb-1 px-1 transition-colors">
                                 <LayoutGrid className="w-4 h-4 text-[#106EBE]" /> Related Videos
                             </h3>
 
                             <div className="flex flex-col gap-4 sm:gap-5 border-none">
                                 {relatedVideos.map((item) => (
                                     <div key={item.id} onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer flex flex-row items-start gap-3 sm:gap-4 w-full border-none">
-                                        <div className="relative w-40 sm:w-52 aspect-video rounded-[8px] overflow-hidden bg-zinc-900 border-none shrink-0 shadow-md">
+                                        {/* Related Video Image Frame - borderless, flat inner background */}
+                                        <div className="relative w-40 sm:w-52 aspect-video rounded-[8px] overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none shrink-0 shadow-none transition-colors">
                                             <img src={getImageUrl(item.img)} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
                                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
                                                 <Play className="w-8 h-8 text-white/90 fill-current drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300" />
@@ -366,10 +367,10 @@ export default function Streaming({ supabase }) {
                                             )}
                                         </div>
                                         <div className="flex flex-col flex-1 min-w-0 border-none pt-0.5 sm:pt-1">
-                                            <h4 className="font-bold text-[12px] sm:text-[14px] text-zinc-100 group-hover:text-[#0FFCBE] transition-colors line-clamp-2 leading-snug mb-1.5" title={item.title}>
+                                            <h4 className="font-bold text-[12px] sm:text-[14px] text-zinc-800 dark:text-zinc-100 group-hover:text-[#106EBE] dark:group-hover:text-[#0FFCBE] transition-colors line-clamp-2 leading-snug mb-1.5" title={item.title}>
                                                 {item.title}
                                             </h4>
-                                            <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-medium text-zinc-500 mb-1 border-none">
+                                            <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-medium text-zinc-500 border-none transition-colors">
                                                 <Clock className="w-3 h-3 text-[#106EBE]" />
                                                 {new Date(item.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                                             </div>
@@ -384,38 +385,38 @@ export default function Streaming({ supabase }) {
             <Footer />
 
             {selectedImage && (
-                <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300 border-none" onClick={() => setSelectedImage(null)} onContextMenu={(e) => e.preventDefault()}>
-                    <button className="absolute top-4 right-4 sm:top-8 sm:right-8 bg-zinc-900 hover:bg-[#106EBE] text-white p-3 rounded-full transition-colors z-50 group border-none" onClick={(e) => { e.stopPropagation(); setSelectedImage(null); }}><X className="w-6 h-6 group-hover:rotate-90 transition-transform" /></button>
-                    <img src={selectedImage} alt="Fullscreen View" className="max-w-full max-h-full object-contain rounded-2xl select-none shadow-[0_20px_50px_rgba(0,0,0,0.9)] border-none" draggable="false" onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} />
+                <div className="fixed inset-0 z-[100] bg-white/95 dark:bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300 border-none transition-colors" onClick={() => setSelectedImage(null)} onContextMenu={(e) => e.preventDefault()}>
+                    <button className="absolute top-4 right-4 sm:top-8 sm:right-8 bg-zinc-200 dark:bg-zinc-900 hover:bg-[#106EBE] dark:hover:bg-[#106EBE] text-zinc-600 hover:text-white dark:text-white p-3 rounded-full transition-colors z-50 group border-none"><X className="w-6 h-6 group-hover:rotate-90 transition-transform" /></button>
+                    <img src={selectedImage} alt="Fullscreen View" className="max-w-full max-h-full object-contain rounded-2xl select-none shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.9)] border-none" draggable="false" onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} />
                 </div>
             )}
 
             {isDownloadModalOpen && (
-                <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-500 border-none">
+                <div className="fixed inset-0 z-[200] bg-white/95 dark:bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-500 border-none transition-colors">
                     <div className="w-full max-w-xl flex flex-col items-center text-center animate-in slide-in-from-bottom-10 duration-500 relative border-none">
                         <div className="flex items-center justify-center gap-3 sm:gap-4 mb-8 w-full border-none">
                             <img
                                 src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/shadow.webp"
                                 alt="ShadowClips Logo"
-                                className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 object-contain"
+                                className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 object-contain drop-shadow-sm dark:drop-shadow-none"
                             />
                             <div className="flex flex-col justify-center text-left border-none">
-                                <span className="text-2xl sm:text-4xl font-black tracking-tighter text-white leading-none mb-1 border-none">Shadow<span className="text-[#106EBE]">Clips</span></span>
-                                <span className="text-[10px] sm:text-[12px] font-bold tracking-[0.22em] text-[#A0B3C6] uppercase ml-[1px] leading-none border-none">www.shadowclips.asia</span>
+                                <span className="text-2xl sm:text-4xl font-black tracking-tighter text-zinc-900 dark:text-white leading-none mb-1 border-none transition-colors">Shadow<span className="text-[#106EBE]">Clips</span></span>
+                                <span className="text-[10px] sm:text-[12px] font-bold tracking-[0.22em] text-[#106EBE] dark:text-[#A0B3C6] uppercase ml-[1px] leading-none border-none transition-colors">www.shadowclips.asia</span>
                             </div>
                         </div>
                         <div className="space-y-4 mb-10 w-full px-2 border-none">
-                            <p className="text-zinc-300 text-base md:text-lg leading-relaxed md:leading-loose border-none">ShadowClips never sells or charges a single penny for this file. We provide this link 100% free for entertainment purposes.<br /><span className="text-zinc-500 text-sm mt-2 block border-none">Please be aware of any scams claiming to represent us.</span></p>
+                            <p className="text-zinc-600 dark:text-zinc-300 text-base md:text-lg leading-relaxed md:leading-loose border-none transition-colors">ShadowClips never sells or charges a single penny for this file. We provide this link 100% free for entertainment purposes.<br /><span className="text-zinc-500 text-sm mt-2 block border-none">Please be aware of any scams claiming to represent us.</span></p>
                         </div>
                         <div className="w-full max-w-sm mb-10 flex flex-col items-center border-none">
-                            <div className="w-full h-1 bg-zinc-800/50 rounded-full overflow-hidden mb-4 border-none"><div className="h-full bg-[#106EBE] transition-all duration-75 ease-linear shadow-[0_0_15px_rgba(16,110,190,0.8)] border-none" style={{ width: `${modalProgress}%` }}></div></div>
+                            <div className="w-full h-1 bg-zinc-200 dark:bg-zinc-800/50 rounded-full overflow-hidden mb-4 border-none transition-colors"><div className="h-full bg-[#106EBE] transition-all duration-75 ease-linear shadow-md dark:shadow-[0_0_15px_rgba(16,110,190,0.8)] border-none" style={{ width: `${modalProgress}%` }}></div></div>
                             <span className="text-[10px] md:text-xs text-zinc-500 tracking-wide h-4 border-none">{modalStatus === 'waiting' && `Preparing secure link... ${Math.ceil(4 - (modalProgress / 25))}s`}</span>
                         </div>
                         <div className="w-full max-w-sm border-none">
                             {modalStatus === 'waiting' ? (
-                                <button disabled className="w-full flex items-center justify-center gap-3 px-8 py-4 rounded-3xl bg-zinc-900/40 text-zinc-600 cursor-wait transition-all border-none"><Loader2 className="w-5 h-5 animate-spin shrink-0 border-none" /><span className="border-none">Please wait...</span></button>
+                                <button disabled className="w-full flex items-center justify-center gap-3 px-8 py-4 rounded-3xl bg-zinc-100 dark:bg-zinc-900/40 text-zinc-500 dark:text-zinc-600 cursor-wait transition-all border-none"><Loader2 className="w-5 h-5 animate-spin shrink-0 border-none" /><span className="border-none">Please wait...</span></button>
                             ) : (
-                                <button onClick={() => { const targetUrl = video.embed_url || video.url_download; if (targetUrl) window.open(targetUrl, '_blank'); else alert("Download link is not available for this video."); setIsDownloadModalOpen(false); }} className="w-full flex items-center justify-center gap-3 px-8 py-4 rounded-3xl bg-[#106EBE] text-white hover:bg-[#0e5c9f] transition-all transform hover:scale-105 shadow-[0_15px_30px_rgba(16,110,190,0.4)] animate-in zoom-in duration-300 border-none"><ExternalLink className="w-5 h-5 shrink-0 border-none" /><span className="border-none">Continue to download page</span></button>
+                                <button onClick={() => { const targetUrl = video.embed_url || video.url_download; if (targetUrl) window.open(targetUrl, '_blank'); else alert("Download link is not available for this video."); setIsDownloadModalOpen(false); }} className="w-full flex items-center justify-center gap-3 px-8 py-4 rounded-3xl bg-[#106EBE] text-white hover:bg-[#0e5c9f] transition-all transform hover:scale-105 shadow-md dark:shadow-[0_15px_30px_rgba(16,110,190,0.4)] animate-in zoom-in duration-300 border-none"><ExternalLink className="w-5 h-5 shrink-0 border-none" /><span className="border-none">Continue to download page</span></button>
                             )}
                         </div>
                     </div>

@@ -11,7 +11,27 @@
     <meta name="rating" content="RTA-5042-1996-1400-1577-RTA" />
     <meta name="google-site-verification" content="e-CeGQ_JS_5lNAfwHF_mvsfC7OAVvR0cIluBcCnOdkI" />
     <link rel="preconnect" href="https://nmeaifqvxgyzvwavijhb.supabase.co" crossorigin />
-<meta name="6a97888e-site-verification" content="2039493ec2b25915f67563004a050d56">
+    <meta name="6a97888e-site-verification" content="2039493ec2b25915f67563004a050d56">
+
+    <!-- SCRIPT ANTI-KEDIP (ANTI-FLICKER) TEMA -->
+    <script>
+      (function() {
+        try {
+          var localTheme = localStorage.getItem('shadowclips_theme');
+          var themeToApply = localTheme;
+          
+          if (!themeToApply) {
+            themeToApply = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+          }
+          
+          if (themeToApply === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body class="selection:bg-[#00B7FF] selection:text-white">
     <div id="root"></div>
