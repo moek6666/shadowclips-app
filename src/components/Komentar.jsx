@@ -1,112 +1,102 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { supabase } from '../supabaseClient';
-import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import { Turnstile } from '@marsidev/react-turnstile';
-import {
-    Loader2, Send, MessageSquare, ChevronDown, Smile,
-    Bold, Italic, Code, Link as LinkIcon, Quote, X, LogOut, BadgeCheck, Crown
-} from 'lucide-react';
+import { Loader2, Send, MessageSquare, ChevronDown, Smile, Bold, Italic, Code, Link as LinkIcon, Quote, X, BadgeCheck, Crown, LogIn } from 'lucide-react';
+import ModalLogin from './ModalLogin';
 
-export default function KomentarWrapper(props) {
-    return (
-        <GoogleOAuthProvider clientId="584667592518-5j301svkhtkoij6dudhscof5ucj4ge16.apps.googleusercontent.com">
-            <Komentar {...props} />
-        </GoogleOAuthProvider>
-    );
-}
-
-function Komentar({ videoId, onCommentSuccess }) {
+export default function Komentar({ videoId, onCommentSuccess, supabase }) {
     const [comments, setComments] = useState([]);
-    const [userProfiles, setUserProfiles] = useState({}); // Menyimpan data kasta setiap user
+    const [userProfiles, setUserProfiles] = useState({});
 
-    const [formData, setFormData] = useState(() => {
-        return {
-            name: typeof window !== 'undefined' ? localStorage.getItem('shadowclips_user_name') || '' : '',
-            email: typeof window !== 'undefined' ? localStorage.getItem('shadowclips_user_email') || '' : '',
-            picture: typeof window !== 'undefined' ? localStorage.getItem('shadowclips_user_picture') || '' : '',
-            content: ''
-        };
-    });
+    const [session, setSession] = useState(null);
+    const [profile, setProfile] = useState(null);
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
+    const [content, setContent] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [notification, setNotification] = useState(null);
     const [replyTo, setReplyTo] = useState(null);
-
     const [captchaToken, setCaptchaToken] = useState(null);
+
     const turnstileRef = useRef(null);
     const textareaRef = useRef(null);
 
-    const isLoggedIn = Boolean(formData.email && formData.picture);
+    const fetchMyProfile = async (id) => {
+        if (!supabase || !id) return;
+        try {
+            const { data } = await supabase.from('profiles').select('*').eq('id', id).single();
+            if (data) setProfile(data);
+        } catch (e) { console.error(e); }
+    };
+
+    useEffect(() => {
+        if (!supabase) return;
+
+        supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+            setSession(currentSession);
+            if (currentSession?.user) fetchMyProfile(currentSession.user.id);
+        });
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+            setSession(currentSession);
+            if (currentSession?.user) fetchMyProfile(currentSession.user.id);
+            else setProfile(null);
+        });
+
+        return () => subscription?.unsubscribe();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [supabase]);
 
     useEffect(() => {
         const fetchData = async () => {
-            if (!videoId) return;
+            if (!videoId || !supabase) return;
 
-            // 1. Ambil semua komentar untuk video ini
-            const { data: commentsData, error: commentsError } = await supabase
-                .from('comments')
-                .select('*')
-                .eq('video_id', String(videoId))
-                .eq('status', 'approved')
-                .order('created_at', { ascending: false });
+            try {
+                const { data: commentsData, error: commentsError } = await supabase
+                    .from('comments')
+                    .select('*')
+                    .eq('video_id', String(videoId))
+                    .eq('status', 'approved')
+                    .order('created_at', { ascending: false });
 
-            if (!commentsError && commentsData) {
-                // 2. Ambil daftar Email Unik dari komentar yang ada
-                const uniqueEmails = [...new Set(commentsData.map(c => c.email))];
+                if (!commentsError && commentsData) {
+                    const uniqueEmails = [...new Set(commentsData.map(c => c.email).filter(Boolean))];
+                    if (uniqueEmails.length > 0) {
+                        const { data: profilesData } = await supabase
+                            .from('profiles')
+                            .select('email, is_admin, is_premium, active_frame')
+                            .in('email', uniqueEmails);
 
-                // 3. Tarik data profil dari Supabase HANYA untuk email yang berkomentar
-                if (uniqueEmails.length > 0) {
-                    const { data: profilesData } = await supabase
-                        .from('profiles')
-                        .select('email, is_admin, is_premium, active_frame')
-                        .in('email', uniqueEmails);
-
-                    if (profilesData) {
-                        const profileMap = {};
-                        profilesData.forEach(p => {
-                            profileMap[p.email] = p;
-                        });
-                        setUserProfiles(profileMap); // Simpan Peta Kasta User
+                        if (profilesData) {
+                            const profileMap = {};
+                            profilesData.forEach(p => { profileMap[p.email] = p; });
+                            setUserProfiles(profileMap);
+                        }
                     }
+                    setComments(commentsData || []);
+                } else {
+                    setComments([]);
                 }
-
-                // 4. Proses komentar pending dari LocalStorage
-                const localPending = JSON.parse(localStorage.getItem(`shadowclips_pending_${videoId}`) || '[]');
-                const now = new Date();
-
-                const validPending = localPending.filter(pending => {
-                    const isApproved = commentsData.some(approved => approved.content === pending.content && approved.name === pending.name);
-                    const isExpired = (now - new Date(pending.created_at)) > (2 * 60 * 60 * 1000);
-                    return !isApproved && !isExpired;
-                });
-
-                localStorage.setItem(`shadowclips_pending_${videoId}`, JSON.stringify(validPending));
-                setComments([...validPending, ...commentsData]);
+            } catch (e) {
+                console.error("Error fetching comments:", e);
+                setComments([]);
             }
         };
 
         fetchData();
 
-        const channel = supabase
-            .channel(`public:comments:${videoId}`)
-            .on('postgres_changes',
-                { event: 'DELETE', schema: 'public', table: 'comments' },
-                (payload) => {
-                    setComments(currentComments => currentComments.filter(c => c.id !== payload.old.id));
-                }
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [videoId]);
+        if (supabase) {
+            const channel = supabase.channel(`public:comments:${videoId}`)
+                .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'comments' }, (payload) => {
+                    setComments(currentComments => (currentComments || []).filter(c => c.id !== payload.old.id));
+                }).subscribe();
+            return () => supabase.removeChannel(channel);
+        }
+    }, [videoId, supabase]);
 
     const timeAgo = (dateString) => {
+        if (!dateString) return '';
         const date = new Date(dateString);
-        const now = new Date();
-        const diffInSeconds = Math.floor((now - date) / 1000);
-
+        const diffInSeconds = Math.floor((new Date() - date) / 1000);
         if (diffInSeconds < 60) return 'Just now';
         if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
         if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
@@ -114,12 +104,10 @@ function Komentar({ videoId, onCommentSuccess }) {
     };
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        if (name === 'content' && value.length > 2000) return;
-
-        setFormData((prev) => ({ ...prev, [name]: value }));
-
-        if (name === 'content' && textareaRef.current) {
+        const value = e.target.value;
+        if (value.length > 2000) return;
+        setContent(value);
+        if (textareaRef.current) {
             textareaRef.current.style.height = 'auto';
             textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
         }
@@ -139,110 +127,40 @@ function Komentar({ videoId, onCommentSuccess }) {
     const cancelReply = () => {
         setReplyTo(null);
         setCaptchaToken(null);
-        setFormData(prev => ({ ...prev, content: '' }));
-    };
-
-    // FUNGSI AUTO-SYNC: Saat user login, sistem otomatis mendaftarkan ke tabel profiles
-    const login = useGoogleLogin({
-        onSuccess: async (tokenResponse) => {
-            try {
-                const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                    headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-                });
-                const userInfo = await res.json();
-
-                setFormData(prev => ({
-                    ...prev,
-                    name: userInfo.name,
-                    email: userInfo.email,
-                    picture: userInfo.picture,
-                }));
-
-                localStorage.setItem('shadowclips_user_name', userInfo.name);
-                localStorage.setItem('shadowclips_user_email', userInfo.email);
-                localStorage.setItem('shadowclips_user_picture', userInfo.picture);
-
-                // UPSERT LOGIC: Daftarkan ke DB secara otomatis (Tanpa menimpa data VIP jika sudah ada)
-                const { data: existingUser } = await supabase
-                    .from('profiles')
-                    .select('email')
-                    .eq('email', userInfo.email)
-                    .single();
-
-                if (!existingUser) {
-                    await supabase
-                        .from('profiles')
-                        .insert([{
-                            email: userInfo.email,
-                            name: userInfo.name,
-                            avatar_url: userInfo.picture,
-                            is_premium: false,
-                            is_admin: false,
-                            points: 0,
-                            active_frame: 'none'
-                        }]);
-                }
-
-                setNotification(null);
-            } catch (error) {
-                console.error("Gagal mengambil data Google:", error);
-                setNotification({ type: 'error', message: 'Autentikasi gagal.' });
-            }
-        },
-        onError: () => {
-            setNotification({ type: 'error', message: 'Login dibatalkan.' });
-        },
-    });
-
-    const handleLogout = () => {
-        setFormData(prev => ({ ...prev, name: '', email: '', picture: '' }));
-        localStorage.removeItem('shadowclips_user_name');
-        localStorage.removeItem('shadowclips_user_email');
-        localStorage.removeItem('shadowclips_user_picture');
+        setContent('');
     };
 
     const insertFormat = (format) => {
         if (!textareaRef.current) return;
         const start = textareaRef.current.selectionStart;
         const end = textareaRef.current.selectionEnd;
-        const text = formData.content;
-        const selectedText = text.substring(start, end);
-        let newText = text;
-
-        if (format === 'bold') newText = text.substring(0, start) + '**' + (selectedText || 'bold') + '**' + text.substring(end);
-        if (format === 'italic') newText = text.substring(0, start) + '*' + (selectedText || 'italic') + '*' + text.substring(end);
-        if (format === 'code') newText = text.substring(0, start) + '`' + (selectedText || 'code') + '`' + text.substring(end);
-        if (format === 'link') newText = text.substring(0, start) + '[' + (selectedText || 'text') + '](url)' + text.substring(end);
-        if (format === 'quote') newText = text.substring(0, start) + '\n> ' + (selectedText || 'quote') + '\n' + text.substring(end);
-
-        setFormData(prev => ({ ...prev, content: newText }));
+        const selectedText = content.substring(start, end);
+        let newText = content;
+        if (format === 'bold') newText = content.substring(0, start) + '**' + (selectedText || 'bold') + '**' + content.substring(end);
+        if (format === 'italic') newText = content.substring(0, start) + '*' + (selectedText || 'italic') + '*' + content.substring(end);
+        if (format === 'code') newText = content.substring(0, start) + '`' + (selectedText || 'code') + '`' + content.substring(end);
+        if (format === 'link') newText = content.substring(0, start) + '[' + (selectedText || 'text') + '](url)' + content.substring(end);
+        if (format === 'quote') newText = content.substring(0, start) + '\n> ' + (selectedText || 'quote') + '\n' + content.substring(end);
+        setContent(newText);
         setTimeout(() => textareaRef.current.focus(), 0);
     };
 
     const insertEmoji = (emojiCode) => {
         if (!textareaRef.current) return;
         const start = textareaRef.current.selectionStart;
-        const text = formData.content;
-        const newText = text.substring(0, start) + emojiCode + text.substring(start);
-
-        setFormData(prev => ({ ...prev, content: newText }));
+        setContent(content.substring(0, start) + emojiCode + content.substring(start));
         setTimeout(() => textareaRef.current.focus(), 0);
     };
 
     const parseMarkdown = (text) => {
-        if (!text) return '';
-
-        let html = text.replace(/[&<>'"]/g, tag => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-        }[tag] || tag));
-
+        if (!text || typeof text !== 'string') return '';
+        let html = text.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
         html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-zinc-900 dark:text-white font-bold">$1</strong>');
         html = html.replace(/\*(.*?)\*/g, '<em class="italic text-zinc-600 dark:text-zinc-300">$1</em>');
         html = html.replace(/`(.*?)`/g, '<code class="bg-zinc-200 dark:bg-zinc-900/60 px-1.5 py-0.5 rounded text-[#106EBE] dark:text-[#0FFCBE] text-[12px] font-mono">$1</code>');
         html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-[#106EBE] hover:underline">$1</a>');
         html = html.replace(/^&gt; (.*$)/gm, '<blockquote class="border-l-2 border-[#106EBE] pl-3 my-1 text-zinc-500 dark:text-zinc-400 italic bg-zinc-100 dark:bg-zinc-900/30 py-1">$1</blockquote>');
         html = html.replace(/\n/g, '<br/>');
-
         const animatedEmojis = {
             ':keren:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Smilies/Smiling%20Face%20with%20Sunglasses.png',
             ':love:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Smilies/Smiling%20Face%20with%20Heart-Eyes.png',
@@ -252,149 +170,103 @@ function Komentar({ videoId, onCommentSuccess }) {
             ':nangis:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Smilies/Loudly%20Crying%20Face.png',
             ':jempol:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Hand%20gestures/Thumbs%20Up.png'
         };
-
         html = html.replace(/(:[a-zA-Z0-9_]+:)/g, (match) => {
-            if (animatedEmojis[match]) {
-                return `<img src="${animatedEmojis[match]}" alt="${match}" title="${match}" class="inline-block w-6 h-6 sm:w-7 sm:h-7 align-bottom drop-shadow-md hover:scale-125 transition-transform duration-300 border-none select-none" draggable="false" />`;
-            }
+            if (animatedEmojis[match]) return `<img src="${animatedEmojis[match]}" alt="${match}" title="${match}" class="inline-block w-6 h-6 sm:w-7 sm:h-7 align-bottom drop-shadow-md hover:scale-125 transition-transform duration-300 border-none select-none" draggable="false" />`;
             return match;
         });
-
         return html;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        if (!formData.name || !formData.email || !formData.content || !captchaToken) return;
-
-        if (!formData.email.toLowerCase().endsWith('@gmail.com')) {
-            setNotification({ type: 'error', message: 'Harap gunakan alamat Gmail yang valid.' });
-            setTimeout(() => setNotification(null), 4000);
-            return;
-        }
+        if (!session?.user || !content.trim() || !captchaToken) return;
 
         setIsSubmitting(true);
         setNotification(null);
 
         const targetParentId = replyTo ? (replyTo.parent_id || replyTo.id) : null;
-
-        // Pengecekan Admin via Data Profile yang sudah kita tarik
-        const myProfile = userProfiles[formData.email];
-        const isAdmin = myProfile ? myProfile.is_admin : false;
+        const isAdmin = profile?.is_admin || false;
         const statusKomentar = isAdmin ? 'approved' : 'pending';
+        const userEmail = session.user.email;
+        const userName = profile?.name || userEmail.split('@')[0];
 
-        const { error } = await supabase
-            .from('comments')
-            .insert({
+        try {
+            const { error } = await supabase.from('comments').insert({
                 video_id: String(videoId),
-                name: formData.name,
-                email: formData.email,
-                avatar_url: formData.picture || null,
-                content: formData.content,
+                name: userName,
+                email: userEmail,
+                avatar_url: profile?.avatar_url || null,
+                content: content,
                 parent_id: targetParentId,
                 status: statusKomentar
             });
 
-        setIsSubmitting(false);
+            if (error) throw error;
 
-        if (error) {
-            console.error("Supabase Error:", error.message);
-            setNotification({ type: 'error', message: 'Gagal mengirim komentar.' });
-            if (turnstileRef.current) turnstileRef.current.reset();
-            setCaptchaToken(null);
-        } else {
-            // GAMIFICATION LOGIC: Tambah Poin jika bukan Admin
+            // PERBAIKAN: Fungsi tanpa catch error mematikan layar
             if (!isAdmin) {
-                await supabase.rpc('increment_user_points', { p_email: formData.email, p_points: 5 });
+                await supabase.rpc('increment_user_points', { p_email: userEmail, p_points: 5 });
             }
 
             if (isAdmin) {
-                setNotification({ type: 'success', message: 'Komentar Admin langsung ditayangkan!' });
+                setNotification({ type: 'success', message: 'Komentar Admin ditayangkan!' });
                 setTimeout(() => setNotification(null), 3000);
             }
 
-            const newCommentData = {
-                id: `temp-${Date.now()}`,
-                name: formData.name,
-                email: formData.email,
-                avatar_url: formData.picture,
-                content: formData.content,
-                created_at: new Date().toISOString(),
-                status: statusKomentar,
-                parent_id: targetParentId
-            };
-
-            setComments(prev => [newCommentData, ...prev]);
-
-            localStorage.setItem('shadowclips_user_name', formData.name);
-            localStorage.setItem('shadowclips_user_email', formData.email);
-            if (formData.picture) localStorage.setItem('shadowclips_user_picture', formData.picture);
-
-            if (!isAdmin) {
-                const existingPending = JSON.parse(localStorage.getItem(`shadowclips_pending_${videoId}`) || '[]');
-                localStorage.setItem(`shadowclips_pending_${videoId}`, JSON.stringify([newCommentData, ...existingPending]));
-            }
-
-            setFormData(prev => ({ ...prev, content: '' }));
+            setContent('');
             setReplyTo(null);
-
             if (turnstileRef.current) turnstileRef.current.reset();
             setCaptchaToken(null);
 
-            localStorage.setItem(`shadowclips_commented_${videoId}`, 'true');
             if (onCommentSuccess) onCommentSuccess();
-
             if (textareaRef.current) textareaRef.current.style.height = '120px';
+
+        } catch (error) {
+            setNotification({ type: 'error', message: 'Gagal mengirim komentar.' });
+            if (turnstileRef.current) turnstileRef.current.reset();
+            setCaptchaToken(null);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
-    const getInitial = (name) => name ? name.charAt(0).toUpperCase() : 'G';
-    const mainComments = comments.filter(c => !c.parent_id);
-    const getReplies = (parentId) => comments.filter(c => c.parent_id === parentId).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    const getInitial = (name) => name ? name.charAt(0).toUpperCase() : 'U';
+
+    const safeComments = Array.isArray(comments) ? comments : [];
+    const mainComments = safeComments.filter(c => !c.parent_id);
+    const getReplies = (parentId) => safeComments.filter(c => c.parent_id === parentId).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
     const renderAuthOrForm = (isInline = false) => {
-        // Cek status user yang sedang login untuk badge di form sendiri
-        const myProfile = userProfiles[formData.email] || {};
-        const isMeAdmin = myProfile.is_admin;
-        const isMePremium = myProfile.is_premium;
+        const isMeAdmin = profile?.is_admin || false;
+        const isMePremium = profile?.is_premium || false;
+        const userName = profile?.name || session?.user?.email?.split('@')[0] || 'Guest';
 
         return (
             <div className={`bg-white dark:bg-zinc-800/60 rounded-[1.5rem] overflow-hidden shadow-sm dark:shadow-lg transition-all duration-500 border-none ${isInline ? 'mt-3 mb-2' : 'mb-10'}`}>
                 <form onSubmit={handleSubmit} className="animate-in fade-in duration-300 border-none">
-
                     <div className="flex items-center justify-between px-4 sm:px-5 py-4 bg-zinc-50 dark:bg-zinc-900/40 border-none">
-                        {isLoggedIn ? (
-                            <>
-                                <div className="flex items-center gap-3">
-                                    <div className="relative">
-                                        <img
-                                            src={formData.picture} alt={formData.name}
-                                            className="w-10 h-10 rounded-full shadow-md object-cover border-none" referrerPolicy="no-referrer"
-                                        />
-                                        {/* KASTA LENCANA: Admin (Centang Biru) / Premium (Mahkota Emas) */}
-                                        {isMeAdmin ? (
-                                            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5">
-                                                <BadgeCheck className="w-4 h-4 text-[#106EBE] dark:text-[#0FFCBE] fill-white dark:fill-[#106EBE]" />
-                                            </div>
-                                        ) : isMePremium ? (
-                                            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm">
-                                                <Crown className="w-4 h-4 text-amber-500 fill-amber-500/20" />
-                                            </div>
-                                        ) : null}
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-[13px] sm:text-[14px] font-bold text-zinc-900 dark:text-white leading-tight flex items-center gap-1.5 transition-colors">
-                                            {formData.name}
-                                            {isMePremium && !isMeAdmin && <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] px-1.5 py-0.5 rounded-[3px] uppercase tracking-wider">VIP</span>}
-                                        </span>
-                                        <span className="text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400 truncate max-w-[150px] sm:max-w-none transition-colors">{formData.email}</span>
-                                    </div>
+                        {session?.user ? (
+                            <div className="flex items-center gap-3">
+                                <div className="relative">
+                                    {profile?.avatar_url ? (
+                                        <img src={profile.avatar_url} alt={userName} className="w-10 h-10 rounded-full shadow-md object-cover border-none" />
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-full bg-[#106EBE] flex items-center justify-center text-white border-none font-bold">{getInitial(userName)}</div>
+                                    )}
+                                    {isMeAdmin ? (
+                                        <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5"><BadgeCheck className="w-4 h-4 text-[#106EBE] dark:text-[#0FFCBE] fill-white dark:fill-[#106EBE]" /></div>
+                                    ) : isMePremium ? (
+                                        <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm"><Crown className="w-4 h-4 text-amber-500 fill-amber-500/20" /></div>
+                                    ) : null}
                                 </div>
-                                <button type="button" onClick={handleLogout} className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-zinc-600 dark:text-zinc-300 hover:text-red-500 dark:hover:text-red-400 transition-colors outline-none bg-zinc-200 dark:bg-zinc-800/80 hover:bg-zinc-300 dark:hover:bg-zinc-800 px-3 py-1.5 rounded-lg border-none shrink-0">
-                                    <LogOut className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Logout
-                                </button>
-                            </>
+                                <div className="flex flex-col">
+                                    <span className="text-[13px] sm:text-[14px] font-bold text-zinc-900 dark:text-white leading-tight flex items-center gap-1.5 transition-colors">
+                                        {userName}
+                                        {isMePremium && !isMeAdmin && <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] px-1.5 py-0.5 rounded-[3px] uppercase tracking-wider">VIP</span>}
+                                    </span>
+                                    <span className="text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400 truncate max-w-[150px] sm:max-w-none transition-colors">{session.user.email}</span>
+                                </div>
+                            </div>
                         ) : (
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-zinc-500 shadow-md border-none transition-colors">
@@ -407,34 +279,23 @@ function Komentar({ videoId, onCommentSuccess }) {
                             </div>
                         )}
                     </div>
-
                     <div className="flex flex-wrap items-center gap-4 px-4 sm:px-5 py-3 bg-zinc-100 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-300 border-none overflow-visible transition-colors">
                         <button type="button" onClick={() => insertFormat('bold')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Bold"><Bold className="w-4 h-4" /></button>
                         <button type="button" onClick={() => insertFormat('italic')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Italic"><Italic className="w-4 h-4" /></button>
                         <button type="button" onClick={() => insertFormat('code')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Code"><Code className="w-4 h-4" /></button>
                         <button type="button" onClick={() => insertFormat('link')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Link"><LinkIcon className="w-4 h-4" /></button>
                         <button type="button" onClick={() => insertFormat('quote')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Quote"><Quote className="w-4 h-4" /></button>
-
                         <div className="h-4 w-[1px] bg-zinc-300 dark:bg-zinc-600 mx-1 shrink-0 transition-colors"></div>
-
                         <div className="relative flex items-center group/emoji h-full py-1">
-                            <button type="button" className="hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors outline-none border-none shrink-0" title="Insert 3D Emoji">
-                                <Smile className="w-4 h-4" />
-                            </button>
-
+                            <button type="button" className="hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors outline-none border-none shrink-0" title="Insert 3D Emoji"><Smile className="w-4 h-4" /></button>
                             <div className="absolute top-full left-0 pt-2 hidden group-hover/emoji:block z-50 min-w-max animate-in fade-in zoom-in-95 duration-200">
-                                <div className="flex items-center gap-2.5 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl p-2.5 rounded-2xl shadow-lg dark:shadow-[0_10px_40px_rgba(0,0,0,0.8)] border border-zinc-200 dark:border-zinc-700/50">
+                                <div className="flex items-center gap-2.5 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl p-2.5 rounded-2xl shadow-lg border border-zinc-200 dark:border-zinc-700/50">
                                     <button type="button" onClick={() => insertEmoji(':keren:')} className="hover:scale-125 transition-transform"><img src="https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Smilies/Smiling%20Face%20with%20Sunglasses.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Keren" /></button>
                                     <button type="button" onClick={() => insertEmoji(':love:')} className="hover:scale-125 transition-transform"><img src="https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Smilies/Smiling%20Face%20with%20Heart-Eyes.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Love" /></button>
                                     <button type="button" onClick={() => insertEmoji(':api:')} className="hover:scale-125 transition-transform"><img src="https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Travel%20and%20places/Fire.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Api" /></button>
-                                    <button type="button" onClick={() => insertEmoji(':ketawa:')} className="hover:scale-125 transition-transform"><img src="https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Smilies/Rolling%20on%20the%20Floor%20Laughing.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Ketawa" /></button>
-                                    <button type="button" onClick={() => insertEmoji(':roket:')} className="hover:scale-125 transition-transform"><img src="https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Travel%20and%20places/Rocket.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Roket" /></button>
-                                    <button type="button" onClick={() => insertEmoji(':nangis:')} className="hover:scale-125 transition-transform"><img src="https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Smilies/Loudly%20Crying%20Face.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Nangis" /></button>
-                                    <button type="button" onClick={() => insertEmoji(':jempol:')} className="hover:scale-125 transition-transform"><img src="https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Hand%20gestures/Thumbs%20Up.png" className="w-6 h-6 sm:w-7 sm:h-7" alt="Jempol" /></button>
                                 </div>
                             </div>
                         </div>
-
                         {replyTo && (
                             <div className="ml-auto flex items-center gap-2 bg-[#106EBE]/10 dark:bg-[#106EBE]/20 text-[#106EBE] px-3 py-1 rounded-lg border-none shrink-0">
                                 <span className="text-[10px] sm:text-[11px] font-bold truncate max-w-[100px] sm:max-w-[150px]">Replying to @{replyTo.name}</span>
@@ -442,74 +303,31 @@ function Komentar({ videoId, onCommentSuccess }) {
                             </div>
                         )}
                     </div>
-
                     <div className="relative bg-white dark:bg-zinc-900/40 border-none transition-colors">
-                        <textarea
-                            ref={textareaRef}
-                            name="content"
-                            value={formData.content}
-                            onChange={handleInputChange}
-                            placeholder="Type your comment here... Use the smile icon for 3D emojis!"
-                            className={`w-full bg-transparent px-4 sm:px-5 py-5 text-[13px] sm:text-[14px] text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none resize-y border-none transition-colors ${isInline ? 'min-h-[100px]' : 'min-h-[140px]'}`}
-                            required
-                        />
-                        <div className="absolute bottom-3 right-4 text-[9px] sm:text-[10px] font-medium text-zinc-400 dark:text-zinc-500 select-none border-none">
-                            {formData.content.length}/2000
-                        </div>
+                        <textarea ref={textareaRef} value={content} onChange={handleInputChange} placeholder="Type your comment here..." className={`w-full bg-transparent px-4 sm:px-5 py-5 text-[13px] sm:text-[14px] text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none resize-y border-none transition-colors ${isInline ? 'min-h-[100px]' : 'min-h-[140px]'}`} required />
+                        <div className="absolute bottom-3 right-4 text-[9px] sm:text-[10px] font-medium text-zinc-400 dark:text-zinc-500 select-none border-none">{content.length}/2000</div>
                     </div>
-
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-zinc-50 dark:bg-zinc-800/80 border-none relative transition-colors">
-                        {isLoggedIn ? (
+                        {session?.user ? (
                             <>
                                 <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2 sm:gap-4 border-none">
                                     <div className="w-full flex justify-center sm:justify-start overflow-hidden py-1 border-none">
                                         <div className="transform scale-[0.75] min-[380px]:scale-[0.85] sm:scale-100 origin-center sm:origin-left transition-all border-none">
-                                            <Turnstile
-                                                siteKey="0x4AAAAAAEI8owBAGHjSd7E5"
-                                                onSuccess={(token) => setCaptchaToken(token)}
-                                                onExpire={() => setCaptchaToken(null)}
-                                                onError={() => setCaptchaToken(null)}
-                                                options={{ theme: 'auto' }}
-                                                ref={turnstileRef}
-                                            />
+                                            <Turnstile siteKey="0x4AAAAAAEI8owBAGHjSd7E5" onSuccess={(token) => setCaptchaToken(token)} onExpire={() => setCaptchaToken(null)} onError={() => setCaptchaToken(null)} options={{ theme: 'auto' }} ref={turnstileRef} />
                                         </div>
                                     </div>
-                                    {notification && (
-                                        <span className={`text-[11px] sm:text-[12px] font-medium animate-in fade-in border-none text-center ${notification.type === 'success' ? 'text-[#106EBE] dark:text-[#0FFCBE]' : 'text-red-500 dark:text-red-400'}`}>
-                                            {notification.message}
-                                        </span>
-                                    )}
+                                    {notification && <span className={`text-[11px] sm:text-[12px] font-medium animate-in fade-in border-none text-center ${notification.type === 'success' ? 'text-[#106EBE] dark:text-[#0FFCBE]' : 'text-red-500 dark:text-red-400'}`}>{notification.message}</span>}
                                 </div>
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting || !formData.content.trim() || !captchaToken}
-                                    className="w-full sm:w-auto bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-300 dark:disabled:bg-zinc-700 disabled:text-zinc-500 text-white px-8 py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold text-[13px] transition-all shadow-sm dark:shadow-[0_5px_15px_rgba(16,110,190,0.3)] disabled:shadow-none outline-none border-none shrink-0"
-                                >
-                                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                                    Post Comment
+                                <button type="submit" disabled={isSubmitting || !content.trim() || !captchaToken} className="w-full sm:w-auto bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-300 dark:disabled:bg-zinc-700 disabled:text-zinc-500 text-white px-8 py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold text-[13px] transition-all shadow-sm outline-none border-none shrink-0">
+                                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} Post Comment
                                 </button>
                             </>
                         ) : (
                             <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4">
-                                <span className="text-[11px] sm:text-[12px] font-medium text-zinc-500 dark:text-zinc-400 text-center sm:text-left flex-1">
-                                    Your text is saved. Please sign in<br className="hidden sm:block" /> with Google to post your comment.
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() => login()}
-                                    className="w-full sm:w-auto bg-white dark:bg-white hover:bg-zinc-100 dark:hover:bg-zinc-200 text-zinc-900 px-6 py-3 rounded-xl flex items-center justify-center gap-2.5 font-bold text-[13px] transition-all shadow-sm outline-none border border-zinc-200 dark:border-transparent shrink-0"
-                                >
-                                    <svg className="w-4 h-4" viewBox="0 0 24 24">
-                                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                                    </svg>
-                                    Sign in to Post
+                                <span className="text-[11px] sm:text-[12px] font-medium text-zinc-500 dark:text-zinc-400 text-center sm:text-left flex-1">Sign in safely with Google to post your comment.</span>
+                                <button type="button" onClick={() => setIsLoginModalOpen(true)} className="w-full sm:w-auto bg-white dark:bg-white hover:bg-zinc-100 dark:hover:bg-zinc-200 text-zinc-900 px-6 py-3 rounded-xl flex items-center justify-center gap-2.5 font-bold text-[13px] transition-all shadow-sm outline-none border border-zinc-200 dark:border-transparent shrink-0 cursor-pointer">
+                                    <LogIn className="w-4 h-4" /> Sign in to Post
                                 </button>
-                                {notification && notification.type === 'error' && (
-                                    <span className="absolute -top-8 right-0 text-xs font-medium text-red-500 dark:text-red-400 animate-in fade-in">{notification.message}</span>
-                                )}
                             </div>
                         )}
                     </div>
@@ -520,27 +338,24 @@ function Komentar({ videoId, onCommentSuccess }) {
 
     return (
         <div className="w-full mt-6 mb-8 font-sans">
+            <ModalLogin isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} supabase={supabase} />
             {!replyTo && renderAuthOrForm(false)}
-
             <div className="flex items-center justify-between mb-8 pb-2 border-none">
                 <div className="flex items-center gap-2 border-none">
                     <MessageSquare className="w-5 h-5 text-zinc-900 dark:text-white transition-colors" />
                     <h3 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white tracking-tight transition-colors">Comments</h3>
-                    <span className="bg-zinc-200 dark:bg-zinc-800/60 text-[#106EBE] dark:text-[#0FFCBE] text-xs sm:text-sm font-black px-2.5 py-0.5 rounded-full border-none transition-colors">{comments.length}</span>
+                    <span className="bg-zinc-200 dark:bg-zinc-800/60 text-[#106EBE] dark:text-[#0FFCBE] text-xs sm:text-sm font-black px-2.5 py-0.5 rounded-full border-none transition-colors">{safeComments.length}</span>
                 </div>
                 <div className="flex items-center gap-1 text-[11px] sm:text-xs font-bold text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition-colors border-none">
                     Newest First <ChevronDown className="w-4 h-4" />
                 </div>
             </div>
-
             <div className="flex flex-col gap-6 border-none">
                 {mainComments.length > 0 ? (
                     mainComments.map((comment) => {
-                        // CEK KASTA USER YANG BERKOMENTAR DARI STATE userProfiles
                         const userProfile = userProfiles[comment.email] || {};
                         const isAdmin = userProfile.is_admin;
                         const isPremium = userProfile.is_premium;
-
                         return (
                             <div key={comment.id} className="flex flex-col gap-3 border-none">
                                 <div className={`flex gap-3 sm:gap-4 group border-none ${comment.status === 'pending' ? 'opacity-60' : ''}`}>
@@ -552,98 +367,52 @@ function Komentar({ videoId, onCommentSuccess }) {
                                                 <span className="text-zinc-500 dark:text-zinc-300 font-black text-sm sm:text-base border-none transition-colors">{getInitial(comment.name)}</span>
                                             )}
                                         </div>
-                                        {/* KASTA LENCANA: Admin (Centang Biru) / Premium (Mahkota Emas) */}
                                         {isAdmin ? (
-                                            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm" title="Verified Admin">
-                                                <BadgeCheck className="w-4 h-4 sm:w-5 sm:h-5 text-[#106EBE] dark:text-[#0FFCBE] fill-white dark:fill-[#106EBE]" />
-                                            </div>
+                                            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm" title="Verified Admin"><BadgeCheck className="w-4 h-4 sm:w-5 sm:h-5 text-[#106EBE] dark:text-[#0FFCBE] fill-white dark:fill-[#106EBE]" /></div>
                                         ) : isPremium ? (
-                                            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm" title="Premium VIP Member">
-                                                <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 fill-amber-500/20" />
-                                            </div>
+                                            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm" title="Premium VIP Member"><Crown className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 fill-amber-500/20" /></div>
                                         ) : null}
                                     </div>
-
                                     <div className={`flex-1 min-w-0 flex flex-col p-4 sm:p-5 rounded-[1.2rem] sm:rounded-[1.5rem] border-none transition-colors ${isAdmin ? 'bg-gradient-to-br from-white dark:from-zinc-800/80 to-[#106EBE]/5 dark:to-[#106EBE]/20 shadow-sm dark:shadow-[0_5px_20px_rgba(16,110,190,0.15)]' : isPremium ? 'bg-gradient-to-br from-white dark:from-zinc-800/80 to-amber-500/5 dark:to-amber-500/10 shadow-sm dark:shadow-[0_5px_15px_rgba(245,158,11,0.1)]' : 'bg-white dark:bg-zinc-800/60 shadow-sm dark:shadow-none'}`}>
                                         <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
-                                            <span className={`text-[13px] sm:text-[14px] font-bold flex items-center gap-1.5 ${isAdmin ? 'text-[#106EBE] dark:text-[#0FFCBE]' : isPremium ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-white'}`}>
-                                                {comment.name}
-                                            </span>
+                                            <span className={`text-[13px] sm:text-[14px] font-bold flex items-center gap-1.5 ${isAdmin ? 'text-[#106EBE] dark:text-[#0FFCBE]' : isPremium ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-white'}`}>{comment.name}</span>
                                             <span className="text-[10px] sm:text-[11px] font-medium text-zinc-400 dark:text-zinc-400 border-none transition-colors">{timeAgo(comment.created_at)}</span>
-                                            {comment.status === 'pending' && (
-                                                <span className="px-2 py-0.5 rounded-[4px] text-[8px] sm:text-[9px] uppercase tracking-wider font-bold bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 border-none transition-colors">Awaiting Approval</span>
-                                            )}
+                                            {comment.status === 'pending' && <span className="px-2 py-0.5 rounded-[4px] text-[8px] sm:text-[9px] uppercase tracking-wider font-bold bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 border-none transition-colors">Awaiting Approval</span>}
                                         </div>
-                                        <div
-                                            className="text-[12px] sm:text-[14px] text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none transition-colors"
-                                            dangerouslySetInnerHTML={{ __html: parseMarkdown(comment.content) }}
-                                        />
+                                        <div className="text-[12px] sm:text-[14px] text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none transition-colors" dangerouslySetInnerHTML={{ __html: parseMarkdown(comment.content) }} />
                                         <div className="flex items-center gap-4 mt-3 pt-3 border-none">
-                                            <button onClick={() => handleReplyClick(comment)} className="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400 font-bold hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors outline-none border-none">
-                                                Reply
-                                            </button>
+                                            <button onClick={() => handleReplyClick(comment)} className="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400 font-bold hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors outline-none border-none">Reply</button>
                                         </div>
                                     </div>
                                 </div>
-
-                                {replyTo && replyTo.id === comment.id && (
-                                    <div className="ml-10 sm:ml-16 animate-in slide-in-from-top-2 fade-in duration-300 border-none">
-                                        {renderAuthOrForm(true)}
-                                    </div>
-                                )}
-
+                                {replyTo && replyTo.id === comment.id && <div className="ml-10 sm:ml-16 animate-in slide-in-from-top-2 fade-in duration-300 border-none">{renderAuthOrForm(true)}</div>}
                                 {getReplies(comment.id).length > 0 && (
                                     <div className="flex flex-col gap-4 mt-1 ml-10 sm:ml-16 border-none">
                                         {getReplies(comment.id).map(reply => {
                                             const replyProfile = userProfiles[reply.email] || {};
                                             const isReplyAdmin = replyProfile.is_admin;
                                             const isReplyPremium = replyProfile.is_premium;
-
                                             return (
                                                 <div key={reply.id} className="flex flex-col gap-3 border-none">
                                                     <div className="flex gap-2.5 sm:gap-3 group border-none">
                                                         <div className="relative w-8 h-8 sm:w-10 sm:h-10 shrink-0">
                                                             <div className="w-full h-full rounded-full bg-zinc-200 dark:bg-zinc-800/60 flex items-center justify-center overflow-hidden shadow-sm border-none transition-colors">
-                                                                {reply.avatar_url ? (
-                                                                    <img src={reply.avatar_url} alt={reply.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                                                                ) : (
-                                                                    <span className="text-zinc-500 dark:text-zinc-300 font-bold text-[10px] sm:text-xs border-none transition-colors">{getInitial(reply.name)}</span>
-                                                                )}
+                                                                {reply.avatar_url ? <img src={reply.avatar_url} alt={reply.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <span className="text-zinc-500 dark:text-zinc-300 font-bold text-[10px] sm:text-xs border-none transition-colors">{getInitial(reply.name)}</span>}
                                                             </div>
-                                                            {/* LENCANA REPLY: Admin (Centang Biru) / Premium (Mahkota Emas) */}
-                                                            {isReplyAdmin ? (
-                                                                <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm" title="Verified Admin">
-                                                                    <BadgeCheck className="w-3.5 h-3.5 text-[#106EBE] dark:text-[#0FFCBE] fill-white dark:fill-[#106EBE]" />
-                                                                </div>
-                                                            ) : isReplyPremium ? (
-                                                                <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm" title="Premium VIP Member">
-                                                                    <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
-                                                                </div>
-                                                            ) : null}
+                                                            {isReplyAdmin ? <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm" title="Verified Admin"><BadgeCheck className="w-3.5 h-3.5 text-[#106EBE] dark:text-[#0FFCBE] fill-white dark:fill-[#106EBE]" /></div> : isReplyPremium ? <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm" title="Premium VIP Member"><Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" /></div> : null}
                                                         </div>
-
                                                         <div className={`flex-1 min-w-0 flex flex-col p-3 sm:p-4 rounded-xl sm:rounded-[1.2rem] border-none transition-colors ${isReplyAdmin ? 'bg-gradient-to-br from-white dark:from-zinc-800/60 to-[#106EBE]/5 dark:to-[#106EBE]/15 shadow-sm dark:shadow-[0_5px_15px_rgba(16,110,190,0.1)]' : isReplyPremium ? 'bg-gradient-to-br from-white dark:from-zinc-800/60 to-amber-500/5 dark:to-amber-500/10 shadow-sm' : 'bg-zinc-50 dark:bg-zinc-800/40 shadow-sm dark:shadow-none'}`}>
                                                             <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
-                                                                <span className={`text-[11px] sm:text-[13px] font-bold ${isReplyAdmin ? 'text-[#106EBE] dark:text-[#0FFCBE]' : isReplyPremium ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-white'}`}>
-                                                                    {reply.name}
-                                                                </span>
+                                                                <span className={`text-[11px] sm:text-[13px] font-bold ${isReplyAdmin ? 'text-[#106EBE] dark:text-[#0FFCBE]' : isReplyPremium ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-white'}`}>{reply.name}</span>
                                                                 <span className="text-[9px] sm:text-[10px] font-medium text-zinc-400 dark:text-zinc-400 border-none transition-colors">{timeAgo(reply.created_at)}</span>
                                                             </div>
                                                             <div className="text-[11px] sm:text-[13px] text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none transition-colors">
-                                                                <span className="text-[#106EBE] font-bold mr-1 border-none">@{comment.name}</span>
-                                                                <span dangerouslySetInnerHTML={{ __html: parseMarkdown(reply.content) }} />
+                                                                <span className="text-[#106EBE] font-bold mr-1 border-none">@{comment.name}</span><span dangerouslySetInnerHTML={{ __html: parseMarkdown(reply.content) }} />
                                                             </div>
-                                                            <div className="flex items-center gap-4 mt-3 pt-2 border-none">
-                                                                <button onClick={() => handleReplyClick(reply)} className="text-[9px] sm:text-[10px] text-zinc-500 dark:text-zinc-400 font-bold hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors outline-none border-none">Reply</button>
-                                                            </div>
+                                                            <div className="flex items-center gap-4 mt-3 pt-2 border-none"><button onClick={() => handleReplyClick(reply)} className="text-[9px] sm:text-[10px] text-zinc-500 dark:text-zinc-400 font-bold hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors outline-none border-none">Reply</button></div>
                                                         </div>
                                                     </div>
-
-                                                    {replyTo && replyTo.id === reply.id && (
-                                                        <div className="ml-10 sm:ml-13 animate-in slide-in-from-top-2 fade-in duration-300 border-none">
-                                                            {renderAuthOrForm(true)}
-                                                        </div>
-                                                    )}
+                                                    {replyTo && replyTo.id === reply.id && <div className="ml-10 sm:ml-13 animate-in slide-in-from-top-2 fade-in duration-300 border-none">{renderAuthOrForm(true)}</div>}
                                                 </div>
                                             );
                                         })}
