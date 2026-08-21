@@ -29,10 +29,12 @@ export default function Navbar({ isScrolled, supabase }) {
     const fetchProfile = async (userId) => {
         if (!supabase || !userId) return;
         try {
-            const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
+            // KUNCI PERBAIKAN: Menggunakan .maybeSingle() anti Error 406
+            const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+            if (error) throw error;
             if (data) setProfile(data);
         } catch (err) {
-            console.error('Error fetching profile:', err);
+            console.error('Error fetching profile:', err.message);
         }
     };
 
@@ -165,19 +167,17 @@ export default function Navbar({ isScrolled, supabase }) {
                         </div>
 
                         <div className="hidden md:flex items-center gap-4 border-none z-50 ml-2">
-                            {/* POSISI BARU: Toggle Tema dipindah ke kiri Profil/Login */}
                             <button onClick={toggleTheme} className="flex items-center justify-center p-2 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors outline-none border-none cursor-pointer" title="Toggle Theme">
                                 {theme === 'dark' ? <Sun className="w-5 h-5 border-none" /> : <Moon className="w-5 h-5 border-none" />}
                             </button>
 
-                            {/* GARIS PEMISAH */}
                             <div className="w-[1px] h-5 bg-zinc-200 dark:bg-zinc-800 border-none"></div>
 
                             {session ? (
                                 <div className="relative border-none">
                                     <button onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)} className="flex items-center gap-2.5 p-1 pl-3 bg-zinc-100 dark:bg-zinc-900/80 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors outline-none border-none cursor-pointer">
                                         <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 max-w-[100px] truncate border-none">
-                                            {profile?.name || session?.user?.email?.split('@')[0] || 'User'}
+                                            {profile?.name || (session?.user?.email || '').split('@')[0] || 'User'}
                                         </span>
                                         {profile?.avatar_url ? (
                                             <img src={profile.avatar_url} alt="Profile" className="w-8 h-8 rounded-full object-cover border-none shadow-sm" />
@@ -189,7 +189,6 @@ export default function Navbar({ isScrolled, supabase }) {
                                     {isProfileDropdownOpen && (
                                         <>
                                             <div className="fixed inset-0 z-40 border-none" onClick={() => setIsProfileDropdownOpen(false)}></div>
-                                            {/* DROPDOWN PROFIL BARU */}
                                             <div className="absolute top-[calc(100%+0.5rem)] right-0 w-56 bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-none overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
                                                 <div className="px-5 py-4 bg-zinc-50 dark:bg-zinc-800/50 border-none border-b border-zinc-100 dark:border-zinc-800">
                                                     <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1 border-none">Masuk Sebagai</p>
@@ -210,7 +209,6 @@ export default function Navbar({ isScrolled, supabase }) {
                                     )}
                                 </div>
                             ) : (
-                                /* TOMBOL LOGIN SIMPEL & BERSIH */
                                 <button onClick={() => setIsLoginModalOpen(true)} className="flex items-center gap-2 text-sm font-bold text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors outline-none border-none cursor-pointer">
                                     <LogIn className="w-5 h-5 border-none" /> Sign In
                                 </button>
@@ -246,7 +244,7 @@ export default function Navbar({ isScrolled, supabase }) {
                                     <div className="w-10 h-10 rounded-full bg-[#106EBE] flex items-center justify-center text-white"><User className="w-5 h-5" /></div>
                                 )}
                                 <div className="flex flex-col">
-                                    <span className="text-sm font-black text-zinc-900 dark:text-white truncate max-w-[120px]">{profile?.name || session?.user?.email?.split('@')[0]}</span>
+                                    <span className="text-sm font-black text-zinc-900 dark:text-white truncate max-w-[120px]">{profile?.name || (session?.user?.email || '').split('@')[0]}</span>
                                     <span className="text-[10px] text-zinc-500 font-bold hover:text-[#106EBE] transition-colors">Edit Profil</span>
                                 </div>
                             </div>
