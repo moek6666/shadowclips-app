@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { X, Mail, Lock, Loader2 } from 'lucide-react';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 
-// Masukkan Client ID Google Bos di sini (Ini ID dari riwayat percakapan kita sebelumnya)
-const GOOGLE_CLIENT_ID = "584667592518-5j301svkhtkoij6dudhscof5ucj4ge16.apps.googleusercontent.com";
+
+const GOOGLE_CLIENT_ID = "584667592518-pg15b6l0jmud072lslgk9utaord83sif.apps.googleusercontent.com";
 
 export default function ModalLoginWrapper(props) {
     // Membungkus modal dengan Provider Google agar sistem Client-Side aktif
