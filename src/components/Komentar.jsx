@@ -4,7 +4,7 @@ import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import { Turnstile } from '@marsidev/react-turnstile';
 import {
     Loader2, Send, MessageSquare, ChevronDown, Smile,
-    Bold, Italic, Code, Link as LinkIcon, Quote, X, LogOut, BadgeCheck
+    Bold, Italic, Code, Link as LinkIcon, Quote, X, LogOut, BadgeCheck, Crown
 } from 'lucide-react';
 
 export default function KomentarWrapper(props) {
@@ -17,7 +17,7 @@ export default function KomentarWrapper(props) {
 
 function Komentar({ videoId, onCommentSuccess }) {
     const [comments, setComments] = useState([]);
-    const [adminEmails, setAdminEmails] = useState([]);
+    const [userProfiles, setUserProfiles] = useState({}); // Menyimpan data kasta setiap user
 
     const [formData, setFormData] = useState(() => {
         return {
@@ -42,6 +42,7 @@ function Komentar({ videoId, onCommentSuccess }) {
         const fetchData = async () => {
             if (!videoId) return;
 
+            // 1. Ambil semua komentar untuk video ini
             const { data: commentsData, error: commentsError } = await supabase
                 .from('comments')
                 .select('*')
@@ -49,17 +50,27 @@ function Komentar({ videoId, onCommentSuccess }) {
                 .eq('status', 'approved')
                 .order('created_at', { ascending: false });
 
-            const { data: profilesData } = await supabase
-                .from('profiles')
-                .select('email')
-                .eq('is_admin', true);
-
-            if (profilesData) {
-                const admins = profilesData.map(p => p.email);
-                setAdminEmails(admins);
-            }
-
             if (!commentsError && commentsData) {
+                // 2. Ambil daftar Email Unik dari komentar yang ada
+                const uniqueEmails = [...new Set(commentsData.map(c => c.email))];
+
+                // 3. Tarik data profil dari Supabase HANYA untuk email yang berkomentar
+                if (uniqueEmails.length > 0) {
+                    const { data: profilesData } = await supabase
+                        .from('profiles')
+                        .select('email, is_admin, is_premium, active_frame')
+                        .in('email', uniqueEmails);
+
+                    if (profilesData) {
+                        const profileMap = {};
+                        profilesData.forEach(p => {
+                            profileMap[p.email] = p;
+                        });
+                        setUserProfiles(profileMap); // Simpan Peta Kasta User
+                    }
+                }
+
+                // 4. Proses komentar pending dari LocalStorage
                 const localPending = JSON.parse(localStorage.getItem(`shadowclips_pending_${videoId}`) || '[]');
                 const now = new Date();
 
@@ -131,6 +142,7 @@ function Komentar({ videoId, onCommentSuccess }) {
         setFormData(prev => ({ ...prev, content: '' }));
     };
 
+    // FUNGSI AUTO-SYNC: Saat user login, sistem otomatis mendaftarkan ke tabel profiles
     const login = useGoogleLogin({
         onSuccess: async (tokenResponse) => {
             try {
@@ -149,6 +161,27 @@ function Komentar({ videoId, onCommentSuccess }) {
                 localStorage.setItem('shadowclips_user_name', userInfo.name);
                 localStorage.setItem('shadowclips_user_email', userInfo.email);
                 localStorage.setItem('shadowclips_user_picture', userInfo.picture);
+
+                // UPSERT LOGIC: Daftarkan ke DB secara otomatis (Tanpa menimpa data VIP jika sudah ada)
+                const { data: existingUser } = await supabase
+                    .from('profiles')
+                    .select('email')
+                    .eq('email', userInfo.email)
+                    .single();
+
+                if (!existingUser) {
+                    await supabase
+                        .from('profiles')
+                        .insert([{
+                            email: userInfo.email,
+                            name: userInfo.name,
+                            avatar_url: userInfo.picture,
+                            is_premium: false,
+                            is_admin: false,
+                            points: 0,
+                            active_frame: 'none'
+                        }]);
+                }
 
                 setNotification(null);
             } catch (error) {
@@ -203,7 +236,6 @@ function Komentar({ videoId, onCommentSuccess }) {
             '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
         }[tag] || tag));
 
-        // Inject classes for Light & Dark mode support in Markdown elements
         html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-zinc-900 dark:text-white font-bold">$1</strong>');
         html = html.replace(/\*(.*?)\*/g, '<em class="italic text-zinc-600 dark:text-zinc-300">$1</em>');
         html = html.replace(/`(.*?)`/g, '<code class="bg-zinc-200 dark:bg-zinc-900/60 px-1.5 py-0.5 rounded text-[#106EBE] dark:text-[#0FFCBE] text-[12px] font-mono">$1</code>');
@@ -246,7 +278,10 @@ function Komentar({ videoId, onCommentSuccess }) {
         setNotification(null);
 
         const targetParentId = replyTo ? (replyTo.parent_id || replyTo.id) : null;
-        const isAdmin = adminEmails.includes(formData.email);
+
+        // Pengecekan Admin via Data Profile yang sudah kita tarik
+        const myProfile = userProfiles[formData.email];
+        const isAdmin = myProfile ? myProfile.is_admin : false;
         const statusKomentar = isAdmin ? 'approved' : 'pending';
 
         const { error } = await supabase
@@ -269,6 +304,11 @@ function Komentar({ videoId, onCommentSuccess }) {
             if (turnstileRef.current) turnstileRef.current.reset();
             setCaptchaToken(null);
         } else {
+            // GAMIFICATION LOGIC: Tambah Poin jika bukan Admin
+            if (!isAdmin) {
+                await supabase.rpc('increment_user_points', { p_email: formData.email, p_points: 5 });
+            }
+
             if (isAdmin) {
                 setNotification({ type: 'success', message: 'Komentar Admin langsung ditayangkan!' });
                 setTimeout(() => setNotification(null), 3000);
@@ -314,11 +354,16 @@ function Komentar({ videoId, onCommentSuccess }) {
     const getReplies = (parentId) => comments.filter(c => c.parent_id === parentId).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
     const renderAuthOrForm = (isInline = false) => {
+        // Cek status user yang sedang login untuk badge di form sendiri
+        const myProfile = userProfiles[formData.email] || {};
+        const isMeAdmin = myProfile.is_admin;
+        const isMePremium = myProfile.is_premium;
+
         return (
-            <div className={`bg-white dark:bg-zinc-800/60 rounded-[1.5rem] overflow-hidden shadow-lg transition-all duration-500 border-none ${isInline ? 'mt-3 mb-2 border border-zinc-200 dark:border-[#106EBE]/20' : 'mb-10 border border-zinc-200 dark:border-transparent'}`}>
+            <div className={`bg-white dark:bg-zinc-800/60 rounded-[1.5rem] overflow-hidden shadow-sm dark:shadow-lg transition-all duration-500 border-none ${isInline ? 'mt-3 mb-2' : 'mb-10'}`}>
                 <form onSubmit={handleSubmit} className="animate-in fade-in duration-300 border-none">
 
-                    <div className="flex items-center justify-between px-4 sm:px-5 py-4 bg-zinc-50 dark:bg-zinc-900/40 border-b border-zinc-200 dark:border-transparent">
+                    <div className="flex items-center justify-between px-4 sm:px-5 py-4 bg-zinc-50 dark:bg-zinc-900/40 border-none">
                         {isLoggedIn ? (
                             <>
                                 <div className="flex items-center gap-3">
@@ -327,14 +372,22 @@ function Komentar({ videoId, onCommentSuccess }) {
                                             src={formData.picture} alt={formData.name}
                                             className="w-10 h-10 rounded-full shadow-md object-cover border-none" referrerPolicy="no-referrer"
                                         />
-                                        {adminEmails.includes(formData.email) && (
+                                        {/* KASTA LENCANA: Admin (Centang Biru) / Premium (Mahkota Emas) */}
+                                        {isMeAdmin ? (
                                             <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5">
                                                 <BadgeCheck className="w-4 h-4 text-[#106EBE] dark:text-[#0FFCBE] fill-white dark:fill-[#106EBE]" />
                                             </div>
-                                        )}
+                                        ) : isMePremium ? (
+                                            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm">
+                                                <Crown className="w-4 h-4 text-amber-500 fill-amber-500/20" />
+                                            </div>
+                                        ) : null}
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className="text-[13px] sm:text-[14px] font-bold text-zinc-900 dark:text-white leading-tight flex items-center gap-1.5 transition-colors">{formData.name}</span>
+                                        <span className="text-[13px] sm:text-[14px] font-bold text-zinc-900 dark:text-white leading-tight flex items-center gap-1.5 transition-colors">
+                                            {formData.name}
+                                            {isMePremium && !isMeAdmin && <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] px-1.5 py-0.5 rounded-[3px] uppercase tracking-wider">VIP</span>}
+                                        </span>
                                         <span className="text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400 truncate max-w-[150px] sm:max-w-none transition-colors">{formData.email}</span>
                                     </div>
                                 </div>
@@ -355,7 +408,7 @@ function Komentar({ videoId, onCommentSuccess }) {
                         )}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-4 px-4 sm:px-5 py-3 bg-zinc-100 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-300 border-b border-zinc-200 dark:border-transparent overflow-visible transition-colors">
+                    <div className="flex flex-wrap items-center gap-4 px-4 sm:px-5 py-3 bg-zinc-100 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-300 border-none overflow-visible transition-colors">
                         <button type="button" onClick={() => insertFormat('bold')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Bold"><Bold className="w-4 h-4" /></button>
                         <button type="button" onClick={() => insertFormat('italic')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Italic"><Italic className="w-4 h-4" /></button>
                         <button type="button" onClick={() => insertFormat('code')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Code"><Code className="w-4 h-4" /></button>
@@ -405,7 +458,7 @@ function Komentar({ videoId, onCommentSuccess }) {
                         </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-zinc-50 dark:bg-zinc-800/80 border-t border-zinc-200 dark:border-transparent relative transition-colors">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-zinc-50 dark:bg-zinc-800/80 border-none relative transition-colors">
                         {isLoggedIn ? (
                             <>
                                 <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2 sm:gap-4 border-none">
@@ -430,7 +483,7 @@ function Komentar({ videoId, onCommentSuccess }) {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting || !formData.content.trim() || !captchaToken}
-                                    className="w-full sm:w-auto bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-300 dark:disabled:bg-zinc-700 disabled:text-zinc-500 text-white px-8 py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold text-[13px] transition-all shadow-[0_5px_15px_rgba(16,110,190,0.3)] disabled:shadow-none outline-none border-none shrink-0"
+                                    className="w-full sm:w-auto bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-300 dark:disabled:bg-zinc-700 disabled:text-zinc-500 text-white px-8 py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold text-[13px] transition-all shadow-sm dark:shadow-[0_5px_15px_rgba(16,110,190,0.3)] disabled:shadow-none outline-none border-none shrink-0"
                                 >
                                     {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                                     Post Comment
@@ -444,7 +497,7 @@ function Komentar({ videoId, onCommentSuccess }) {
                                 <button
                                     type="button"
                                     onClick={() => login()}
-                                    className="w-full sm:w-auto bg-white dark:bg-white hover:bg-zinc-100 dark:hover:bg-zinc-200 text-zinc-900 px-6 py-3 rounded-xl flex items-center justify-center gap-2.5 font-bold text-[13px] transition-all shadow-md outline-none border border-zinc-200 dark:border-transparent shrink-0"
+                                    className="w-full sm:w-auto bg-white dark:bg-white hover:bg-zinc-100 dark:hover:bg-zinc-200 text-zinc-900 px-6 py-3 rounded-xl flex items-center justify-center gap-2.5 font-bold text-[13px] transition-all shadow-sm outline-none border border-zinc-200 dark:border-transparent shrink-0"
                                 >
                                     <svg className="w-4 h-4" viewBox="0 0 24 24">
                                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -483,29 +536,37 @@ function Komentar({ videoId, onCommentSuccess }) {
             <div className="flex flex-col gap-6 border-none">
                 {mainComments.length > 0 ? (
                     mainComments.map((comment) => {
-                        const isAdmin = adminEmails.includes(comment.email);
+                        // CEK KASTA USER YANG BERKOMENTAR DARI STATE userProfiles
+                        const userProfile = userProfiles[comment.email] || {};
+                        const isAdmin = userProfile.is_admin;
+                        const isPremium = userProfile.is_premium;
 
                         return (
                             <div key={comment.id} className="flex flex-col gap-3 border-none">
                                 <div className={`flex gap-3 sm:gap-4 group border-none ${comment.status === 'pending' ? 'opacity-60' : ''}`}>
                                     <div className="relative w-10 h-10 sm:w-12 sm:h-12 shrink-0">
-                                        <div className="w-full h-full rounded-full bg-zinc-200 dark:bg-zinc-800/60 flex items-center justify-center shadow-md dark:shadow-lg overflow-hidden border-none transition-colors">
+                                        <div className="w-full h-full rounded-full bg-zinc-200 dark:bg-zinc-800/60 flex items-center justify-center shadow-sm dark:shadow-md overflow-hidden border-none transition-colors">
                                             {comment.avatar_url ? (
                                                 <img src={comment.avatar_url} alt={comment.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                             ) : (
                                                 <span className="text-zinc-500 dark:text-zinc-300 font-black text-sm sm:text-base border-none transition-colors">{getInitial(comment.name)}</span>
                                             )}
                                         </div>
-                                        {isAdmin && (
+                                        {/* KASTA LENCANA: Admin (Centang Biru) / Premium (Mahkota Emas) */}
+                                        {isAdmin ? (
                                             <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm" title="Verified Admin">
                                                 <BadgeCheck className="w-4 h-4 sm:w-5 sm:h-5 text-[#106EBE] dark:text-[#0FFCBE] fill-white dark:fill-[#106EBE]" />
                                             </div>
-                                        )}
+                                        ) : isPremium ? (
+                                            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm" title="Premium VIP Member">
+                                                <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 fill-amber-500/20" />
+                                            </div>
+                                        ) : null}
                                     </div>
 
-                                    <div className={`flex-1 min-w-0 flex flex-col p-4 sm:p-5 rounded-[1.2rem] sm:rounded-[1.5rem] border border-zinc-100 dark:border-transparent transition-colors ${isAdmin ? 'bg-gradient-to-br from-white dark:from-zinc-800/80 to-[#106EBE]/5 dark:to-[#106EBE]/20 shadow-sm dark:shadow-[0_5px_20px_rgba(16,110,190,0.15)]' : 'bg-white dark:bg-zinc-800/60 shadow-sm dark:shadow-none'}`}>
+                                    <div className={`flex-1 min-w-0 flex flex-col p-4 sm:p-5 rounded-[1.2rem] sm:rounded-[1.5rem] border-none transition-colors ${isAdmin ? 'bg-gradient-to-br from-white dark:from-zinc-800/80 to-[#106EBE]/5 dark:to-[#106EBE]/20 shadow-sm dark:shadow-[0_5px_20px_rgba(16,110,190,0.15)]' : isPremium ? 'bg-gradient-to-br from-white dark:from-zinc-800/80 to-amber-500/5 dark:to-amber-500/10 shadow-sm dark:shadow-[0_5px_15px_rgba(245,158,11,0.1)]' : 'bg-white dark:bg-zinc-800/60 shadow-sm dark:shadow-none'}`}>
                                         <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
-                                            <span className={`text-[13px] sm:text-[14px] font-bold flex items-center gap-1.5 ${isAdmin ? 'text-[#106EBE] dark:text-[#0FFCBE]' : 'text-zinc-900 dark:text-white'}`}>
+                                            <span className={`text-[13px] sm:text-[14px] font-bold flex items-center gap-1.5 ${isAdmin ? 'text-[#106EBE] dark:text-[#0FFCBE]' : isPremium ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-white'}`}>
                                                 {comment.name}
                                             </span>
                                             <span className="text-[10px] sm:text-[11px] font-medium text-zinc-400 dark:text-zinc-400 border-none transition-colors">{timeAgo(comment.created_at)}</span>
@@ -534,7 +595,9 @@ function Komentar({ videoId, onCommentSuccess }) {
                                 {getReplies(comment.id).length > 0 && (
                                     <div className="flex flex-col gap-4 mt-1 ml-10 sm:ml-16 border-none">
                                         {getReplies(comment.id).map(reply => {
-                                            const isReplyAdmin = adminEmails.includes(reply.email);
+                                            const replyProfile = userProfiles[reply.email] || {};
+                                            const isReplyAdmin = replyProfile.is_admin;
+                                            const isReplyPremium = replyProfile.is_premium;
 
                                             return (
                                                 <div key={reply.id} className="flex flex-col gap-3 border-none">
@@ -547,16 +610,21 @@ function Komentar({ videoId, onCommentSuccess }) {
                                                                     <span className="text-zinc-500 dark:text-zinc-300 font-bold text-[10px] sm:text-xs border-none transition-colors">{getInitial(reply.name)}</span>
                                                                 )}
                                                             </div>
-                                                            {isReplyAdmin && (
+                                                            {/* LENCANA REPLY: Admin (Centang Biru) / Premium (Mahkota Emas) */}
+                                                            {isReplyAdmin ? (
                                                                 <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm" title="Verified Admin">
                                                                     <BadgeCheck className="w-3.5 h-3.5 text-[#106EBE] dark:text-[#0FFCBE] fill-white dark:fill-[#106EBE]" />
                                                                 </div>
-                                                            )}
+                                                            ) : isReplyPremium ? (
+                                                                <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm" title="Premium VIP Member">
+                                                                    <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
+                                                                </div>
+                                                            ) : null}
                                                         </div>
 
-                                                        <div className={`flex-1 min-w-0 flex flex-col p-3 sm:p-4 rounded-xl sm:rounded-[1.2rem] border border-zinc-100 dark:border-transparent transition-colors ${isReplyAdmin ? 'bg-gradient-to-br from-white dark:from-zinc-800/60 to-[#106EBE]/5 dark:to-[#106EBE]/15 shadow-sm dark:shadow-[0_5px_15px_rgba(16,110,190,0.1)]' : 'bg-zinc-50 dark:bg-zinc-800/40 shadow-sm dark:shadow-none'}`}>
+                                                        <div className={`flex-1 min-w-0 flex flex-col p-3 sm:p-4 rounded-xl sm:rounded-[1.2rem] border-none transition-colors ${isReplyAdmin ? 'bg-gradient-to-br from-white dark:from-zinc-800/60 to-[#106EBE]/5 dark:to-[#106EBE]/15 shadow-sm dark:shadow-[0_5px_15px_rgba(16,110,190,0.1)]' : isReplyPremium ? 'bg-gradient-to-br from-white dark:from-zinc-800/60 to-amber-500/5 dark:to-amber-500/10 shadow-sm' : 'bg-zinc-50 dark:bg-zinc-800/40 shadow-sm dark:shadow-none'}`}>
                                                             <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
-                                                                <span className={`text-[11px] sm:text-[13px] font-bold ${isReplyAdmin ? 'text-[#106EBE] dark:text-[#0FFCBE]' : 'text-zinc-900 dark:text-white'}`}>
+                                                                <span className={`text-[11px] sm:text-[13px] font-bold ${isReplyAdmin ? 'text-[#106EBE] dark:text-[#0FFCBE]' : isReplyPremium ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-white'}`}>
                                                                     {reply.name}
                                                                 </span>
                                                                 <span className="text-[9px] sm:text-[10px] font-medium text-zinc-400 dark:text-zinc-400 border-none transition-colors">{timeAgo(reply.created_at)}</span>
@@ -585,7 +653,7 @@ function Komentar({ videoId, onCommentSuccess }) {
                         );
                     })
                 ) : (
-                    <div className="text-center py-12 text-zinc-400 dark:text-zinc-500 bg-white dark:bg-zinc-800/40 rounded-[1.5rem] border border-zinc-200 dark:border-transparent transition-colors shadow-sm dark:shadow-none">
+                    <div className="text-center py-12 text-zinc-400 dark:text-zinc-500 bg-white dark:bg-zinc-800/40 rounded-[1.5rem] border-none transition-colors shadow-sm dark:shadow-none">
                         <MessageSquare className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 opacity-30 dark:opacity-20 border-none" />
                         <p className="text-[12px] sm:text-sm font-medium border-none">Be the first to share your thoughts!</p>
                     </div>

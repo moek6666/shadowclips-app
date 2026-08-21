@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Play, Download, Clock, Eye, MonitorPlay, Share2, Heart, HardDrive, FolderArchive, Database, Server, X, ZoomIn, LayoutGrid, Loader2, ExternalLink, Lock, ChevronDown } from 'lucide-react';
+import { Play, Download, Clock, Eye, MonitorPlay, Share2, Heart, HardDrive, FolderArchive, Database, Server, X, ZoomIn, LayoutGrid, Loader2, ExternalLink, Lock, ChevronDown, Gift, Info } from 'lucide-react';
 
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -38,6 +38,7 @@ export default function Streaming({ supabase }) {
     const [modalProgress, setModalProgress] = useState(0);
 
     const [isVipUnlocked, setIsVipUnlocked] = useState(true);
+    const [lockReason, setLockReason] = useState('none');
     const [hasCommented, setHasCommented] = useState(false);
 
     const [secureUrls, setSecureUrls] = useState({ main: '', alt: '', alt2: '', img: '' });
@@ -48,9 +49,12 @@ export default function Streaming({ supabase }) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    // OTAM OTOMATIS: Mendeteksi status Premium User dan jenis kasta video
     const checkVipAccess = async (videoId, currentCommented, vidData) => {
         const categoryStr = String(vidData?.category || '').toLowerCase().trim();
-        const isVipContent = categoryStr.includes('exclusive');
+
+        const isPaidContent = categoryStr.includes('payment');
+        const isExclusiveContent = categoryStr.includes('exclusive') && !isPaidContent;
 
         const { data: vipData, error } = await supabase.rpc('get_vip_video_urls', {
             p_video_id: videoId,
@@ -58,35 +62,68 @@ export default function Streaming({ supabase }) {
             p_has_commented: currentCommented
         });
 
-        if (!error && vipData) {
-            setHasLiked(vipData.has_liked);
+        let currentHasLiked = false;
+        let dbMain = '', dbAlt = '', dbAlt2 = '', dbImg = vidData?.img || '';
 
-            if (!isVipContent) {
+        if (!error && vipData) {
+            currentHasLiked = vipData.has_liked;
+            dbMain = vipData.main || '';
+            dbAlt = vipData.alt || '';
+            dbAlt2 = vipData.alt2 || '';
+        } else {
+            currentHasLiked = localStorage.getItem(`shadowclips_liked_${videoId}`) === 'true';
+            dbMain = vidData?.trailer_url || '';
+            dbAlt = vidData?.alternative_server || '';
+            dbAlt2 = vidData?.alternative_server2 || '';
+        }
+
+        setHasLiked(currentHasLiked);
+
+        // MEMBACA STATUS PREMIUM DARI SUPABASE
+        let isUserPremium = false;
+        const userEmail = localStorage.getItem('shadowclips_user_email');
+
+        if (userEmail) {
+            const { data: profileData } = await supabase
+                .from('profiles')
+                .select('is_premium')
+                .eq('email', userEmail)
+                .single();
+
+            if (profileData && profileData.is_premium) {
+                isUserPremium = true;
+            }
+        }
+
+        // LOGIKA PEMISAHAN KUNCI CERDAS
+        if (isPaidContent) {
+            if (isUserPremium) {
+                // KASTA 1: SUDAH BAYAR (Gembok Terbuka)
                 setIsVipUnlocked(true);
-                setSecureUrls({ main: vipData.main || '', alt: vipData.alt || '', alt2: vipData.alt2 || '', img: vipData.img || '' });
-            } else if (vipData.has_liked && currentCommented) {
+                setLockReason('none');
+                setSecureUrls({ main: dbMain, alt: dbAlt, alt2: dbAlt2, img: dbImg });
+            } else {
+                // KASTA 1: BELUM BAYAR (Gembok Kuning Saweria)
+                setIsVipUnlocked(false);
+                setLockReason('payment');
+                setSecureUrls({ main: '', alt: '', alt2: '', img: dbImg });
+            }
+        } else if (isExclusiveContent) {
+            // KASTA 2: Harus Like & Comment (Premium otomatis tembus)
+            if (isUserPremium || (currentHasLiked && currentCommented)) {
                 setIsVipUnlocked(true);
-                setSecureUrls({ main: vipData.main || '', alt: vipData.alt || '', alt2: vipData.alt2 || '', img: vipData.img || '' });
+                setLockReason('none');
+                setSecureUrls({ main: dbMain, alt: dbAlt, alt2: dbAlt2, img: dbImg });
             } else {
                 setIsVipUnlocked(false);
-                setSecureUrls({ main: '', alt: '', alt2: '', img: vipData.img || '' });
+                setLockReason('exclusive');
+                setSecureUrls({ main: '', alt: '', alt2: '', img: dbImg });
             }
         } else {
-            const localLiked = localStorage.getItem(`shadowclips_liked_${videoId}`) === 'true';
-            setHasLiked(localLiked);
-
-            if (isVipContent) {
-                if (localLiked && currentCommented) {
-                    setIsVipUnlocked(true);
-                    setSecureUrls({ main: vidData.trailer_url, alt: vidData.alternative_server, alt2: vidData.alternative_server2, img: vidData.img });
-                } else {
-                    setIsVipUnlocked(false);
-                    setSecureUrls({ main: '', alt: '', alt2: '', img: vidData.img });
-                }
-            } else {
-                setIsVipUnlocked(true);
-                setSecureUrls({ main: vidData.trailer_url, alt: vidData.alternative_server, alt2: vidData.alternative_server2, img: vidData.img });
-            }
+            // KASTA 3: Gratis Polos
+            setIsVipUnlocked(true);
+            setLockReason('none');
+            setSecureUrls({ main: dbMain, alt: dbAlt, alt2: dbAlt2, img: dbImg });
         }
 
         const { data: currentVideo } = await supabase.from('videos').select('likes').eq('id', videoId).single();
@@ -231,17 +268,54 @@ export default function Streaming({ supabase }) {
 
                     <div className="lg:col-span-8 flex flex-col gap-4">
 
-                        {/* Player / Gallery Container - Border removed, soft shadow */}
                         <div className={`w-full ${currentVideoUrl || !isVipUnlocked || showGallery ? 'aspect-video' : 'min-h-[400px] max-h-[80vh]'} bg-zinc-100 dark:bg-zinc-950 rounded-[1.5rem] overflow-hidden relative flex items-center justify-center shadow-md dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-none transition-colors`}>
+
                             {!isVipUnlocked ? (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center p-8 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-3xl z-50 text-center transition-colors">
-                                    <div className="absolute inset-0 z-[-1] opacity-10 dark:opacity-20">
-                                        <img src={coverImage} className="w-full h-full object-cover blur-sm" alt="locked background" />
+                                lockReason === 'payment' ? (
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center p-6 sm:p-8 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-3xl z-50 text-center transition-colors">
+                                        <div className="absolute inset-0 z-[-1] opacity-10 dark:opacity-20">
+                                            <img src={coverImage} className="w-full h-full object-cover blur-sm" alt="locked background" />
+                                        </div>
+                                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-amber-500 rounded-3xl flex items-center justify-center shadow-md dark:shadow-[0_0_40px_rgba(245,158,11,0.4)] mb-4 sm:mb-6 transform rotate-3 hover:rotate-0 transition-transform">
+                                            <Lock className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                                        </div>
+                                        <h2 className="text-xl sm:text-3xl font-black text-zinc-900 dark:text-white mb-2 sm:mb-3 tracking-tight transition-colors">Premium Content</h2>
+
+                                        {/* BAHASA PROFESIONAL UNTUK DONASI */}
+                                        <p className="text-zinc-600 dark:text-zinc-400 text-xs sm:text-base max-w-lg leading-relaxed transition-colors mb-6">
+                                            Video eksklusif ini terkunci. Dukung admin untuk terus mengembangkan ShadowClips dengan memberikan <strong>Donasi (Min. Rp 10.000)</strong> via Saweria untuk membuka akses penuh.
+                                        </p>
+
+                                        <div className="flex flex-col items-center gap-4 w-full max-w-sm">
+                                            <a
+                                                href="https://saweria.co/shadowclips"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="w-full flex items-center justify-center gap-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 px-6 rounded-xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-1"
+                                            >
+                                                {/* IKON DONASI ELEGAN */}
+                                                <Gift className="w-5 h-5" /> Dukung & Donasi via Saweria
+                                            </a>
+
+                                            {/* KOTAK PENTING YANG LEBIH RAPI & PROFESIONAL */}
+                                            <div className="flex items-start gap-3 w-full bg-[#106EBE]/5 dark:bg-[#106EBE]/10 border border-[#106EBE]/20 dark:border-[#106EBE]/30 p-3.5 sm:p-4 rounded-xl text-left shadow-sm">
+                                                <Info className="w-5 h-5 text-[#106EBE] dark:text-[#0FFCBE] shrink-0 mt-0.5" />
+                                                <p className="text-[11px] sm:text-[12px] text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                                                    <strong className="text-[#106EBE] dark:text-[#0FFCBE]">Perhatian:</strong> Wajib mencantumkan <strong>Email Google</strong> Anda pada kolom pesan donasi agar sistem dapat memberikan akses ke akun Anda.
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="w-20 h-20 bg-gradient-to-br from-[#106EBE] to-[#0e5c9f] rounded-3xl flex items-center justify-center shadow-md dark:shadow-[0_0_40px_rgba(16,110,190,0.6)] mb-6 transform rotate-3 hover:rotate-0 transition-transform"><Lock className="w-10 h-10 text-white" /></div>
-                                    <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white mb-3 tracking-tight transition-colors">VIP Content Locked</h2>
-                                    <p className="text-zinc-600 dark:text-zinc-400 text-sm sm:text-base max-w-lg leading-relaxed transition-colors">This premium content is locked. Please <strong className="text-zinc-900 dark:text-white">Like</strong> and leave a <strong className="text-zinc-900 dark:text-white">Comment</strong> below to unlock full access immediately.</p>
-                                </div>
+                                ) : (
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center p-8 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-3xl z-50 text-center transition-colors">
+                                        <div className="absolute inset-0 z-[-1] opacity-10 dark:opacity-20">
+                                            <img src={coverImage} className="w-full h-full object-cover blur-sm" alt="locked background" />
+                                        </div>
+                                        <div className="w-20 h-20 bg-gradient-to-br from-[#106EBE] to-[#0e5c9f] rounded-3xl flex items-center justify-center shadow-md dark:shadow-[0_0_40px_rgba(16,110,190,0.6)] mb-6 transform rotate-3 hover:rotate-0 transition-transform"><Lock className="w-10 h-10 text-white" /></div>
+                                        <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white mb-3 tracking-tight transition-colors">VIP Content Locked</h2>
+                                        <p className="text-zinc-600 dark:text-zinc-400 text-sm sm:text-base max-w-lg leading-relaxed transition-colors">This premium content is locked. Please <strong className="text-zinc-900 dark:text-white">Like</strong> and leave a <strong className="text-zinc-900 dark:text-white">Comment</strong> below to unlock full access immediately for free.</p>
+                                    </div>
+                                )
                             ) : currentVideoUrl ? (
                                 isDirectVideo ? (
                                     <CustomPlayer
@@ -280,7 +354,6 @@ export default function Streaming({ supabase }) {
                             ) : (<div className="text-zinc-400 dark:text-zinc-500 flex flex-col items-center p-12"><Play className="w-12 h-12 mb-2 opacity-50" /><p>Video unavailable</p></div>)}
                         </div>
 
-                        {/* Server Selection Card - borderless, shadowless, subtle background */}
                         {isVipUnlocked && (
                             <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 bg-zinc-100 dark:bg-zinc-900/40 p-2.5 sm:p-4 rounded-[1.5rem] border-none shadow-none transition-colors">
                                 <div className="flex items-center gap-2 relative min-w-0">
@@ -313,7 +386,6 @@ export default function Streaming({ supabase }) {
                             </div>
                         )}
 
-                        {/* Title & Metadata Card - borderless, shadowless, subtle background */}
                         <div className="bg-zinc-100 dark:bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] flex flex-col gap-5 border-none shadow-none transition-colors">
                             <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-zinc-900 dark:text-white leading-snug tracking-tight transition-colors" title={video.title}>{video.title}</h1>
                             <div className="flex flex-wrap items-center gap-4 text-xs sm:text-[13px] text-zinc-500 dark:text-zinc-400 font-medium transition-colors">
@@ -334,7 +406,6 @@ export default function Streaming({ supabase }) {
                             </div>
                         </div>
 
-                        {/* Komentar Container - borderless, shadowless, subtle background */}
                         <div className="bg-zinc-100 dark:bg-zinc-900/40 p-2 sm:p-6 rounded-[1.5rem] w-full border-none shadow-none overflow-hidden transition-colors">
                             <Komentar videoId={video.id} onCommentSuccess={async () => {
                                 setHasCommented(true);
@@ -345,7 +416,6 @@ export default function Streaming({ supabase }) {
                     </div>
 
                     <div className="lg:col-span-4 flex flex-col gap-4 w-full">
-                        {/* Related Videos Container - borderless, shadowless, subtle background */}
                         <div className="bg-zinc-100 dark:bg-zinc-900/40 p-3 sm:p-5 rounded-[1.5rem] flex flex-col gap-3 sm:gap-4 border-none shadow-none transition-colors">
                             <h3 className="text-[15px] sm:text-[16px] font-black text-zinc-900 dark:text-white flex items-center gap-2 mb-1 px-1 transition-colors">
                                 <LayoutGrid className="w-4 h-4 text-[#106EBE]" /> Related Videos
@@ -354,7 +424,6 @@ export default function Streaming({ supabase }) {
                             <div className="flex flex-col gap-4 sm:gap-5 border-none">
                                 {relatedVideos.map((item) => (
                                     <div key={item.id} onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer flex flex-row items-start gap-3 sm:gap-4 w-full border-none">
-                                        {/* Related Video Image Frame - borderless, flat inner background */}
                                         <div className="relative w-40 sm:w-52 aspect-video rounded-[8px] overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none shrink-0 shadow-none transition-colors">
                                             <img src={getImageUrl(item.img)} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
                                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
