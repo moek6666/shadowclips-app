@@ -13,6 +13,7 @@ const LegalPages = lazy(() => import('./pages/LegalPages'));
 const Koleksi = lazy(() => import('./pages/Koleksi'));
 const Jelajahi = lazy(() => import('./pages/Jelajahi'));
 const Tutorial = lazy(() => import('./pages/Tutorial'));
+const Profile = lazy(() => import('./pages/Profile')); // TAMBAHAN: Halaman Profil Baru
 
 // ROUTING FOLDER BARU
 const DetailCategory = lazy(() => import('./pages/Category/DetailCategory'));
@@ -91,6 +92,7 @@ export default function App() {
                     <div className="w-14 h-14 border-4 border-zinc-200 dark:border-zinc-800 border-t-[#106EBE] dark:border-t-[#106EBE] rounded-full animate-spin shadow-[0_0_20px_rgba(16,110,190,0.2)] dark:shadow-[0_0_20px_rgba(16,110,190,0.5)]"></div>
                 </div>
             }>
+                {/* LOGIKA ROUTING BARU: Menambahkan /profile */}
                 {pathname.startsWith('/streaming/') ? (
                     <Streaming supabase={supabase} />
                 ) : pathname.startsWith('/page/') ? (
@@ -107,6 +109,8 @@ export default function App() {
                     <DetailCategory supabase={supabase} />
                 ) : pathname === '/jelajahi' ? (
                     <Jelajahi supabase={supabase} />
+                ) : pathname === '/profile' ? (
+                    <Profile supabase={supabase} />
                 ) : (
                     <Home supabase={supabase} />
                 )}

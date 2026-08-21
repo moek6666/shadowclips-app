@@ -53,12 +53,14 @@ export default function CustomPlayer({ src, poster }) {
 
         const isHLS = validUrls[0].toLowerCase().includes('.m3u8');
 
+        // PERBAIKAN: Menambahkan ratio 16:9 bawaan agar fluid
         const plyrOptions = {
             controls: [
                 'play-large', 'play', 'progress', 'current-time',
                 'duration', 'mute', 'volume', 'settings', 'fullscreen'
             ],
             settings: ['quality', 'speed'],
+            ratio: '16:9',
             keyboard: { focused: true, global: true },
             ads: {
                 enabled: true,
@@ -128,28 +130,15 @@ export default function CustomPlayer({ src, poster }) {
     }
 
     return (
-        <div className="relative w-full h-full bg-black rounded-xl overflow-hidden shadow-[0_0_40px_rgba(16,110,190,0.15)] group shadowclips-plyr-wrapper">
-
+        <div className="relative w-full h-full bg-black rounded-[1.5rem] overflow-hidden shadow-[0_0_40px_rgba(16,110,190,0.15)] group shadowclips-plyr-wrapper border-none">
+            {/* PERBAIKAN: CSS dibersihkan agar tidak menimpa tinggi bawaan Plyr */}
             <style dangerouslySetInnerHTML={{
                 __html: `
                 .shadowclips-plyr-wrapper {
-                    width: 100%;
-                    height: 100%;
                     --plyr-color-main: #106EBE;
                     --plyr-video-control-color-hover: #0FFCBE;
                     --plyr-video-controls-background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.85));
                 }
-                .shadowclips-plyr-wrapper .plyr {
-                    height: 100%;
-                    width: 100%;
-                    border-radius: 0.75rem; 
-                }
-                .shadowclips-plyr-wrapper .plyr__video-wrapper {
-                    height: 100%;
-                    width: 100%;
-                    background: #000;
-                }
-                
                 .shadowclips-plyr-wrapper .plyr__control--overlaid {
                     background: transparent !important;
                     position: absolute !important;
@@ -174,7 +163,7 @@ export default function CustomPlayer({ src, poster }) {
 
             <video
                 ref={videoRef}
-                className="w-full h-full"
+                className="w-full h-full object-contain"
                 playsInline
             ></video>
         </div>
