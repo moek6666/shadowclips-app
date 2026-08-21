@@ -59,16 +59,21 @@ export default function Navbar({ isScrolled, supabase }) {
             await supabase.auth.signOut();
         }
         setIsProfileDropdownOpen(false);
+        setIsMobileMenuOpen(false); // Tutup menu mobile jika sedang terbuka
         if (typeof window !== 'undefined') {
             window.location.reload();
         }
     };
 
+    // Mencegah scroll saat modal atau menu mobile terbuka
     useEffect(() => {
-        if (showSearchModal || isLoginModalOpen) document.body.style.overflow = 'hidden';
-        else document.body.style.overflow = 'unset';
+        if (showSearchModal || isLoginModalOpen || isMobileMenuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
         return () => { document.body.style.overflow = 'unset'; };
-    }, [showSearchModal, isLoginModalOpen]);
+    }, [showSearchModal, isLoginModalOpen, isMobileMenuOpen]);
 
     useEffect(() => {
         const timer = setTimeout(() => setDebouncedSearch(localSearch), 500);
@@ -201,53 +206,90 @@ export default function Navbar({ isScrolled, supabase }) {
                             <button onClick={() => setShowSearchModal(true)} className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors border-none outline-none cursor-pointer">
                                 <Search className="w-5 h-5 border-none" />
                             </button>
-                            {session ? (
-                                <button onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)} className="relative outline-none border-none ml-1 cursor-pointer">
-                                    {profile?.avatar_url ? (
-                                        <img src={profile.avatar_url} alt="Profile" className="w-8 h-8 rounded-full object-cover border-none" />
-                                    ) : (
-                                        <div className="w-8 h-8 rounded-full bg-[#106EBE] flex items-center justify-center text-white border-none"><User className="w-4 h-4 border-none" /></div>
-                                    )}
-                                </button>
-                            ) : (
-                                <button onClick={() => setIsLoginModalOpen(true)} className="p-2 text-[#106EBE] dark:text-[#0FFCBE] border-none outline-none cursor-pointer">
-                                    <LogIn className="w-5 h-5 border-none" />
-                                </button>
-                            )}
-                            <button onClick={toggleTheme} className="p-2 text-zinc-500 dark:text-zinc-400 border-none outline-none ml-1 cursor-pointer">
+                            <button onClick={toggleTheme} className="p-2 text-zinc-500 dark:text-zinc-400 border-none outline-none cursor-pointer">
                                 {theme === 'dark' ? <Sun className="w-5 h-5 border-none" /> : <Moon className="w-5 h-5 border-none" />}
                             </button>
-                            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-zinc-600 dark:text-zinc-300 border-none outline-none cursor-pointer">
-                                {isMobileMenuOpen ? <X className="w-6 h-6 border-none" /> : <Menu className="w-6 h-6 border-none" />}
+                            <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 ml-1 text-zinc-900 dark:text-white bg-zinc-100 dark:bg-zinc-800/80 rounded-full border-none outline-none cursor-pointer shadow-sm">
+                                <Menu className="w-5 h-5 border-none" />
                             </button>
                         </div>
-                    </div>
-                </div>
-                <div className={`md:hidden absolute top-0 left-0 w-full bg-white/95 dark:bg-zinc-950 dark:bg-gradient-to-r dark:from-zinc-950 dark:via-zinc-950 dark:to-[#106EBE]/10 backdrop-blur-xl transition-all duration-300 overflow-y-auto custom-scrollbar border-none ${isMobileMenuOpen ? 'max-h-[80vh] pt-24 pb-6 px-4 shadow-lg dark:shadow-[0_10px_30px_rgba(16,110,190,0.1)]' : 'max-h-0 opacity-0'}`}>
-                    <div className="flex flex-col gap-5 text-base font-bold px-2 mt-2 border-none">
-                        <a href="/" className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] outline-none border-none"><Home className="w-5 h-5" /> Home</a>
-                        <a href="/jelajahi" className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] outline-none border-none"><Compass className="w-5 h-5" /> Explore</a>
-                        <a href="/populer" className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] outline-none border-none"><Flame className="w-5 h-5" /> Trending</a>
-                        <a href="/koleksi" className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] outline-none border-none"><FolderOpen className="w-5 h-5" /> Library</a>
-                        <div className="flex flex-col gap-2 mt-2 border-none">
-                            <button onClick={() => setIsMobilePremiumOpen(!isMobilePremiumOpen)} className="flex items-center justify-between w-full text-left group transition-colors text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] outline-none border-none cursor-pointer">
-                                <div className="flex items-center gap-2 border-none"><Crown className="w-5 h-5 text-[#106EBE]" /> Premium Site</div>
-                                <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isMobilePremiumOpen ? 'rotate-180 text-[#106EBE]' : ''}`} />
-                            </button>
-                            <div className={`flex flex-col ml-7 overflow-hidden transition-all duration-300 border-none ${isMobilePremiumOpen ? 'max-h-[500px] mt-2 opacity-100' : 'max-h-0 opacity-0'}`}>
-                                {premiumCategories.map((cat, idx) => (
-                                    <a key={idx} href={`/category/${generateSeoSlug(cat)}`} className="py-2.5 text-sm text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] outline-none border-none">{cat}</a>
-                                ))}
-                            </div>
-                        </div>
-                        {session && (
-                            <div className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-                                <button onClick={handleLogout} className="flex items-center gap-2 text-red-500 font-bold outline-none border-none cursor-pointer"><LogOut className="w-5 h-5" /> Logout</button>
-                            </div>
-                        )}
                     </div>
                 </div>
             </nav>
+
+            {/* 🔥 MENU MOBILE TIPE DRAWER (ANTI HILANG) 🔥 */}
+            <div className={`md:hidden fixed inset-0 z-[100] transition-all duration-300 ${isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
+                {/* Latar Belakang Gelap (Overlay) */}
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
+                
+                {/* Panel Menu Samping */}
+                <div className={`absolute top-0 right-0 w-[80%] max-w-[320px] h-full bg-white dark:bg-zinc-950 shadow-2xl transition-transform duration-300 ease-out flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                    
+                    {/* Bagian Profil / Login (Header Menu) */}
+                    <div className="p-5 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/60">
+                        {session ? (
+                            <div className="flex items-center gap-3">
+                                {profile?.avatar_url ? (
+                                    <img src={profile.avatar_url} alt="Profile" className="w-10 h-10 rounded-full object-cover shadow-md" />
+                                ) : (
+                                    <div className="w-10 h-10 rounded-full bg-[#106EBE] flex items-center justify-center text-white"><User className="w-5 h-5" /></div>
+                                )}
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-black text-zinc-900 dark:text-white truncate max-w-[120px]">{profile?.name || session?.user?.email?.split('@')[0]}</span>
+                                    {profile?.is_premium && <span className="text-[10px] text-amber-500 font-bold uppercase">Premium VIP</span>}
+                                </div>
+                            </div>
+                        ) : (
+                            <button onClick={() => { setIsMobileMenuOpen(false); setIsLoginModalOpen(true); }} className="flex items-center gap-2 px-4 py-2 bg-[#106EBE] text-white text-sm font-bold rounded-full shadow-md">
+                                <LogIn className="w-4 h-4" /> Sign In
+                            </button>
+                        )}
+                        <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-zinc-100 dark:bg-zinc-900 rounded-full text-zinc-500 dark:text-zinc-400">
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    {/* Navigasi Utama */}
+                    <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-2">
+                        <a href="/" className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors">
+                            <Home className="w-5 h-5 text-[#106EBE]" /> Home
+                        </a>
+                        <a href="/jelajahi" className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors">
+                            <Compass className="w-5 h-5 text-[#106EBE]" /> Explore
+                        </a>
+                        <a href="/populer" className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors">
+                            <Flame className="w-5 h-5 text-[#106EBE]" /> Trending
+                        </a>
+                        <a href="/koleksi" className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors">
+                            <FolderOpen className="w-5 h-5 text-[#106EBE]" /> Library
+                        </a>
+                        
+                        <div className="h-px w-full bg-zinc-100 dark:bg-zinc-800/60 my-2"></div>
+
+                        <div className="flex flex-col gap-1">
+                            <button onClick={() => setIsMobilePremiumOpen(!isMobilePremiumOpen)} className="flex items-center justify-between px-4 py-3.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold w-full text-left">
+                                <div className="flex items-center gap-3"><Crown className="w-5 h-5 text-[#106EBE]" /> Premium Site</div>
+                                <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isMobilePremiumOpen ? 'rotate-180 text-[#106EBE]' : ''}`} />
+                            </button>
+                            <div className={`flex flex-col ml-8 overflow-hidden transition-all duration-300 ${isMobilePremiumOpen ? 'max-h-[500px] opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
+                                {premiumCategories.map((cat, idx) => (
+                                    <a key={idx} href={`/category/${generateSeoSlug(cat)}`} className="py-2.5 px-4 text-[13px] font-bold text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors">{cat}</a>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Tombol Logout (Jika Login) */}
+                    {session && (
+                        <div className="p-4 border-t border-zinc-100 dark:border-zinc-800/60 bg-zinc-50 dark:bg-zinc-950">
+                            <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 font-bold hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">
+                                <LogOut className="w-5 h-5" /> Sign Out
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+
             {showSearchModal && (
                 <div className="fixed inset-0 z-[100] bg-white/95 dark:bg-zinc-950/95 backdrop-blur-3xl overflow-y-auto custom-scrollbar animate-in fade-in duration-300 border-none">
                     <div className="min-h-screen px-4 sm:px-8 py-10 md:py-16 flex flex-col items-center border-none">
