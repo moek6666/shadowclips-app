@@ -3,6 +3,7 @@ import useSWR from 'swr';
 import { Search, Menu, X, Home, Compass, Flame, FolderOpen, Crown, ChevronDown, Sun, Moon, LogIn, LogOut, User, Settings } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
 import ModalLogin from './ModalLogin';
+import Avatar from './Avatar'; // 🔥 IMPORT KOMPONEN AVATAR KITA 🔥
 
 const generateSeoSlug = (categoryName) => categoryName ? categoryName.toLowerCase().trim().replace(/\s+/g, '-') : '';
 
@@ -29,7 +30,6 @@ export default function Navbar({ isScrolled, supabase }) {
     const fetchProfile = async (userId) => {
         if (!supabase || !userId) return;
         try {
-            // KUNCI PERBAIKAN: Menggunakan .maybeSingle() anti Error 406
             const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
             if (error) throw error;
             if (data) setProfile(data);
@@ -179,11 +179,9 @@ export default function Navbar({ isScrolled, supabase }) {
                                         <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 max-w-[100px] truncate border-none">
                                             {profile?.name || (session?.user?.email || '').split('@')[0] || 'User'}
                                         </span>
-                                        {profile?.avatar_url ? (
-                                            <img src={profile.avatar_url} alt="Profile" className="w-8 h-8 rounded-full object-cover border-none shadow-sm" />
-                                        ) : (
-                                            <div className="w-8 h-8 rounded-full bg-[#106EBE] flex items-center justify-center text-white border-none shadow-sm"><User className="w-4 h-4" /></div>
-                                        )}
+
+                                        {/* 🔥 AVATAR USER DI NAVBAR DESKTOP 🔥 */}
+                                        <Avatar url={profile?.avatar_url} frameId={profile?.active_frame} containerClass="w-8 h-8" scale={0.32} />
                                     </button>
 
                                     {isProfileDropdownOpen && (
@@ -238,11 +236,9 @@ export default function Navbar({ isScrolled, supabase }) {
                     <div className="p-5 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/60">
                         {session ? (
                             <div className="flex items-center gap-3" onClick={() => { window.location.href = '/profile'; }}>
-                                {profile?.avatar_url ? (
-                                    <img src={profile.avatar_url} alt="Profile" className="w-10 h-10 rounded-full object-cover shadow-md" />
-                                ) : (
-                                    <div className="w-10 h-10 rounded-full bg-[#106EBE] flex items-center justify-center text-white"><User className="w-5 h-5" /></div>
-                                )}
+                                {/* 🔥 AVATAR USER DI NAVBAR MOBILE 🔥 */}
+                                <Avatar url={profile?.avatar_url} frameId={profile?.active_frame} containerClass="w-10 h-10" scale={0.4} />
+
                                 <div className="flex flex-col">
                                     <span className="text-sm font-black text-zinc-900 dark:text-white truncate max-w-[120px]">{profile?.name || (session?.user?.email || '').split('@')[0]}</span>
                                     <span className="text-[10px] text-zinc-500 font-bold hover:text-[#106EBE] transition-colors">Edit Profil</span>

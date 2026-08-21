@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Loader2, Send, MessageSquare, ChevronDown, Smile, Bold, Italic, Code, Link as LinkIcon, Quote, X, BadgeCheck, Crown, LogIn } from 'lucide-react';
 import ModalLogin from './ModalLogin';
+import Avatar from './Avatar'; // 🔥 IMPORT KOMPONEN AVATAR ANIMASI KITA 🔥
 
 // DAFTAR EMOJI 3D
 const animatedEmojis = {
@@ -40,7 +41,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
     const fetchMyProfile = async (id) => {
         if (!supabase || !id) return;
         try {
-            const { data } = await supabase.from('profiles').select('*').eq('id', id).single();
+            const { data } = await supabase.from('profiles').select('*').eq('id', id).maybeSingle();
             if (data) setProfile(data);
         } catch (e) { console.error(e); }
     };
@@ -193,7 +194,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!session?.user || !content.trim()) return; // Captcha token dilepas
+        if (!session?.user || !content.trim()) return;
 
         setIsSubmitting(true);
         setNotification(null);
@@ -226,6 +227,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                     email: userEmail,
                     is_admin: profile?.is_admin || false,
                     is_premium: profile?.is_premium || false,
+                    active_frame: profile?.active_frame || 'none'
                 }
             }));
 
@@ -254,8 +256,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
         }
     };
 
-    const getInitial = (name) => name ? name.charAt(0).toUpperCase() : 'U';
-
     const safeComments = Array.isArray(comments) ? comments : [];
     const mainComments = safeComments.filter(c => !c.parent_id);
     const getReplies = (parentId) => safeComments.filter(c => c.parent_id === parentId).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
@@ -271,22 +271,20 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                     <div className="flex items-center justify-between px-4 sm:px-5 py-4 bg-zinc-50 dark:bg-zinc-900/40 border-none">
                         {session?.user ? (
                             <div className="flex items-center gap-3">
-                                <div className="relative">
-                                    {profile?.avatar_url ? (
-                                        <img src={profile.avatar_url} alt={userName} className="w-10 h-10 rounded-full shadow-md object-cover border-none" />
-                                    ) : (
-                                        <div className="w-10 h-10 rounded-full bg-[#106EBE] flex items-center justify-center text-white border-none font-bold">{getInitial(userName)}</div>
-                                    )}
+                                {/* 🔥 AVATAR KITA DI INPUT KOMENTAR 🔥 */}
+                                <div className="relative shrink-0 flex items-center justify-center">
+                                    <Avatar url={profile?.avatar_url} frameId={profile?.active_frame} containerClass="w-10 h-10" scale={0.4} />
                                     {isMeAdmin ? (
-                                        <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5"><BadgeCheck className="w-4 h-4 text-[#106EBE] dark:text-[#0FFCBE] fill-white dark:fill-[#106EBE]" /></div>
+                                        <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 z-30"><BadgeCheck className="w-4 h-4 text-[#106EBE] dark:text-[#0FFCBE] fill-white dark:fill-[#106EBE]" /></div>
                                     ) : isMePremium ? (
-                                        <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm"><Crown className="w-4 h-4 text-amber-500 fill-amber-500/20" /></div>
+                                        <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm z-30"><Crown className="w-4 h-4 text-amber-500 fill-amber-500/20" /></div>
                                     ) : null}
                                 </div>
                                 <div className="flex flex-col">
                                     <span className="text-[13px] sm:text-[14px] font-bold text-zinc-900 dark:text-white leading-tight flex items-center gap-1.5 transition-colors">
                                         {userName}
-                                        {isMePremium && !isMeAdmin && <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] px-1.5 py-0.5 rounded-[3px] uppercase tracking-wider">VIP</span>}
+                                        {isMeAdmin && <span className="bg-[#106EBE] text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest shrink-0 shadow-sm">Admin</span>}
+                                        {isMePremium && !isMeAdmin && <span className="bg-amber-400 text-amber-950 text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest shrink-0 shadow-sm">VIP</span>}
                                     </span>
                                     <span className="text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400 truncate max-w-[150px] sm:max-w-none transition-colors">{session.user.email}</span>
                                 </div>
@@ -303,6 +301,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                             </div>
                         )}
                     </div>
+
                     <div className="flex flex-wrap items-center gap-4 px-4 sm:px-5 py-3 bg-zinc-100 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-300 border-none overflow-visible transition-colors">
                         <button type="button" onClick={() => insertFormat('bold')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Bold"><Bold className="w-4 h-4" /></button>
                         <button type="button" onClick={() => insertFormat('italic')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Italic"><Italic className="w-4 h-4" /></button>
@@ -341,7 +340,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                                 <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2 sm:gap-4 border-none">
                                     {notification && <span className={`text-[11px] sm:text-[12px] font-medium animate-in fade-in border-none text-center ${notification.type === 'success' ? 'text-[#106EBE] dark:text-[#0FFCBE]' : 'text-red-500 dark:text-red-400'}`}>{notification.message}</span>}
                                 </div>
-                                {/* Tombol tanpa Captcha Dependency */}
                                 <button type="submit" disabled={isSubmitting || !content.trim()} className="w-full sm:w-auto bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-300 dark:disabled:bg-zinc-700 disabled:text-zinc-500 text-white px-8 py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold text-[13px] transition-all shadow-sm outline-none border-none shrink-0">
                                     {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} Post Comment
                                 </button>
@@ -374,32 +372,39 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                     Newest First <ChevronDown className="w-4 h-4" />
                 </div>
             </div>
+
             <div className="flex flex-col gap-6 border-none">
                 {mainComments.length > 0 ? (
                     mainComments.map((comment) => {
                         const userProfile = userProfiles[comment.email] || {};
                         const isAdmin = userProfile.is_admin;
                         const isPremium = userProfile.is_premium;
+                        const frameId = userProfile.active_frame || 'none';
+
                         return (
                             <div key={comment.id} className="flex flex-col gap-3 border-none">
                                 <div className={`flex gap-3 sm:gap-4 group border-none transition-all duration-500 ${comment.status === 'pending' ? 'opacity-50' : ''}`}>
-                                    <div className="relative w-10 h-10 sm:w-12 sm:h-12 shrink-0">
-                                        <div className="w-full h-full rounded-full bg-zinc-200 dark:bg-zinc-800/60 flex items-center justify-center shadow-sm dark:shadow-md overflow-hidden border-none transition-colors">
-                                            {comment.avatar_url ? (
-                                                <img src={comment.avatar_url} alt={comment.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                                            ) : (
-                                                <span className="text-zinc-500 dark:text-zinc-300 font-black text-sm sm:text-base border-none transition-colors">{getInitial(comment.name)}</span>
-                                            )}
-                                        </div>
+
+                                    {/* 🔥 AVATAR USER DI LIST KOMENTAR 🔥 */}
+                                    <div className="relative shrink-0 flex items-center justify-center">
+                                        <Avatar url={comment.avatar_url} frameId={frameId} containerClass="w-10 h-10 sm:w-12 sm:h-12" scale={0.48} />
                                         {isAdmin ? (
-                                            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm" title="Verified Admin"><BadgeCheck className="w-4 h-4 sm:w-5 sm:h-5 text-[#106EBE] dark:text-[#0FFCBE] fill-white dark:fill-[#106EBE]" /></div>
+                                            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm z-30" title="Verified Admin"><BadgeCheck className="w-4 h-4 sm:w-5 sm:h-5 text-[#106EBE] dark:text-[#0FFCBE] fill-white dark:fill-[#106EBE]" /></div>
                                         ) : isPremium ? (
-                                            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm" title="Premium VIP Member"><Crown className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 fill-amber-500/20" /></div>
+                                            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm z-30" title="Premium VIP Member"><Crown className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 fill-amber-500/20" /></div>
                                         ) : null}
                                     </div>
+
                                     <div className={`flex-1 min-w-0 flex flex-col p-4 sm:p-5 rounded-[1.2rem] sm:rounded-[1.5rem] border-none transition-colors ${isAdmin ? 'bg-gradient-to-br from-white dark:from-zinc-800/80 to-[#106EBE]/5 dark:to-[#106EBE]/20 shadow-sm dark:shadow-[0_5px_20px_rgba(16,110,190,0.15)]' : isPremium ? 'bg-gradient-to-br from-white dark:from-zinc-800/80 to-amber-500/5 dark:to-amber-500/10 shadow-sm dark:shadow-[0_5px_15px_rgba(245,158,11,0.1)]' : 'bg-white dark:bg-zinc-800/60 shadow-sm dark:shadow-none'}`}>
                                         <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
-                                            <span className={`text-[13px] sm:text-[14px] font-bold flex items-center gap-1.5 ${isAdmin ? 'text-[#106EBE] dark:text-[#0FFCBE]' : isPremium ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-white'}`}>{comment.name}</span>
+
+                                            {/* 🔥 NAMA & LABEL ADMIN/VIP DI KOMENTAR 🔥 */}
+                                            <span className={`text-[13px] sm:text-[14px] font-bold flex items-center flex-wrap gap-1.5 ${isAdmin ? 'text-[#106EBE] dark:text-[#0FFCBE]' : isPremium ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-white'}`}>
+                                                {comment.name}
+                                                {isAdmin && <span className="bg-[#106EBE] text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest shrink-0 shadow-sm">Admin</span>}
+                                                {isPremium && !isAdmin && <span className="bg-amber-400 text-amber-950 text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest shrink-0 shadow-sm">VIP</span>}
+                                            </span>
+
                                             <span className="text-[10px] sm:text-[11px] font-medium text-zinc-400 dark:text-zinc-400 border-none transition-colors">{timeAgo(comment.created_at)}</span>
                                             {comment.status === 'pending' && <span className="px-2 py-0.5 rounded-[6px] text-[9px] sm:text-[10px] uppercase tracking-widest font-black bg-amber-500 text-white shadow-sm border-none transition-colors animate-pulse">Menunggu Persetujuan</span>}
                                         </div>
@@ -410,24 +415,35 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                                     </div>
                                 </div>
                                 {replyTo && replyTo.id === comment.id && <div className="ml-10 sm:ml-16 animate-in slide-in-from-top-2 fade-in duration-300 border-none">{renderAuthOrForm(true)}</div>}
+
                                 {getReplies(comment.id).length > 0 && (
                                     <div className="flex flex-col gap-4 mt-1 ml-10 sm:ml-16 border-none">
                                         {getReplies(comment.id).map(reply => {
                                             const replyProfile = userProfiles[reply.email] || {};
                                             const isReplyAdmin = replyProfile.is_admin;
                                             const isReplyPremium = replyProfile.is_premium;
+                                            const replyFrameId = replyProfile.active_frame || 'none';
+
                                             return (
                                                 <div key={reply.id} className="flex flex-col gap-3 border-none">
                                                     <div className={`flex gap-2.5 sm:gap-3 group border-none transition-all duration-500 ${reply.status === 'pending' ? 'opacity-50' : ''}`}>
-                                                        <div className="relative w-8 h-8 sm:w-10 sm:h-10 shrink-0">
-                                                            <div className="w-full h-full rounded-full bg-zinc-200 dark:bg-zinc-800/60 flex items-center justify-center overflow-hidden shadow-sm border-none transition-colors">
-                                                                {reply.avatar_url ? <img src={reply.avatar_url} alt={reply.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <span className="text-zinc-500 dark:text-zinc-300 font-bold text-[10px] sm:text-xs border-none transition-colors">{getInitial(reply.name)}</span>}
-                                                            </div>
-                                                            {isReplyAdmin ? <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm" title="Verified Admin"><BadgeCheck className="w-3.5 h-3.5 text-[#106EBE] dark:text-[#0FFCBE] fill-white dark:fill-[#106EBE]" /></div> : isReplyPremium ? <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm" title="Premium VIP Member"><Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" /></div> : null}
+
+                                                        {/* 🔥 AVATAR USER DI BALASAN KOMENTAR 🔥 */}
+                                                        <div className="relative shrink-0 flex items-center justify-center">
+                                                            <Avatar url={reply.avatar_url} frameId={replyFrameId} containerClass="w-8 h-8 sm:w-10 sm:h-10" scale={0.38} />
+                                                            {isReplyAdmin ? <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm z-30" title="Verified Admin"><BadgeCheck className="w-3.5 h-3.5 text-[#106EBE] dark:text-[#0FFCBE] fill-white dark:fill-[#106EBE]" /></div> : isReplyPremium ? <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm z-30" title="Premium VIP Member"><Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" /></div> : null}
                                                         </div>
+
                                                         <div className={`flex-1 min-w-0 flex flex-col p-3 sm:p-4 rounded-xl sm:rounded-[1.2rem] border-none transition-colors ${isReplyAdmin ? 'bg-gradient-to-br from-white dark:from-zinc-800/60 to-[#106EBE]/5 dark:to-[#106EBE]/15 shadow-sm dark:shadow-[0_5px_15px_rgba(16,110,190,0.1)]' : isReplyPremium ? 'bg-gradient-to-br from-white dark:from-zinc-800/60 to-amber-500/5 dark:to-amber-500/10 shadow-sm' : 'bg-zinc-50 dark:bg-zinc-800/40 shadow-sm dark:shadow-none'}`}>
                                                             <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
-                                                                <span className={`text-[11px] sm:text-[13px] font-bold ${isReplyAdmin ? 'text-[#106EBE] dark:text-[#0FFCBE]' : isReplyPremium ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-white'}`}>{reply.name}</span>
+
+                                                                {/* 🔥 NAMA & LABEL DI BALASAN 🔥 */}
+                                                                <span className={`text-[11px] sm:text-[13px] font-bold flex items-center flex-wrap gap-1.5 ${isReplyAdmin ? 'text-[#106EBE] dark:text-[#0FFCBE]' : isReplyPremium ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-white'}`}>
+                                                                    {reply.name}
+                                                                    {isReplyAdmin && <span className="bg-[#106EBE] text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest shrink-0 shadow-sm">Admin</span>}
+                                                                    {isReplyPremium && !isReplyAdmin && <span className="bg-amber-400 text-amber-950 text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest shrink-0 shadow-sm">VIP</span>}
+                                                                </span>
+
                                                                 <span className="text-[9px] sm:text-[10px] font-medium text-zinc-400 dark:text-zinc-400 border-none transition-colors">{timeAgo(reply.created_at)}</span>
                                                                 {reply.status === 'pending' && <span className="px-2 py-0.5 rounded-[6px] text-[9px] sm:text-[10px] uppercase tracking-widest font-black bg-amber-500 text-white shadow-sm border-none transition-colors animate-pulse">Menunggu Persetujuan</span>}
                                                             </div>
