@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { X, Mail, Lock, Loader2 } from 'lucide-react';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
-
+import { Turnstile } from '@marsidev/react-turnstile';
 
 const GOOGLE_CLIENT_ID = "584667592518-pg15b6l0jmud072lslgk9utaord83sif.apps.googleusercontent.com";
 
 export default function ModalLoginWrapper(props) {
-    // Membungkus modal dengan Provider Google agar sistem Client-Side aktif
     return (
         <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
             <ModalLogin {...props} />
@@ -21,52 +20,63 @@ function ModalLogin({ isOpen, onClose, supabase }) {
     const [loading, setLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
 
+    // State untuk Satpam Cloudflare
+    const [captchaToken, setCaptchaToken] = useState(null);
+    const turnstileRef = useRef(null);
+
     if (!isOpen) return null;
 
     const handleEmailAuth = async (e) => {
         e.preventDefault();
-        if (!supabase) {
-            setErrorMsg('Koneksi sistem belum siap. Silakan coba lagi.');
+
+        // PENGAMAN SINKRON: Tolak jika captcha belum centang hijau
+        if (!supabase || !captchaToken) {
+            setErrorMsg('Silakan selesaikan verifikasi keamanan terlebih dahulu.');
             return;
         }
+
         setLoading(true);
         setErrorMsg('');
 
         try {
             if (isLogin) {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
-                if (error) setErrorMsg(error.message);
-                else onClose();
+                if (error) throw error;
+                onClose();
             } else {
                 const { error } = await supabase.auth.signUp({ email, password });
-                if (error) setErrorMsg(error.message);
-                else {
-                    setErrorMsg('Registrasi berhasil! Silakan cek email Anda untuk verifikasi.');
-                    setIsLogin(true);
-                }
+                if (error) throw error;
+
+                setErrorMsg('Registrasi berhasil! Silakan cek email Anda untuk verifikasi.');
+                setIsLogin(true);
+
+                // Reset Satpam setelah berhasil daftar agar tidak stuck
+                if (turnstileRef.current) turnstileRef.current.reset();
+                setCaptchaToken(null);
             }
         } catch (err) {
             setErrorMsg(err.message || 'Terjadi kesalahan sistem.');
+            // Reset Satpam jika password salah/error
+            if (turnstileRef.current) turnstileRef.current.reset();
+            setCaptchaToken(null);
         } finally {
             setLoading(false);
         }
     };
 
-    // TRIK BYPASS: Menangkap Token langsung dari Google (Tanpa lewat URL Supabase)
     const handleGoogleSuccess = async (credentialResponse) => {
         if (!supabase) return;
         setLoading(true);
         setErrorMsg('');
 
         try {
-            // Mengirimkan Token Kunci langsung ke database Supabase
             const { error } = await supabase.auth.signInWithIdToken({
                 provider: 'google',
                 token: credentialResponse.credential,
             });
 
             if (error) throw error;
-            onClose(); // Sukses login, tutup modal!
+            onClose();
 
         } catch (err) {
             console.error("ID Token Error:", err);
@@ -117,7 +127,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                     </div>
                 )}
 
-                {/* TOMBOL RESMI GOOGLE (Bypass Redirect) */}
+                {/* TOMBOL GOOGLE (Punya keamanan anti-bot sendiri dari Google) */}
                 <div className="flex justify-center w-full mb-6 border-none">
                     <GoogleLogin
                         onSuccess={handleGoogleSuccess}
@@ -127,7 +137,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                         shape="pill"
                         width="320"
                         text="continue_with"
-                        useOneTap={false} // Dimatikan agar tidak mengganggu UI lain
+                        useOneTap={false}
                     />
                 </div>
 
@@ -149,7 +159,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                             className="w-full bg-zinc-100 dark:bg-zinc-900 py-3.5 pl-12 pr-4 rounded-2xl text-zinc-900 dark:text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#106EBE]/50 transition-all border-none"
                         />
                     </div>
-                    <div className="relative border-none">
+                    <div className="relative border-none mb-2">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 border-none" />
                         <input
                             type="password"
@@ -162,9 +172,23 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                         />
                     </div>
 
+                    {/* CLOUDFLARE TURNSTILE (SINKRON DENGAN TOMBOL SUBMIT) */}
+                    <div className="flex justify-center w-full overflow-hidden py-1 border-none">
+                        <div className="transform scale-[0.85] sm:scale-100 origin-center border-none">
+                            <Turnstile
+                                siteKey="0x4AAAAAAEI8owBAGHjSd7E5"
+                                onSuccess={(token) => setCaptchaToken(token)}
+                                onExpire={() => setCaptchaToken(null)}
+                                onError={() => setCaptchaToken(null)}
+                                options={{ theme: 'auto' }}
+                                ref={turnstileRef}
+                            />
+                        </div>
+                    </div>
+
                     <button
                         type="submit"
-                        disabled={loading || !email || !password}
+                        disabled={loading || !email || !password || !captchaToken}
                         className="w-full bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-300 dark:disabled:bg-zinc-800 text-white py-3.5 rounded-2xl font-bold transition-all shadow-md mt-2 flex items-center justify-center gap-2 outline-none border-none cursor-pointer disabled:cursor-not-allowed"
                     >
                         {loading ? <Loader2 className="w-5 h-5 animate-spin border-none" /> : (isLogin ? 'Sign In' : 'Sign Up')}
@@ -175,7 +199,12 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                     {isLogin ? "Don't have an account? " : "Already have an account? "}
                     <button
                         type="button"
-                        onClick={() => { setIsLogin(!isLogin); setErrorMsg(''); }}
+                        onClick={() => {
+                            setIsLogin(!isLogin);
+                            setErrorMsg('');
+                            if (turnstileRef.current) turnstileRef.current.reset();
+                            setCaptchaToken(null);
+                        }}
                         className="text-[#106EBE] dark:text-[#0FFCBE] font-bold hover:underline outline-none border-none cursor-pointer"
                     >
                         {isLogin ? 'Sign up here' : 'Sign in here'}

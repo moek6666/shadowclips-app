@@ -1,10 +1,8 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AlertTriangle, LogIn } from 'lucide-react';
-import { Turnstile } from '@marsidev/react-turnstile';
 
 export default function AgeVerification() {
     const [isVisible, setIsVisible] = useState(false);
-    const [isHuman, setIsHuman] = useState(false);
 
     useEffect(() => {
         const storedData = localStorage.getItem('shadowclips_age_verified');
@@ -15,6 +13,7 @@ export default function AgeVerification() {
                 const parsedData = JSON.parse(storedData);
                 const currentTime = new Date().getTime();
 
+                // Cek apakah data masih valid (belum kedaluwarsa)
                 if (parsedData.verified && currentTime < parsedData.expiry) {
                     needsVerification = false;
                 } else {
@@ -32,9 +31,7 @@ export default function AgeVerification() {
     }, []);
 
     const handleAccept = () => {
-        if (!isHuman) return;
-
-        const daysToKeep = 3;
+        const daysToKeep = 3; // Verifikasi bertahan selama 3 hari
         const expiryDate = new Date().getTime() + (daysToKeep * 24 * 60 * 60 * 1000);
 
         const dataToStore = {
@@ -49,6 +46,7 @@ export default function AgeVerification() {
     };
 
     const handleDecline = () => {
+        // Jika menolak, langsung lempar ke Google
         window.location.href = 'https://www.google.com';
     };
 
@@ -59,11 +57,13 @@ export default function AgeVerification() {
 
             <div className="bg-gradient-to-br from-zinc-50 to-zinc-200 dark:from-zinc-900 dark:to-zinc-950 rounded-3xl p-8 sm:p-10 max-w-md w-full relative overflow-hidden shadow-[0_15px_50px_rgba(0,0,0,0.2)] dark:shadow-[0_15px_50px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.05)] text-center transition-all">
 
+                {/* Efek Cahaya Kosmetik */}
                 <div className="absolute -top-32 -left-32 w-64 h-64 bg-[#106EBE]/20 blur-[100px] pointer-events-none"></div>
                 <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-[#106EBE]/10 blur-[100px] pointer-events-none"></div>
 
                 <div className="relative z-10">
 
+                    {/* Header Logo */}
                     <div className="flex items-center justify-center gap-3 sm:gap-4 mb-8 w-full">
                         <img
                             src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/shadow.webp"
@@ -85,43 +85,31 @@ export default function AgeVerification() {
                         Age Verification
                     </h2>
 
-                    <p className="text-zinc-600 dark:text-zinc-400 mb-6 text-sm sm:text-base leading-relaxed transition-colors">
-                        This site contains exclusive age-restricted content. Please verify that you are human and <strong className="text-zinc-900 dark:text-white">18 years of age or older</strong>.
+                    <p className="text-zinc-600 dark:text-zinc-400 mb-8 text-sm sm:text-base leading-relaxed transition-colors">
+                        This site contains exclusive age-restricted content. Please verify that you are <strong className="text-zinc-900 dark:text-white">18 years of age or older</strong>.
                     </p>
 
-                    <div className="flex justify-center mb-6 min-h-[65px]">
-                        <Turnstile
-                            siteKey="0x4AAAAAAEI8owBAGHjSd7E5"
-                            onSuccess={() => setIsHuman(true)}
-                            onError={() => setIsHuman(false)}
-                            onExpire={() => setIsHuman(false)}
-                            options={{ theme: 'auto' }}
-                        />
-                    </div>
-
+                    {/* Tombol Aksi */}
                     <div className="flex flex-col gap-3">
                         <button
                             onClick={handleAccept}
-                            disabled={!isHuman}
-                            className={`w-full font-bold py-3.5 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${isHuman
-                                ? 'bg-[#106EBE] text-white shadow-[0_0_20px_rgba(16,110,190,0.4)] hover:shadow-[0_0_30px_rgba(16,110,190,0.6)] hover:bg-[#0e5c9f] hover:scale-[1.02] cursor-pointer'
-                                : 'bg-zinc-200 dark:bg-zinc-800/50 text-zinc-400 dark:text-zinc-600 shadow-none cursor-not-allowed'
-                                }`}
+                            className="w-full font-bold py-3.5 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 bg-[#106EBE] text-white shadow-[0_0_20px_rgba(16,110,190,0.4)] hover:shadow-[0_0_30px_rgba(16,110,190,0.6)] hover:bg-[#0e5c9f] hover:scale-[1.02] cursor-pointer outline-none border-none"
                         >
-                            {isHuman && <LogIn className="w-5 h-5" />}
+                            <LogIn className="w-5 h-5 border-none" />
                             I am 18+ (Enter)
                         </button>
 
                         <button
                             onClick={handleDecline}
-                            className="w-full bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-900/40 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] font-bold py-3.5 px-6 rounded-xl transition-colors"
+                            className="w-full bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-900/40 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] font-bold py-3.5 px-6 rounded-xl transition-colors cursor-pointer outline-none border-none"
                         >
                             I am under 18 (Exit)
                         </button>
                     </div>
 
-                    <div className="mt-6 flex items-center justify-center gap-1.5 text-[10px] text-zinc-500 uppercase tracking-widest font-bold">
-                        <AlertTriangle className="w-3 h-3" /> 18 U.S.C. 2257 Compliant
+                    {/* Footer Peringatan */}
+                    <div className="mt-6 flex items-center justify-center gap-1.5 text-[10px] text-zinc-500 uppercase tracking-widest font-bold border-none">
+                        <AlertTriangle className="w-3 h-3 border-none" /> 18 U.S.C. 2257 Compliant
                     </div>
                 </div>
             </div>
