@@ -150,10 +150,12 @@ export default function Streaming({ supabase }) {
                     setVideo(vidData);
                     document.title = `${vidData.title || 'Video'} | ShadowClips`;
 
-                    // PERBAIKAN: Menjalankan rpc tanpa catch() yang bikin error
-                    supabase.rpc('increment_views', { vid_id: vidData.id }).then(({ error }) => {
+                    // PERBAIKAN MUTLAK: Menggunakan async function pengganti .catch()
+                    const addView = async () => {
+                        const { error } = await supabase.rpc('increment_views', { vid_id: vidData.id });
                         if (error) console.error("Gagal menambah view:", error);
-                    });
+                    };
+                    addView();
 
                     const userCommented = localStorage.getItem(`shadowclips_commented_${vidData.id}`) === 'true';
                     setHasCommented(userCommented);
@@ -299,34 +301,42 @@ export default function Streaming({ supabase }) {
             <div className="pt-24 pb-20 max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 min-h-screen relative transition-colors">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
                     <div className="lg:col-span-8 flex flex-col gap-4">
-                        <div className={`w-full ${currentVideoUrl || !isVipUnlocked || showGallery ? 'aspect-video' : 'min-h-[400px] max-h-[80vh]'} bg-zinc-100 dark:bg-zinc-950 rounded-[1.5rem] overflow-hidden relative flex items-center justify-center shadow-md dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-none transition-colors`}>
+
+                        {/* KONTEN VIDEO TERKUNCI (RESPONSIVE MOBILE DIJAGA) */}
+                        <div className={`w-full ${!isVipUnlocked ? 'aspect-auto min-h-[350px] sm:min-h-0 sm:aspect-video' : (currentVideoUrl || showGallery ? 'aspect-video' : 'min-h-[400px] max-h-[80vh]')} bg-zinc-100 dark:bg-zinc-950 rounded-[1.5rem] overflow-hidden relative flex items-center justify-center shadow-md dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-none transition-colors`}>
                             {!isVipUnlocked ? (
                                 lockReason === 'payment' ? (
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center p-6 sm:p-8 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-3xl z-50 text-center transition-colors">
-                                        <div className="absolute inset-0 z-[-1] opacity-10 dark:opacity-20"><img src={coverImage} className="w-full h-full object-cover blur-sm" alt="locked background" /></div>
-                                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-amber-500 rounded-3xl flex items-center justify-center shadow-md dark:shadow-[0_0_40px_rgba(245,158,11,0.4)] mb-4 sm:mb-6 transform rotate-3 hover:rotate-0 transition-transform">
-                                            <Lock className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center p-4 sm:p-8 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-3xl z-50 text-center transition-colors overflow-y-auto">
+                                        <div className="absolute inset-0 z-[-1] opacity-10 dark:opacity-20 pointer-events-none">
+                                            <img src={coverImage} className="w-full h-full object-cover blur-sm" alt="locked background" />
                                         </div>
-                                        <h2 className="text-xl sm:text-3xl font-black text-zinc-900 dark:text-white mb-2 sm:mb-3 tracking-tight transition-colors">Premium Content</h2>
-                                        <p className="text-zinc-600 dark:text-zinc-400 text-xs sm:text-base max-w-lg leading-relaxed transition-colors mb-6">
-                                            Video eksklusif ini terkunci. Dukung admin untuk terus mengembangkan ShadowClips dengan memberikan <strong>Donasi (Min. Rp 10.000)</strong> via Saweria untuk membuka akses penuh.
+                                        <div className="w-12 h-12 sm:w-20 sm:h-20 bg-amber-500 rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-md dark:shadow-[0_0_40px_rgba(245,158,11,0.4)] mb-3 sm:mb-6 transform rotate-3 hover:rotate-0 transition-transform shrink-0">
+                                            <Lock className="w-6 h-6 sm:w-10 sm:h-10 text-white border-none" />
+                                        </div>
+                                        <h2 className="text-lg sm:text-3xl font-black text-zinc-900 dark:text-white mb-1.5 sm:mb-3 tracking-tight transition-colors border-none">Premium Content</h2>
+                                        <p className="text-zinc-600 dark:text-zinc-400 text-[11px] sm:text-base max-w-lg leading-tight sm:leading-relaxed transition-colors mb-4 sm:mb-6 px-2 border-none">
+                                            Video eksklusif ini terkunci. Dukung admin untuk terus mengembangkan ShadowClips dengan memberikan <strong className="text-zinc-900 dark:text-white border-none">Donasi (Min. Rp 10.000)</strong> via Saweria untuk membuka akses penuh.
                                         </p>
-                                        <div className="flex flex-col items-center gap-4 w-full max-w-sm">
-                                            <a href="https://saweria.co/shadowclips" target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 px-6 rounded-xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-1 outline-none border-none">
-                                                <Gift className="w-5 h-5 border-none" /> Dukung & Donasi via Saweria
+                                        <div className="flex flex-col items-center gap-2.5 sm:gap-4 w-full max-w-sm px-2 sm:px-0">
+                                            <a href="https://saweria.co/shadowclips" target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 sm:py-3.5 px-4 sm:px-6 rounded-xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-1 outline-none border-none text-[12px] sm:text-base">
+                                                <Gift className="w-4 h-4 sm:w-5 sm:h-5 border-none shrink-0" /> Dukung & Donasi
                                             </a>
-                                            <div className="flex items-start gap-3 w-full bg-[#106EBE]/5 dark:bg-[#106EBE]/10 border border-[#106EBE]/20 dark:border-[#106EBE]/30 p-3.5 sm:p-4 rounded-xl text-left shadow-sm">
-                                                <Info className="w-5 h-5 text-[#106EBE] dark:text-[#0FFCBE] shrink-0 mt-0.5 border-none" />
-                                                <p className="text-[11px] sm:text-[12px] text-zinc-700 dark:text-zinc-300 leading-relaxed border-none"><strong className="text-[#106EBE] dark:text-[#0FFCBE] border-none">Perhatian:</strong> Wajib mencantumkan <strong>Email Google</strong> Anda pada kolom pesan donasi agar sistem dapat memberikan akses ke akun Anda.</p>
+                                            <div className="flex items-start gap-2 sm:gap-3 w-full bg-[#106EBE]/5 dark:bg-[#106EBE]/10 border border-[#106EBE]/20 dark:border-[#106EBE]/30 p-2.5 sm:p-4 rounded-xl text-left shadow-sm">
+                                                <Info className="w-4 h-4 sm:w-5 sm:h-5 text-[#106EBE] dark:text-[#0FFCBE] shrink-0 mt-0.5 border-none" />
+                                                <p className="text-[9px] sm:text-[12px] text-zinc-700 dark:text-zinc-300 leading-snug sm:leading-relaxed border-none"><strong className="text-[#106EBE] dark:text-[#0FFCBE] border-none">Perhatian:</strong> Wajib mencantumkan <strong className="border-none">Email Google</strong> Anda pada pesan donasi agar sistem memberikan akses.</p>
                                             </div>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center p-8 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-3xl z-50 text-center transition-colors">
-                                        <div className="absolute inset-0 z-[-1] opacity-10 dark:opacity-20"><img src={coverImage} className="w-full h-full object-cover blur-sm" alt="locked background" /></div>
-                                        <div className="w-20 h-20 bg-gradient-to-br from-[#106EBE] to-[#0e5c9f] rounded-3xl flex items-center justify-center shadow-md dark:shadow-[0_0_40px_rgba(16,110,190,0.6)] mb-6 transform rotate-3 hover:rotate-0 transition-transform border-none"><Lock className="w-10 h-10 text-white border-none" /></div>
-                                        <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white mb-3 tracking-tight transition-colors border-none">VIP Content Locked</h2>
-                                        <p className="text-zinc-600 dark:text-zinc-400 text-sm sm:text-base max-w-lg leading-relaxed transition-colors border-none">This premium content is locked. Please <strong className="text-zinc-900 dark:text-white border-none">Like</strong> and leave a <strong className="text-zinc-900 dark:text-white border-none">Comment</strong> below to unlock full access immediately.</p>
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center p-4 sm:p-8 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-3xl z-50 text-center transition-colors overflow-y-auto">
+                                        <div className="absolute inset-0 z-[-1] opacity-10 dark:opacity-20 pointer-events-none">
+                                            <img src={coverImage} className="w-full h-full object-cover blur-sm" alt="locked background" />
+                                        </div>
+                                        <div className="w-12 h-12 sm:w-20 sm:h-20 bg-gradient-to-br from-[#106EBE] to-[#0e5c9f] rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-md dark:shadow-[0_0_40px_rgba(16,110,190,0.6)] mb-3 sm:mb-6 transform rotate-3 hover:rotate-0 transition-transform shrink-0 border-none">
+                                            <Lock className="w-6 h-6 sm:w-10 h-10 text-white border-none" />
+                                        </div>
+                                        <h2 className="text-lg sm:text-3xl font-black text-zinc-900 dark:text-white mb-1.5 sm:mb-3 tracking-tight transition-colors border-none">VIP Content Locked</h2>
+                                        <p className="text-zinc-600 dark:text-zinc-400 text-[11px] sm:text-base max-w-lg leading-tight sm:leading-relaxed transition-colors px-2 border-none">This premium content is locked. Please <strong className="text-zinc-900 dark:text-white border-none">Like</strong> and leave a <strong className="text-zinc-900 dark:text-white border-none">Comment</strong> below to unlock full access immediately.</p>
                                     </div>
                                 )
                             ) : currentVideoUrl ? (
@@ -414,9 +424,11 @@ export default function Streaming({ supabase }) {
                                 <LayoutGrid className="w-4 h-4 text-[#106EBE] border-none" /> Related Videos
                             </h3>
                             <div className="flex flex-col gap-4 sm:gap-5 border-none">
+
+                                {/* RELATED VIDEOS (VERSI AMAN ANTI POTONG DI MOBILE) */}
                                 {relatedVideos?.map((item) => (
                                     <div key={item.id} onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer flex flex-row items-start gap-3 sm:gap-4 w-full border-none">
-                                        <div className="relative w-40 sm:w-52 aspect-video rounded-[8px] overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none shrink-0 shadow-none transition-colors">
+                                        <div className="relative w-[110px] min-[400px]:w-[130px] sm:w-[180px] aspect-video rounded-xl overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none shrink-0 shadow-sm dark:shadow-none transition-colors">
                                             <img src={getImageUrl(item.img)} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 border-none" loading="lazy" />
                                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20 border-none">
                                                 <Play className="w-8 h-8 text-white/90 fill-current drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300 border-none" />
@@ -428,16 +440,17 @@ export default function Streaming({ supabase }) {
                                             )}
                                         </div>
                                         <div className="flex flex-col flex-1 min-w-0 border-none pt-0.5 sm:pt-1">
-                                            <h4 className="font-bold text-[12px] sm:text-[14px] text-zinc-800 dark:text-zinc-100 group-hover:text-[#106EBE] dark:group-hover:text-[#0FFCBE] transition-colors line-clamp-2 leading-snug mb-1.5 border-none" title={item.title}>
+                                            <h4 className="font-bold text-[12px] min-[400px]:text-[13px] sm:text-[14px] text-zinc-800 dark:text-zinc-100 group-hover:text-[#106EBE] dark:group-hover:text-[#0FFCBE] transition-colors line-clamp-3 sm:line-clamp-2 leading-relaxed sm:leading-snug mb-1 sm:mb-1.5 border-none" title={item.title}>
                                                 {item.title}
                                             </h4>
-                                            <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-medium text-zinc-500 border-none transition-colors">
-                                                <Clock className="w-3 h-3 text-[#106EBE] border-none" />
-                                                {new Date(item.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                            <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-medium text-zinc-500 border-none transition-colors mt-auto">
+                                                <Clock className="w-3 h-3 text-[#106EBE] border-none shrink-0" />
+                                                <span className="truncate">{new Date(item.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                                             </div>
                                         </div>
                                     </div>
                                 ))}
+
                             </div>
                         </div>
                     </div>
