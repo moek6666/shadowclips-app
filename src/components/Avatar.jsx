@@ -20,6 +20,15 @@ export const FRAME_OPTIONS = [
     { id: 'fire', name: 'Blazing Flame', unlockPoints: 15000, imageUrl: 'https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/ss3.webp' },
     { id: 'vip', name: 'Emperor VIP', unlockPoints: 20000, imageUrl: 'https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/china.webp' },
     { id: 'admin', name: 'Supreme Admin', unlockPoints: 25000, imageUrl: 'https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/ss5.webp' },
+    
+    // 🔥 BINGKAI BARU DITAMBAHKAN DI SINI 🔥
+    { id: 'astral_aura', name: 'Astral Aura', unlockPoints: 30000, imageUrl: 'https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/astral_aura.webp' },
+    { id: 'shenron', name: 'Shenron', unlockPoints: 35000, imageUrl: 'https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/shenron.webp' },
+    { id: 'shocked', name: 'Shocked', unlockPoints: 40000, imageUrl: 'https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/shocked.webp' },
+    { id: 'spider', name: 'Spider', unlockPoints: 45000, imageUrl: 'https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/spooder.webp' },
+    { id: 'starry', name: 'Starry Eyed', unlockPoints: 50000, imageUrl: 'https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/starry_eyed.webp' },
+    { id: 'zombie', name: 'Zombie Food', unlockPoints: 60000, imageUrl: 'https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/zombie_food.webp' },
+    { id: 'zombie_purple', name: 'Zombie Purple', unlockPoints: 75000, imageUrl: 'https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/zombie_food_purple.webp' },
 ];
 
 export default function Avatar({ url, frameId, containerClass = "w-12 h-12", scale = 1 }) {
