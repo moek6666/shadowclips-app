@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Shield, Crown, Settings, LogOut, Save, Loader2, AlertTriangle, BadgeCheck, Info, Star, Lock, Check, ExternalLink, Hexagon, Heart, Clock, Play } from 'lucide-react';
+import { Shield, Crown, Settings, LogOut, Save, Loader2, AlertTriangle, BadgeCheck, Info, Star, Lock, Check, ExternalLink, Hexagon, Play } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Avatar, { FRAME_OPTIONS } from '../components/Avatar';
 
+// Helper untuk mengambil gambar pertama dari string URL
 const getImageUrl = (imgString) => imgString ? imgString.split(',')[0].trim() : '';
 
 export default function Profile({ supabase }) {
@@ -34,15 +35,27 @@ export default function Profile({ supabase }) {
                 }
             }
 
-            // 🔥 KUNCI UTAMA: Tarik Likes menggunakan User ID (bukan local storage lagi) 🔥
-            const activeDeviceId = currentSession?.user ? currentSession.user.id : localStorage.getItem('shadowclips_device_id');
-            if (activeDeviceId) {
-                const { data: likesData, error: likesError } = await supabase.from('user_likes').select('video_id').eq('device_id', activeDeviceId).order('created_at', { ascending: false }).limit(10);
+            const localDevId = localStorage.getItem('shadowclips_device_id');
+            const userId = currentSession?.user?.id;
+
+            const queryIds = [];
+            if (userId) queryIds.push(userId);
+            if (localDevId) queryIds.push(localDevId);
+
+            if (queryIds.length > 0) {
+                const { data: likesData, error: likesError } = await supabase
+                    .from('user_likes')
+                    .select('video_id')
+                    .in('device_id', queryIds)
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+
                 if (!likesError && likesData && likesData.length > 0) {
-                    const videoIds = likesData.map(l => l.video_id);
-                    const { data: vids, error: vidsError } = await supabase.from('videos').select('*').in('id', videoIds);
+                    const videoIds = [...new Set(likesData.map(l => l.video_id))];
+                    const { data: vids, error: vidsError } = await supabase.from('videos').select('id, title, slug, img').in('id', videoIds);
                     if (!vidsError && vids) {
-                        setLikedVideos(videoIds.map(id => vids.find(v => String(v.id) === String(id))).filter(Boolean));
+                        const resolvedLiked = videoIds.map(id => vids.find(v => String(v.id) === String(id))).filter(Boolean);
+                        setLikedVideos(resolvedLiked.slice(0, 3));
                     }
                 } else {
                     setLikedVideos([]);
@@ -52,7 +65,7 @@ export default function Profile({ supabase }) {
             const localHistory = JSON.parse(localStorage.getItem('shadowclips_history') || '[]');
             if (localHistory && localHistory.length > 0) {
                 const limitedHistory = localHistory.slice(0, 3);
-                const { data: histVids, error: histError } = await supabase.from('videos').select('*').in('id', limitedHistory);
+                const { data: histVids, error: histError } = await supabase.from('videos').select('id, title, slug, img').in('id', limitedHistory);
                 if (!histError && histVids) {
                     setHistoryVideos(limitedHistory.map(id => histVids.find(v => String(v.id) === String(id))).filter(Boolean));
                 }
@@ -165,14 +178,14 @@ export default function Profile({ supabase }) {
     }, [showDeleteConfirm]);
 
     if (loading) return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center transition-colors border-none">
+        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 flex flex-col items-center justify-center transition-colors border-none">
             <Loader2 className="w-10 h-10 text-[#106EBE] animate-spin mb-4 border-none" />
             <p className="text-zinc-500 font-bold text-sm animate-pulse border-none">Loading profile data...</p>
         </div>
     );
 
     if (!profile) return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white flex flex-col items-center justify-center px-4 text-center font-sans transition-colors border-none">
+        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white flex flex-col items-center justify-center px-4 text-center font-sans transition-colors border-none">
             <Navbar isScrolled={true} supabase={supabase} />
             <div className="flex flex-col items-center justify-center mb-6 border-none">
                 <AlertTriangle className="w-12 h-12 text-red-500 border-none mb-4" />
@@ -196,14 +209,17 @@ export default function Profile({ supabase }) {
     const displayName = editName || (session?.user?.email ? session.user.email.split('@')[0] : 'User');
 
     return (
-        <div className="flex flex-col min-h-screen bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300 font-sans pb-24 border-none">
+        <div className="flex flex-col min-h-screen bg-zinc-50 dark:bg-zinc-900 transition-colors duration-300 font-sans border-none">
             <Navbar isScrolled={true} supabase={supabase} />
 
             <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-36 pb-16 border-none">
 
-                <section className="bg-white dark:bg-zinc-900/40 rounded-[2.5rem] overflow-hidden relative mb-8 border-none transition-colors duration-300 backdrop-blur-3xl">
+                {/* ========================================== */}
+                {/* 1. HERO SECTION */}
+                {/* ========================================== */}
+                <section className="bg-white dark:bg-zinc-800/40 rounded-[2.5rem] overflow-hidden relative mb-8 border-none transition-colors duration-300 backdrop-blur-3xl">
                     <div className="absolute inset-0 bg-cover bg-center opacity-10 dark:opacity-20 blur-[80px] scale-[1.5] pointer-events-none transition-all duration-700 border-none" style={{ backgroundImage: `url("${headerBgUrl}")` }}></div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/50 dark:from-zinc-950/90 dark:via-zinc-950/40 pointer-events-none border-none"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/50 dark:from-zinc-900/90 dark:via-zinc-900/40 pointer-events-none border-none"></div>
 
                     <div className="relative p-8 lg:p-12 flex flex-col lg:flex-row items-center lg:items-center gap-8 lg:gap-12 border-none">
 
@@ -232,16 +248,16 @@ export default function Profile({ supabase }) {
                             </div>
                         </div>
 
-                        <div className="w-full lg:w-[400px] bg-zinc-100/50 dark:bg-zinc-900/60 rounded-[2rem] p-8 z-20 border-none transition-colors backdrop-blur-md">
+                        <div className="w-full lg:w-[400px] bg-zinc-100/50 dark:bg-zinc-800/60 rounded-[2rem] p-8 z-20 border-none transition-colors backdrop-blur-md">
                             <p className="text-xs font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-3 border-none truncate">{displayName}'S POINTS</p>
-                            <div className="flex items-center gap-4 mb-3 border-none">
+                            <div className="flex items-center gap-3 mb-3 border-none">
                                 <Star className="w-8 h-8 text-[#106EBE] fill-[#106EBE] border-none shrink-0" />
                                 <span className="text-4xl font-black text-zinc-900 dark:text-white tracking-tight border-none">{currentPoints.toLocaleString()}</span>
                             </div>
 
                             {nextFrame ? (
                                 <div className="border-none mt-8">
-                                    <div className="w-full bg-zinc-200/50 dark:bg-zinc-950/50 rounded-full h-2 mb-4 overflow-hidden border-none">
+                                    <div className="w-full bg-zinc-200/50 dark:bg-zinc-800/50 rounded-full h-2 mb-4 overflow-hidden border-none">
                                         <div className="bg-[#106EBE] h-full rounded-full border-none" style={{ width: `${progressPercentage}%` }}></div>
                                     </div>
                                     <div className="flex items-center justify-between border-none">
@@ -261,76 +277,12 @@ export default function Profile({ supabase }) {
                     </div>
                 </section>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 border-none items-start">
-
-                    <div className="bg-white dark:bg-zinc-900/40 rounded-[2.5rem] p-8 sm:p-10 flex flex-col border-none transition-colors backdrop-blur-2xl">
-                        <div className="flex items-center gap-3 mb-6 border-none">
-                            <Heart className="w-6 h-6 text-red-500 fill-red-500 border-none shrink-0" />
-                            <h2 className="text-lg font-black text-zinc-900 dark:text-white tracking-tight border-none">Video Disukai</h2>
-                        </div>
-                        {likedVideos.length > 0 ? (
-                            <div className="flex flex-col gap-3 border-none">
-                                {likedVideos.map(vid => (
-                                    <div key={vid.id} onClick={() => window.location.href = `/streaming/${vid.slug || vid.id}`} className="group cursor-pointer flex items-center gap-4 p-3 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors border-none">
-                                        <div className="relative w-28 sm:w-32 aspect-video rounded-xl overflow-hidden bg-zinc-200 dark:bg-zinc-800 shrink-0 border-none shadow-sm dark:shadow-none">
-                                            <img src={getImageUrl(vid.img)} alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" />
-                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center border-none z-10">
-                                                <Play className="w-6 h-6 text-white fill-current drop-shadow-md border-none" />
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col flex-1 border-none min-w-0">
-                                            <h4 className="text-xs sm:text-[14px] font-bold text-zinc-800 dark:text-zinc-200 line-clamp-2 leading-snug border-none group-hover:text-[#106EBE] transition-colors">{vid.title}</h4>
-                                            <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-medium text-zinc-500 border-none mt-1 sm:mt-1.5">
-                                                <Heart className="w-3 h-3 text-red-500 fill-red-500 border-none shrink-0" /> Disukai
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="flex-1 flex flex-col items-center justify-center py-8 text-center border-none">
-                                <Heart className="w-8 h-8 text-zinc-300 dark:text-zinc-700 mb-2 border-none" />
-                                <p className="text-[13px] font-bold text-zinc-400 dark:text-zinc-600 border-none">Belum ada video yang disukai</p>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="bg-white dark:bg-zinc-900/40 rounded-[2.5rem] p-8 sm:p-10 flex flex-col border-none transition-colors backdrop-blur-2xl">
-                        <div className="flex items-center gap-3 mb-6 border-none">
-                            <Clock className="w-6 h-6 text-[#106EBE] border-none shrink-0" />
-                            <h2 className="text-lg font-black text-zinc-900 dark:text-white tracking-tight border-none">Riwayat Terakhir</h2>
-                        </div>
-                        {historyVideos.length > 0 ? (
-                            <div className="flex overflow-x-auto gap-4 pb-2 custom-scrollbar border-none">
-                                {historyVideos.map(vid => (
-                                    <div key={vid.id} onClick={() => window.location.href = `/streaming/${vid.slug || vid.id}`} className="group cursor-pointer shrink-0 w-[140px] sm:w-[180px] border-none">
-                                        <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-zinc-200 dark:bg-zinc-800 mb-3 border-none shadow-sm dark:shadow-none">
-                                            <img src={getImageUrl(vid.img)} alt={vid.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 border-none" />
-                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center border-none z-10">
-                                                <Play className="w-8 h-8 text-white fill-current drop-shadow-md border-none" />
-                                            </div>
-                                            {vid.duration && vid.duration !== 'EMPTY' && (
-                                                <div className="absolute bottom-1 right-1 sm:bottom-1.5 sm:right-1.5 bg-black/80 text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-[3px] z-30 pointer-events-none border-none">
-                                                    {vid.duration}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <h4 className="text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-200 line-clamp-2 leading-snug border-none group-hover:text-[#106EBE] transition-colors">{vid.title}</h4>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="flex-1 flex flex-col items-center justify-center py-8 text-center border-none">
-                                <Clock className="w-8 h-8 text-zinc-300 dark:text-zinc-700 mb-2 border-none" />
-                                <p className="text-[13px] font-bold text-zinc-400 dark:text-zinc-600 border-none">Riwayat tontonan masih kosong</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
+                {/* ========================================== */}
+                {/* 2. SPLIT LAYOUT (SETTINGS & AVATARS) */}
+                {/* ========================================== */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch border-none">
 
-                    <div className="lg:col-span-5 bg-white dark:bg-zinc-900/40 rounded-[2.5rem] p-8 sm:p-10 flex flex-col border-none transition-colors backdrop-blur-2xl relative overflow-hidden">
+                    <div className="lg:col-span-5 bg-white dark:bg-zinc-800/40 rounded-[2.5rem] p-8 sm:p-10 flex flex-col border-none transition-colors backdrop-blur-2xl relative overflow-hidden">
 
                         {notification && (
                             <div className="absolute top-6 left-6 right-6 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
@@ -353,14 +305,14 @@ export default function Profile({ supabase }) {
                             <div className="flex flex-col gap-6 border-none">
                                 <div className="flex flex-col gap-2.5 border-none">
                                     <label className="text-[11px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest border-none">Display Name</label>
-                                    <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} required className="w-full bg-zinc-50 dark:bg-zinc-950/50 py-4 px-5 rounded-2xl text-zinc-900 dark:text-white text-sm focus:outline-none focus:bg-zinc-100 dark:focus:bg-zinc-900 transition-colors font-bold border-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700" placeholder="Enter your display name" />
+                                    <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} required className="w-full bg-zinc-50 dark:bg-zinc-900/50 py-4 px-5 rounded-2xl text-zinc-900 dark:text-white text-sm focus:outline-none focus:bg-zinc-100 dark:focus:bg-zinc-800 transition-colors font-bold border-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700" placeholder="Enter your display name" />
                                 </div>
                                 <div className="flex flex-col gap-2.5 border-none">
                                     <label className="text-[11px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest border-none">Avatar URL</label>
-                                    <input type="url" value={editAvatarUrl} onChange={(e) => setEditAvatarUrl(e.target.value)} className="w-full bg-zinc-50 dark:bg-zinc-950/50 py-4 px-5 rounded-2xl text-zinc-900 dark:text-white text-sm focus:outline-none focus:bg-zinc-100 dark:focus:bg-zinc-900 transition-colors font-bold border-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700" placeholder="https://image-url.com/..." />
+                                    <input type="url" value={editAvatarUrl} onChange={(e) => setEditAvatarUrl(e.target.value)} className="w-full bg-zinc-50 dark:bg-zinc-900/50 py-4 px-5 rounded-2xl text-zinc-900 dark:text-white text-sm focus:outline-none focus:bg-zinc-100 dark:focus:bg-zinc-800 transition-colors font-bold border-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700" placeholder="https://image-url.com/..." />
                                 </div>
 
-                                <div className="bg-zinc-50 dark:bg-zinc-950/30 rounded-2xl p-6 flex gap-4 items-start border-none mt-2">
+                                <div className="bg-zinc-50 dark:bg-zinc-800/30 rounded-2xl p-6 flex gap-4 items-start border-none mt-2">
                                     <Info className="w-5 h-5 text-[#106EBE] border-none shrink-0 mt-0.5" />
                                     <div className="flex-1 border-none">
                                         <h4 className="text-[11px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest border-none">Image Hosting</h4>
@@ -371,12 +323,55 @@ export default function Profile({ supabase }) {
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col items-start gap-1.5 mt-4 border-none">
+                                {/* LIKE & RIWAYAT (THUMBNAIL HORIZONTAL MAX 3 SEJAJAR, WARNA PUTIH) */}
+                                <div className="flex flex-col gap-6 pt-4 border-t border-zinc-200/50 dark:border-zinc-800/50 border-none">
+
+                                    {/* Like */}
+                                    <div className="flex flex-col gap-2.5 border-none">
+                                        <h4 className="text-xs font-bold text-zinc-800 dark:text-white border-none">Like Terakhir Saya</h4>
+                                        {likedVideos.length > 0 ? (
+                                            <div className="grid grid-cols-3 gap-2 border-none">
+                                                {likedVideos.map(vid => (
+                                                    <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group relative aspect-video rounded-xl overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none shadow-sm block" title={vid.title}>
+                                                        <img src={getImageUrl(vid.img)} alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" />
+                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center border-none z-10">
+                                                            <Play className="w-4 h-4 text-white fill-current border-none" />
+                                                        </div>
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-zinc-400 dark:text-zinc-500 pl-1 border-none">Belum ada video disukai</p>
+                                        )}
+                                    </div>
+
+                                    {/* Tonton */}
+                                    <div className="flex flex-col gap-2.5 border-none">
+                                        <h4 className="text-xs font-bold text-zinc-800 dark:text-white border-none">Tontonan Terakhir Saya</h4>
+                                        {historyVideos.length > 0 ? (
+                                            <div className="grid grid-cols-3 gap-2 border-none">
+                                                {historyVideos.map(vid => (
+                                                    <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group relative aspect-video rounded-xl overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none shadow-sm block" title={vid.title}>
+                                                        <img src={getImageUrl(vid.img)} alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" />
+                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center border-none z-10">
+                                                            <Play className="w-4 h-4 text-white fill-current border-none" />
+                                                        </div>
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-zinc-400 dark:text-zinc-500 pl-1 border-none">Belum ada riwayat tontonan</p>
+                                        )}
+                                    </div>
+
+                                </div>
+
+                                <div className="flex flex-col items-start gap-1.5 mt-2 border-none">
                                     <div className="flex items-start gap-3 border-none">
                                         <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5 border-none" />
                                         <div className="flex flex-col border-none">
                                             <h4 className="text-[13px] font-black text-red-500 mb-0.5 tracking-tight border-none">Danger Zone</h4>
-                                            <p className="text-[11px] sm:text-[12px] text-zinc-500 dark:text-zinc-500 leading-relaxed border-none">
+                                            <p className="text-[11px] sm:text-[12px] text-zinc-500 dark:text-zinc-400 leading-relaxed border-none">
                                                 Menghapus akun akan menghilangkan semua data profil dan riwayat Anda secara permanen.
                                             </p>
                                         </div>
@@ -388,7 +383,7 @@ export default function Profile({ supabase }) {
                             </div>
 
                             <div className="mt-auto pt-8 flex flex-col sm:flex-row gap-4 border-none">
-                                <button type="submit" disabled={isSaving || !editName.trim()} className="flex-1 bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 dark:disabled:text-zinc-600 text-white py-4 rounded-2xl text-sm font-black transition-colors flex items-center justify-center gap-2 border-none cursor-pointer">
+                                <button type="submit" disabled={isSaving || !editName.trim()} className="flex-1 bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 dark:disabled:text-zinc-500 text-white py-4 rounded-2xl text-sm font-black transition-colors flex items-center justify-center gap-2 border-none cursor-pointer">
                                     {isSaving ? <Loader2 className="w-4 h-4 animate-spin border-none" /> : <Save className="w-4 h-4 border-none" />} {isSaving ? 'SAVING...' : 'SAVE CHANGES'}
                                 </button>
                                 <button type="button" onClick={handleLogout} className="flex-1 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 py-4 rounded-2xl text-sm font-black transition-colors flex items-center justify-center gap-2 border-none cursor-pointer">
@@ -398,7 +393,8 @@ export default function Profile({ supabase }) {
                         </form>
                     </div>
 
-                    <div className="lg:col-span-7 bg-white dark:bg-zinc-900/40 rounded-[2.5rem] p-8 sm:p-10 flex flex-col border-none transition-colors backdrop-blur-2xl">
+                    {/* KANAN: AVATAR BORDERS */}
+                    <div className="lg:col-span-7 bg-white dark:bg-zinc-800/40 rounded-[2.5rem] p-8 sm:p-10 flex flex-col border-none transition-colors backdrop-blur-2xl">
                         <div className="flex items-center gap-4 mb-6 border-none">
                             <Hexagon className="w-7 h-7 text-teal-600 dark:text-[#0FFCBE] border-none shrink-0" />
                             <div className="border-none">
@@ -413,7 +409,7 @@ export default function Profile({ supabase }) {
                                 <h4 className="text-[13px] sm:text-[14px] font-black text-zinc-900 dark:text-white mb-1 tracking-tight border-none">
                                     Kumpulkan Poin untuk Membuka Avatar!
                                 </h4>
-                                <p className="text-[11px] sm:text-[13px] text-zinc-500 dark:text-zinc-500 leading-relaxed border-none">
+                                <p className="text-[11px] sm:text-[13px] text-zinc-500 dark:text-zinc-400 leading-relaxed border-none">
                                     Berinteraksilah dengan komunitas! Setiap kali Anda memberikan <strong className="text-zinc-700 dark:text-zinc-300 font-bold border-none">Like</strong> atau <strong className="text-zinc-700 dark:text-zinc-300 font-bold border-none">Komentar</strong> di video, poin Anda akan bertambah. Kumpulkan poin sebanyak-banyaknya untuk membuka bingkai avatar animasi eksklusif.
                                 </p>
                             </div>
@@ -425,8 +421,8 @@ export default function Profile({ supabase }) {
                                 const isActive = editFrame === frame.id;
 
                                 return (
-                                    <div key={frame.id} onClick={() => { if (!isLocked) setEditFrame(frame.id); }} className={`relative flex flex-col items-center p-6 rounded-[2rem] transition-all duration-300 border-none ${isActive ? 'bg-[#106EBE]/5 dark:bg-[#106EBE]/10 scale-[1.02] z-10' : isLocked ? 'bg-zinc-50 dark:bg-zinc-950/40 opacity-40 cursor-not-allowed grayscale' : 'bg-zinc-50 dark:bg-zinc-950/40 hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer'}`}>
-                                        {isActive && <span className="absolute -top-3 bg-[#106EBE] dark:bg-[#0FFCBE] text-white dark:text-zinc-950 text-[9px] font-black px-3 py-1 rounded-lg z-30 uppercase tracking-widest border-none">Active</span>}
+                                    <div key={frame.id} onClick={() => { if (!isLocked) setEditFrame(frame.id); }} className={`relative flex flex-col items-center p-6 rounded-[2rem] transition-all duration-300 border-none ${isActive ? 'bg-[#106EBE]/5 dark:bg-[#106EBE]/10 scale-[1.02] z-10' : isLocked ? 'bg-zinc-50 dark:bg-zinc-900/40 opacity-40 cursor-not-allowed grayscale' : 'bg-zinc-50 dark:bg-zinc-900/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer'}`}>
+                                        {isActive && <span className="absolute -top-3 bg-[#106EBE] dark:text-zinc-950 text-white text-[9px] font-black px-3 py-1 rounded-lg z-30 uppercase tracking-widest border-none">Active</span>}
 
                                         <div className="h-24 flex items-center justify-center mt-3 mb-6 w-full pointer-events-none border-none">
                                             <Avatar url={editAvatarUrl} frameId={frame.id} containerClass="w-16 h-16" scale={0.7} />
@@ -438,7 +434,7 @@ export default function Profile({ supabase }) {
                                         </div>
 
                                         <div className="h-7 flex items-center justify-center w-full border-none">
-                                            {isActive ? <div className="w-7 h-7 rounded-full bg-[#106EBE] flex items-center justify-center border-none"><Check className="w-4 h-4 text-white border-none" /></div> : isLocked ? <div className="w-7 h-7 rounded-full bg-zinc-200 dark:bg-zinc-900 flex items-center justify-center border-none"><Lock className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600 border-none" /></div> : <div className="w-7 h-7 rounded-full bg-zinc-200 dark:bg-zinc-900 hover:bg-zinc-300 dark:hover:bg-zinc-800 flex items-center justify-center transition-colors border-none"></div>}
+                                            {isActive ? <div className="w-7 h-7 rounded-full bg-[#106EBE] flex items-center justify-center border-none"><Check className="w-4 h-4 text-white border-none" /></div> : isLocked ? <div className="w-7 h-7 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center border-none"><Lock className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600 border-none" /></div> : <div className="w-7 h-7 rounded-full bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 flex items-center justify-center transition-colors border-none"></div>}
                                         </div>
                                     </div>
                                 );
