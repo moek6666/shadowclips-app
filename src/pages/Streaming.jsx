@@ -21,7 +21,7 @@ export default function Streaming({ supabase }) {
     const [fetchError, setFetchError] = useState('');
     const [isScrolled, setIsScrolled] = useState(false);
 
-    const [deviceId] = useState(() => {
+    const [deviceId, setDeviceId] = useState(() => {
         if (typeof window === 'undefined') return 'server';
         let id = localStorage.getItem('shadowclips_device_id');
         if (!id) {
@@ -52,7 +52,6 @@ export default function Streaming({ supabase }) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // 🔥 LOGIKA KUNCI FINAL: Deteksi Eksklusif Diperketat & Validasi Database 🔥
     const checkVipAccess = useCallback(async (videoId, vidData, forceCommented = null, forceLiked = null) => {
         if (!supabase || !vidData) return;
 
@@ -61,8 +60,6 @@ export default function Streaming({ supabase }) {
         const labelsStr = Array.isArray(vidData.labels) ? vidData.labels.join(' ').toLowerCase() : String(vidData.labels || '').toLowerCase();
 
         const isPaidContent = categoryStr.includes('payment') || labelsStr.includes('payment');
-
-        // PENDETEKSI EKSKLUSIF SUPER KUAT: Mengecek Kategori, Judul, dan Label
         const isExclusiveContent = (
             categoryStr.includes('exclusive') ||
             titleStr.includes('exclusive') ||
@@ -72,32 +69,33 @@ export default function Streaming({ supabase }) {
 
         let isUserPremium = false;
         let userEmail = null;
+        let activeDeviceId = deviceId; // Default pakai local storage
 
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
                 userEmail = session.user.email;
+                // 🔥 KUNCI UTAMA: Jika login, gunakan User ID sebagai pengganti Device ID! 🔥
+                activeDeviceId = session.user.id;
+                setDeviceId(activeDeviceId); // Update state agar tombol Like juga pakai ID ini
+
                 const { data: profileData } = await supabase.from('profiles').select('is_premium').eq('id', session.user.id).single();
-                // Jika is_premium = true (Admin/VIP), mereka KEBAL GEMBOK!
                 if (profileData?.is_premium) isUserPremium = true;
             }
-        } catch (error) {
-            console.error("Error membaca status premium:", error);
-        }
+        } catch (error) { console.error(error); }
 
-        // 1. Validasi Like MURNI via Database Supabase (Spesifik per ID Video)
         let isLiked = false;
         if (forceLiked !== null) {
             isLiked = forceLiked;
         } else {
             try {
-                const { data: likeData } = await supabase.from('user_likes').select('id').eq('video_id', videoId).eq('device_id', deviceId).maybeSingle();
+                // 🔥 Cek database menggunakan activeDeviceId (User ID jika login) 🔥
+                const { data: likeData } = await supabase.from('user_likes').select('id').eq('video_id', videoId).eq('device_id', activeDeviceId).maybeSingle();
                 if (likeData) isLiked = true;
             } catch (error) { }
         }
         setHasLiked(isLiked);
 
-        // 2. Validasi Komen MURNI via Database Supabase (Spesifik per ID Video)
         let isCommented = false;
         if (forceCommented !== null) {
             isCommented = forceCommented;
@@ -109,45 +107,31 @@ export default function Streaming({ supabase }) {
         }
         setHasCommented(isCommented);
 
-        // 3. AMBIL URL ASLI DARI DATABASE (TIDAK PAKAI RPC YANG MENYEBABKAN BLANK)
         const uMain = vidData.trailer_url || '';
         const uAlt = vidData.alternative_server || '';
         const uAlt2 = vidData.alternative_server2 || '';
         const uImg = vidData.img || '';
 
-        // 4. EKSEKUSI PEMBUKAAN GEMBOK
         if (isPaidContent) {
             if (isUserPremium) {
-                setIsVipUnlocked(true);
-                setLockReason('none');
-                setSecureUrls({ main: uMain, alt: uAlt, alt2: uAlt2, img: uImg });
+                setIsVipUnlocked(true); setLockReason('none'); setSecureUrls({ main: uMain, alt: uAlt, alt2: uAlt2, img: uImg });
             } else {
-                setIsVipUnlocked(false);
-                setLockReason('payment');
-                setSecureUrls({ main: '', alt: '', alt2: '', img: uImg });
+                setIsVipUnlocked(false); setLockReason('payment'); setSecureUrls({ main: '', alt: '', alt2: '', img: uImg });
             }
         } else if (isExclusiveContent) {
-            // SYARAT MUTLAK KONTEN EKSKLUSIF: Admin/VIP ATAU (Like Valid + Komen Valid)
             if (isUserPremium || (isLiked && isCommented)) {
-                setIsVipUnlocked(true);
-                setLockReason('none');
-                setSecureUrls({ main: uMain, alt: uAlt, alt2: uAlt2, img: uImg });
+                setIsVipUnlocked(true); setLockReason('none'); setSecureUrls({ main: uMain, alt: uAlt, alt2: uAlt2, img: uImg });
             } else {
-                setIsVipUnlocked(false);
-                setLockReason('exclusive');
-                setSecureUrls({ main: '', alt: '', alt2: '', img: uImg });
+                setIsVipUnlocked(false); setLockReason('exclusive'); setSecureUrls({ main: '', alt: '', alt2: '', img: uImg });
             }
         } else {
-            // Video Publik (Tidak terkunci)
-            setIsVipUnlocked(true);
-            setLockReason('none');
-            setSecureUrls({ main: uMain, alt: uAlt, alt2: uAlt2, img: uImg });
+            setIsVipUnlocked(true); setLockReason('none'); setSecureUrls({ main: uMain, alt: uAlt, alt2: uAlt2, img: uImg });
         }
 
         try {
             const { data: currentVideo } = await supabase.from('videos').select('likes').eq('id', videoId).single();
             if (currentVideo) setLikes(currentVideo.likes || 0);
-        } catch (e) { console.error(e); }
+        } catch (e) { }
 
     }, [supabase, deviceId]);
 
@@ -156,39 +140,34 @@ export default function Streaming({ supabase }) {
 
         const fetchVideoDetails = async () => {
             if (!supabase) return;
-            setLoading(true);
-            setFetchError('');
+            setLoading(true); setFetchError('');
 
             try {
                 const pathParts = window.location.pathname.split('/');
                 const slug = decodeURIComponent(pathParts[2] || '');
-                if (!slug) {
-                    if (isMounted) setFetchError('URL tidak valid.');
-                    return;
-                }
+                if (!slug) { if (isMounted) setFetchError('URL tidak valid.'); return; }
 
                 const processVideo = async (vidData) => {
                     if (!isMounted) return;
                     setVideo(vidData);
                     document.title = `${vidData.title || 'Video'} | ShadowClips`;
 
-                    const addView = async () => {
-                        const { error } = await supabase.rpc('increment_views', { vid_id: vidData.id });
-                        if (error) console.error("Gagal menambah view:", error);
-                    };
+                    let hist = JSON.parse(localStorage.getItem('shadowclips_history') || '[]');
+                    if (!hist.includes(vidData.id)) {
+                        hist.unshift(vidData.id);
+                        localStorage.setItem('shadowclips_history', JSON.stringify(hist.slice(0, 20)));
+                    }
+
+                    const addView = async () => { await supabase.rpc('increment_views', { vid_id: vidData.id }); };
                     addView();
 
-                    // Panggil fungsi validasi gembok utama
                     await checkVipAccess(vidData.id, vidData);
 
                     const safeCategory = vidData.category || 'Uncategorized';
                     try {
                         const { data: relatedData } = await supabase.from('videos').select('*').eq('category', safeCategory).neq('id', vidData.id).limit(10).order('created_at', { ascending: false });
                         if (isMounted) setRelatedVideos(relatedData || []);
-                    } catch (relError) {
-                        console.error("Related Video Error:", relError);
-                        if (isMounted) setRelatedVideos([]);
-                    }
+                    } catch (relError) { }
                 };
 
                 let query = supabase.from('videos').select('*').eq('slug', slug);
@@ -199,22 +178,14 @@ export default function Streaming({ supabase }) {
                 } else {
                     if (/^\d+$/.test(slug)) {
                         const { data: fallbackData } = await supabase.from('videos').select('*').eq('id', slug).single();
-                        if (fallbackData) {
-                            await processVideo(fallbackData);
-                            return;
-                        }
+                        if (fallbackData) { await processVideo(fallbackData); return; }
                     }
-                    if (isMounted) setFetchError('Video tidak ditemukan di database. Pastikan link (URL) sudah benar.');
+                    if (isMounted) setFetchError('Video tidak ditemukan di database.');
                 }
-            } catch (err) {
-                console.error("Fetch Error:", err);
-                if (isMounted) setFetchError(`Sistem Gagal: ${err.message || 'Koneksi terputus.'}`);
-            } finally {
-                if (isMounted) setLoading(false);
-            }
+            } catch (err) { if (isMounted) setFetchError(`Sistem Gagal: ${err.message}`); }
+            finally { if (isMounted) setLoading(false); }
         };
         fetchVideoDetails();
-
         return () => { isMounted = false; };
     }, [supabase, checkVipAccess]);
 
@@ -245,10 +216,18 @@ export default function Streaming({ supabase }) {
         setLikes(prev => newHasLiked ? prev + 1 : Math.max(prev - 1, 0));
 
         try {
-            const { data: newTotalLikes } = await supabase.rpc('toggle_user_like', { p_video_id: video.id, p_device_id: deviceId });
+            // 🔥 Ambil Exact ID (User ID jika login, atau Local ID) untuk akurasi 100% 🔥
+            const { data: { session } } = await supabase.auth.getSession();
+            const exactDeviceId = session?.user ? session.user.id : deviceId;
+
+            const { data: newTotalLikes } = await supabase.rpc('toggle_user_like', { p_video_id: video.id, p_device_id: exactDeviceId });
             if (newTotalLikes !== null) setLikes(newTotalLikes);
 
-            // Validasi ulang status gembok setelah Like diklik
+            if (session?.user?.email) {
+                const pointToGive = newHasLiked ? 10 : -10;
+                await supabase.rpc('increment_user_points', { p_email: session.user.email, p_points: pointToGive });
+            }
+
             await checkVipAccess(video.id, video, hasCommented, newHasLiked);
         } catch (e) { console.error("Like Error:", e); }
     };
@@ -257,7 +236,7 @@ export default function Streaming({ supabase }) {
         try {
             if (navigator.share) await navigator.share({ title: video?.title || 'ShadowClips', url: window.location.href });
             else { await navigator.clipboard.writeText(window.location.href); alert('Link copied!'); }
-        } catch (err) { console.log('Share error:', err); }
+        } catch (err) { }
     };
 
     if (loading) return (
@@ -305,7 +284,6 @@ export default function Streaming({ supabase }) {
     const coverImage = imageList[0] || '';
     const showGallery = isDeepFake && !hasMain && !hasAlternativeServer && !hasAlternativeServer2 && galleryImages.length > 0;
 
-    // Tautan Khusus Download ditarik dari embed_url
     const hasDownloadLink = video.embed_url && video.embed_url.trim() !== '' && video.embed_url !== 'EMPTY';
 
     const serverOptions = [];
@@ -432,9 +410,14 @@ export default function Streaming({ supabase }) {
                         </div>
 
                         <div className="bg-zinc-100 dark:bg-zinc-900/40 p-2 sm:p-6 rounded-[1.5rem] w-full border-none shadow-none overflow-hidden transition-colors">
-                            {/* Saat komen sukses, buka gembok untuk video ini saja */}
                             <Komentar videoId={video?.id} supabase={supabase} onCommentSuccess={async () => {
                                 setHasCommented(true);
+                                try {
+                                    const { data: { session } } = await supabase.auth.getSession();
+                                    if (session?.user?.email) {
+                                        await supabase.rpc('increment_user_points', { p_email: session.user.email, p_points: 25 });
+                                    }
+                                } catch (e) { }
                                 await checkVipAccess(video.id, video, true, hasLiked);
                             }} />
                         </div>
