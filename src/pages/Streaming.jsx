@@ -5,7 +5,7 @@ import Footer from '../components/Footer';
 import CustomPlayer from '../components/CustomPlayer';
 import Komentar from '../components/Komentar';
 import SynopsisTooltip from '../components/SynopsisTooltip';
-import IklanCustom from '../components/IklanCustom'; // 🔥 IMPORT IKLAN CUSTOM KITA 🔥
+import IklanCustom from '../components/IklanCustom';
 
 const getImageUrl = (imgString) => imgString ? imgString.split(',')[0].trim() : '';
 
@@ -52,51 +52,70 @@ export default function Streaming({ supabase }) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    const checkVipAccess = useCallback(async (videoId, currentCommented, vidData) => {
-        if (!supabase) return;
+    // 🔥 LOGIKA KUNCI FINAL: Deteksi Eksklusif Diperketat & Validasi Database 🔥
+    const checkVipAccess = useCallback(async (videoId, vidData, forceCommented = null, forceLiked = null) => {
+        if (!supabase || !vidData) return;
 
-        const categoryStr = String(vidData?.category || '').toLowerCase().trim();
-        const isPaidContent = categoryStr.includes('payment');
-        const isExclusiveContent = categoryStr.includes('exclusive') && !isPaidContent;
+        const categoryStr = String(vidData.category || '').toLowerCase().trim();
+        const titleStr = String(vidData.title || '').toLowerCase().trim();
+        const labelsStr = Array.isArray(vidData.labels) ? vidData.labels.join(' ').toLowerCase() : String(vidData.labels || '').toLowerCase();
+
+        const isPaidContent = categoryStr.includes('payment') || labelsStr.includes('payment');
+
+        // PENDETEKSI EKSKLUSIF SUPER KUAT: Mengecek Kategori, Judul, dan Label
+        const isExclusiveContent = (
+            categoryStr.includes('exclusive') ||
+            titleStr.includes('exclusive') ||
+            labelsStr.includes('exclusive') ||
+            labelsStr.includes('premium')
+        ) && !isPaidContent;
 
         let isUserPremium = false;
+        let userEmail = null;
 
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
+                userEmail = session.user.email;
                 const { data: profileData } = await supabase.from('profiles').select('is_premium').eq('id', session.user.id).single();
+                // Jika is_premium = true (Admin/VIP), mereka KEBAL GEMBOK!
                 if (profileData?.is_premium) isUserPremium = true;
             }
         } catch (error) {
             console.error("Error membaca status premium:", error);
         }
 
+        // 1. Validasi Like MURNI via Database Supabase (Spesifik per ID Video)
         let isLiked = false;
-        let uMain = '', uAlt = '', uAlt2 = '';
-        const uImg = vidData?.img || '';
-
-        try {
-            const { data: vipData, error } = await supabase.rpc('get_vip_video_urls', { p_video_id: videoId, p_device_id: deviceId, p_has_commented: currentCommented });
-            if (!error && vipData) {
-                isLiked = vipData.has_liked;
-                uMain = vipData.main || '';
-                uAlt = vipData.alt || '';
-                uAlt2 = vipData.alt2 || '';
-            } else {
-                isLiked = localStorage.getItem(`shadowclips_liked_${videoId}`) === 'true';
-                uMain = vidData?.trailer_url || '';
-                uAlt = vidData?.alternative_server || '';
-                uAlt2 = vidData?.alternative_server2 || '';
-            }
-        } catch (error) {
-            isLiked = localStorage.getItem(`shadowclips_liked_${videoId}`) === 'true';
-            uMain = vidData?.trailer_url || '';
-            uAlt = vidData?.alternative_server || '';
-            uAlt2 = vidData?.alternative_server2 || '';
+        if (forceLiked !== null) {
+            isLiked = forceLiked;
+        } else {
+            try {
+                const { data: likeData } = await supabase.from('user_likes').select('id').eq('video_id', videoId).eq('device_id', deviceId).maybeSingle();
+                if (likeData) isLiked = true;
+            } catch (error) { }
         }
-
         setHasLiked(isLiked);
 
+        // 2. Validasi Komen MURNI via Database Supabase (Spesifik per ID Video)
+        let isCommented = false;
+        if (forceCommented !== null) {
+            isCommented = forceCommented;
+        } else if (userEmail) {
+            try {
+                const { data: commentData } = await supabase.from('comments').select('id').eq('video_id', String(videoId)).eq('email', userEmail).limit(1);
+                if (commentData && commentData.length > 0) isCommented = true;
+            } catch (error) { }
+        }
+        setHasCommented(isCommented);
+
+        // 3. AMBIL URL ASLI DARI DATABASE (TIDAK PAKAI RPC YANG MENYEBABKAN BLANK)
+        const uMain = vidData.trailer_url || '';
+        const uAlt = vidData.alternative_server || '';
+        const uAlt2 = vidData.alternative_server2 || '';
+        const uImg = vidData.img || '';
+
+        // 4. EKSEKUSI PEMBUKAAN GEMBOK
         if (isPaidContent) {
             if (isUserPremium) {
                 setIsVipUnlocked(true);
@@ -108,7 +127,8 @@ export default function Streaming({ supabase }) {
                 setSecureUrls({ main: '', alt: '', alt2: '', img: uImg });
             }
         } else if (isExclusiveContent) {
-            if (isUserPremium || (isLiked && currentCommented)) {
+            // SYARAT MUTLAK KONTEN EKSKLUSIF: Admin/VIP ATAU (Like Valid + Komen Valid)
+            if (isUserPremium || (isLiked && isCommented)) {
                 setIsVipUnlocked(true);
                 setLockReason('none');
                 setSecureUrls({ main: uMain, alt: uAlt, alt2: uAlt2, img: uImg });
@@ -118,6 +138,7 @@ export default function Streaming({ supabase }) {
                 setSecureUrls({ main: '', alt: '', alt2: '', img: uImg });
             }
         } else {
+            // Video Publik (Tidak terkunci)
             setIsVipUnlocked(true);
             setLockReason('none');
             setSecureUrls({ main: uMain, alt: uAlt, alt2: uAlt2, img: uImg });
@@ -157,10 +178,8 @@ export default function Streaming({ supabase }) {
                     };
                     addView();
 
-                    const userCommented = localStorage.getItem(`shadowclips_commented_${vidData.id}`) === 'true';
-                    setHasCommented(userCommented);
-
-                    await checkVipAccess(vidData.id, userCommented, vidData);
+                    // Panggil fungsi validasi gembok utama
+                    await checkVipAccess(vidData.id, vidData);
 
                     const safeCategory = vidData.category || 'Uncategorized';
                     try {
@@ -221,18 +240,16 @@ export default function Streaming({ supabase }) {
     const handleLike = async () => {
         if (!supabase || !video) return;
         const newHasLiked = !hasLiked;
+
         setHasLiked(newHasLiked);
         setLikes(prev => newHasLiked ? prev + 1 : Math.max(prev - 1, 0));
-
-        if (newHasLiked) localStorage.setItem(`shadowclips_liked_${video.id}`, 'true');
-        else localStorage.removeItem(`shadowclips_liked_${video.id}`);
 
         try {
             const { data: newTotalLikes } = await supabase.rpc('toggle_user_like', { p_video_id: video.id, p_device_id: deviceId });
             if (newTotalLikes !== null) setLikes(newTotalLikes);
-            else await supabase.rpc('update_likes', { vid_id: video.id, new_likes: newHasLiked ? likes + 1 : Math.max(likes - 1, 0) });
 
-            await checkVipAccess(video.id, hasCommented, video);
+            // Validasi ulang status gembok setelah Like diklik
+            await checkVipAccess(video.id, video, hasCommented, newHasLiked);
         } catch (e) { console.error("Like Error:", e); }
     };
 
@@ -287,6 +304,8 @@ export default function Streaming({ supabase }) {
     const galleryImages = imageList.slice(1);
     const coverImage = imageList[0] || '';
     const showGallery = isDeepFake && !hasMain && !hasAlternativeServer && !hasAlternativeServer2 && galleryImages.length > 0;
+
+    // Tautan Khusus Download ditarik dari embed_url
     const hasDownloadLink = video.embed_url && video.embed_url.trim() !== '' && video.embed_url !== 'EMPTY';
 
     const serverOptions = [];
@@ -302,7 +321,6 @@ export default function Streaming({ supabase }) {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
                     <div className="lg:col-span-8 flex flex-col gap-4">
 
-                        {/* KONTEN VIDEO TERKUNCI (RESPONSIVE MOBILE DIJAGA) */}
                         <div className={`w-full ${!isVipUnlocked ? 'aspect-auto min-h-[350px] sm:min-h-0 sm:aspect-video' : (currentVideoUrl || showGallery ? 'aspect-video' : 'min-h-[400px] max-h-[80vh]')} bg-zinc-100 dark:bg-zinc-950 rounded-[1.5rem] overflow-hidden relative flex items-center justify-center shadow-md dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-none transition-colors`}>
                             {!isVipUnlocked ? (
                                 lockReason === 'payment' ? (
@@ -409,16 +427,15 @@ export default function Streaming({ supabase }) {
                             </div>
                         </div>
 
-                        {/* 🔥 AREA IKLAN CUSTOM DI ANTARA LIKE DAN KOMENTAR (TANPA BORDER) 🔥 */}
                         <div className="w-full border-none">
                             <IklanCustom className="border-none" />
                         </div>
 
                         <div className="bg-zinc-100 dark:bg-zinc-900/40 p-2 sm:p-6 rounded-[1.5rem] w-full border-none shadow-none overflow-hidden transition-colors">
+                            {/* Saat komen sukses, buka gembok untuk video ini saja */}
                             <Komentar videoId={video?.id} supabase={supabase} onCommentSuccess={async () => {
                                 setHasCommented(true);
-                                localStorage.setItem(`shadowclips_commented_${video?.id}`, 'true');
-                                await checkVipAccess(video.id, true, video);
+                                await checkVipAccess(video.id, video, true, hasLiked);
                             }} />
                         </div>
                     </div>
@@ -430,7 +447,6 @@ export default function Streaming({ supabase }) {
                             </h3>
                             <div className="flex flex-col gap-4 sm:gap-5 border-none">
 
-                                {/* RELATED VIDEOS (VERSI AMAN ANTI POTONG DI MOBILE) */}
                                 {relatedVideos?.map((item) => (
                                     <div key={item.id} onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer flex flex-row items-start gap-3 sm:gap-4 w-full border-none">
                                         <div className="relative w-[110px] min-[400px]:w-[130px] sm:w-[180px] aspect-video rounded-xl overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none shrink-0 shadow-sm dark:shadow-none transition-colors">
@@ -495,7 +511,12 @@ export default function Streaming({ supabase }) {
                             {modalStatus === 'waiting' ? (
                                 <button disabled className="w-full flex items-center justify-center gap-3 px-8 py-4 rounded-3xl bg-zinc-100 dark:bg-zinc-900/40 text-zinc-500 dark:text-zinc-600 cursor-wait transition-all border-none outline-none"><Loader2 className="w-5 h-5 animate-spin shrink-0 border-none" /><span className="border-none">Please wait...</span></button>
                             ) : (
-                                <button onClick={() => { const targetUrl = video.embed_url || video.url_download; if (targetUrl) window.open(targetUrl, '_blank'); else alert("Download link is not available for this video."); setIsDownloadModalOpen(false); }} className="w-full flex items-center justify-center gap-3 px-8 py-4 rounded-3xl bg-[#106EBE] text-white hover:bg-[#0e5c9f] transition-all transform hover:scale-105 shadow-md dark:shadow-[0_15px_30px_rgba(16,110,190,0.4)] animate-in zoom-in duration-300 border-none outline-none cursor-pointer"><ExternalLink className="w-5 h-5 shrink-0 border-none" /><span className="border-none">Continue to download page</span></button>
+                                <button onClick={() => {
+                                    const targetUrl = video.embed_url || video.url_download;
+                                    if (targetUrl) window.open(targetUrl, '_blank');
+                                    else alert("Download link is not available for this video.");
+                                    setIsDownloadModalOpen(false);
+                                }} className="w-full flex items-center justify-center gap-3 px-8 py-4 rounded-3xl bg-[#106EBE] text-white hover:bg-[#0e5c9f] transition-all transform hover:scale-105 shadow-md dark:shadow-[0_15px_30px_rgba(16,110,190,0.4)] animate-in zoom-in duration-300 border-none outline-none cursor-pointer"><ExternalLink className="w-5 h-5 shrink-0 border-none" /><span className="border-none">Continue to download page</span></button>
                             )}
                         </div>
                     </div>
