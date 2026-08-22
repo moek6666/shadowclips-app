@@ -63,7 +63,8 @@ export default function Navbar({ isScrolled, supabase }) {
         setIsProfileDropdownOpen(false);
         setIsMobileMenuOpen(false);
         if (typeof window !== 'undefined') {
-            window.location.href = '/';
+            // 🔥 PERBAIKAN: Refresh halaman saat ini, bukan dilempar ke Beranda 🔥
+            window.location.reload();
         }
     };
 
