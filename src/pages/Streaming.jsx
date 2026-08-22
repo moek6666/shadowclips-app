@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import CustomPlayer from '../components/CustomPlayer';
 import Komentar from '../components/Komentar';
 import SynopsisTooltip from '../components/SynopsisTooltip';
+import IklanCustom from '../components/IklanCustom'; // 🔥 IMPORT IKLAN CUSTOM KITA 🔥
 
 const getImageUrl = (imgString) => imgString ? imgString.split(',')[0].trim() : '';
 
@@ -150,7 +151,6 @@ export default function Streaming({ supabase }) {
                     setVideo(vidData);
                     document.title = `${vidData.title || 'Video'} | ShadowClips`;
 
-                    // PERBAIKAN MUTLAK: Menggunakan async function pengganti .catch()
                     const addView = async () => {
                         const { error } = await supabase.rpc('increment_views', { vid_id: vidData.id });
                         if (error) console.error("Gagal menambah view:", error);
@@ -407,6 +407,11 @@ export default function Streaming({ supabase }) {
                                     <Share2 className="w-4 h-4 border-none" /> <span className="border-none">Share</span>
                                 </button>
                             </div>
+                        </div>
+
+                        {/* 🔥 AREA IKLAN CUSTOM DI ANTARA LIKE DAN KOMENTAR (TANPA BORDER) 🔥 */}
+                        <div className="w-full border-none">
+                            <IklanCustom className="border-none" />
                         </div>
 
                         <div className="bg-zinc-100 dark:bg-zinc-900/40 p-2 sm:p-6 rounded-[1.5rem] w-full border-none shadow-none overflow-hidden transition-colors">
