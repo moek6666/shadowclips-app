@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Shield, Crown, Settings, LogOut, Save, Loader2, AlertTriangle, BadgeCheck, Info, Star, Lock, Check, ExternalLink, Hexagon, Play } from 'lucide-react';
+import { Shield, Crown, Settings, LogOut, Save, Loader2, AlertTriangle, BadgeCheck, Info, Star, Lock, Check, ExternalLink, Hexagon } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Avatar, { FRAME_OPTIONS } from '../components/Avatar';
@@ -212,66 +212,66 @@ export default function Profile({ supabase }) {
         <div className="flex flex-col min-h-screen bg-zinc-50 dark:bg-zinc-900 transition-colors duration-300 font-sans border-none">
             <Navbar isScrolled={true} supabase={supabase} />
 
-            <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-36 pb-16 border-none">
+            <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-36 pb-16 border-none">
 
                 {/* ========================================== */}
-                {/* 1. HERO SECTION */}
+                {/* 1. HERO SECTION (Responsif untuk HP) */}
                 {/* ========================================== */}
-                <section className="bg-white dark:bg-zinc-800/40 rounded-[2.5rem] overflow-hidden relative mb-8 border-none transition-colors duration-300 backdrop-blur-3xl">
+                <section className="bg-white dark:bg-zinc-800/40 rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden relative mb-6 sm:mb-8 border-none transition-colors duration-300 backdrop-blur-3xl">
                     <div className="absolute inset-0 bg-cover bg-center opacity-10 dark:opacity-20 blur-[80px] scale-[1.5] pointer-events-none transition-all duration-700 border-none" style={{ backgroundImage: `url("${headerBgUrl}")` }}></div>
                     <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/50 dark:from-zinc-900/90 dark:via-zinc-900/40 pointer-events-none border-none"></div>
 
-                    <div className="relative p-8 lg:p-12 flex flex-col lg:flex-row items-center lg:items-center gap-8 lg:gap-12 border-none">
+                    <div className="relative p-6 sm:p-8 lg:p-12 flex flex-col lg:flex-row items-center lg:items-center gap-6 sm:gap-8 lg:gap-12 border-none">
 
                         <div className="shrink-0 relative z-20 border-none">
-                            <Avatar url={editAvatarUrl} frameId={editFrame} containerClass="w-40 h-40 lg:w-44 lg:h-44" scale={1.5} />
+                            <Avatar url={editAvatarUrl} frameId={editFrame} containerClass="w-32 h-32 sm:w-40 sm:h-40 lg:w-44 lg:h-44" scale={1.5} />
                         </div>
 
                         <div className="flex-1 text-center lg:text-left z-20 border-none">
-                            <h1 className="text-3xl lg:text-4xl font-black text-zinc-900 dark:text-white flex items-center justify-center lg:justify-start gap-3 mb-2 tracking-tight border-none transition-all">
-                                {displayName}
-                                {profile.is_admin && <BadgeCheck className="w-7 h-7 text-[#106EBE] fill-white dark:fill-[#106EBE] dark:text-zinc-900 shrink-0 border-none" />}
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-zinc-900 dark:text-white flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 mb-1.5 sm:mb-2 tracking-tight border-none transition-all">
+                                <span className="truncate max-w-full">{displayName}</span>
+                                {profile.is_admin && <BadgeCheck className="w-6 h-6 sm:w-7 sm:h-7 text-[#106EBE] fill-white dark:fill-[#106EBE] dark:text-zinc-900 shrink-0 border-none" />}
                             </h1>
-                            <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-6 font-medium border-none">{session.user.email}</p>
+                            <p className="text-zinc-500 dark:text-zinc-400 text-xs sm:text-sm mb-4 sm:mb-6 font-medium border-none break-all">{session.user.email}</p>
 
-                            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 border-none">
+                            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 border-none">
                                 {profile.is_premium && (
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[11px] font-black rounded-lg shrink-0 uppercase tracking-widest border-none">
-                                        <Crown className="w-4 h-4 border-none" /> Premium VIP
+                                    <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] sm:text-[11px] font-black rounded-lg shrink-0 uppercase tracking-widest border-none">
+                                        <Crown className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-none" /> Premium VIP
                                     </span>
                                 )}
                                 {profile.is_admin && (
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#106EBE]/10 text-[#106EBE] dark:text-[#0FFCBE] text-[11px] font-black rounded-lg shrink-0 uppercase tracking-widest border-none">
-                                        <Shield className="w-4 h-4 border-none" /> Administrator
+                                    <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-[#106EBE]/10 text-[#106EBE] dark:text-[#0FFCBE] text-[10px] sm:text-[11px] font-black rounded-lg shrink-0 uppercase tracking-widest border-none">
+                                        <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-none" /> Administrator
                                     </span>
                                 )}
                             </div>
                         </div>
 
-                        <div className="w-full lg:w-[400px] bg-zinc-100/50 dark:bg-zinc-800/60 rounded-[2rem] p-8 z-20 border-none transition-colors backdrop-blur-md">
-                            <p className="text-xs font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-3 border-none truncate">{displayName}'S POINTS</p>
-                            <div className="flex items-center gap-3 mb-3 border-none">
-                                <Star className="w-8 h-8 text-[#106EBE] fill-[#106EBE] border-none shrink-0" />
-                                <span className="text-4xl font-black text-zinc-900 dark:text-white tracking-tight border-none">{currentPoints.toLocaleString()}</span>
+                        <div className="w-full lg:w-[350px] xl:w-[400px] bg-zinc-100/50 dark:bg-zinc-800/60 rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 z-20 border-none transition-colors backdrop-blur-md mt-2 lg:mt-0">
+                            <p className="text-[11px] sm:text-xs font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-2 sm:mb-3 border-none truncate text-center lg:text-left">{displayName}'S POINTS</p>
+                            <div className="flex items-center justify-center lg:justify-start gap-2.5 sm:gap-3 mb-3 border-none">
+                                <Star className="w-6 h-6 sm:w-8 sm:h-8 text-[#106EBE] fill-[#106EBE] border-none shrink-0" />
+                                <span className="text-3xl sm:text-4xl font-black text-zinc-900 dark:text-white tracking-tight border-none">{currentPoints.toLocaleString()}</span>
                             </div>
 
                             {nextFrame ? (
-                                <div className="border-none mt-8">
-                                    <div className="w-full bg-zinc-200/50 dark:bg-zinc-800/50 rounded-full h-2 mb-4 overflow-hidden border-none">
+                                <div className="border-none mt-6 sm:mt-8">
+                                    <div className="w-full bg-zinc-200/50 dark:bg-zinc-800/50 rounded-full h-1.5 sm:h-2 mb-3 sm:mb-4 overflow-hidden border-none">
                                         <div className="bg-[#106EBE] h-full rounded-full border-none" style={{ width: `${progressPercentage}%` }}></div>
                                     </div>
                                     <div className="flex items-center justify-between border-none">
                                         <div className="border-none">
-                                            <p className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 mb-1 border-none">Next Reward: <span className="text-[#106EBE] dark:text-[#0FFCBE] border-none">{nextFrame.name}</span></p>
-                                            <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-bold border-none">{currentPoints.toLocaleString()} / {nextFrame.unlockPoints.toLocaleString()} Pts</p>
+                                            <p className="text-[10px] sm:text-[11px] font-bold text-zinc-500 dark:text-zinc-400 mb-0.5 sm:mb-1 border-none">Next Reward: <span className="text-[#106EBE] dark:text-[#0FFCBE] border-none">{nextFrame.name}</span></p>
+                                            <p className="text-[9px] sm:text-[10px] text-zinc-400 dark:text-zinc-500 font-bold border-none">{currentPoints.toLocaleString()} / {nextFrame.unlockPoints.toLocaleString()} Pts</p>
                                         </div>
-                                        <div className="border-none relative pointer-events-none">
-                                            <Avatar url={null} frameId={nextFrame.id} containerClass="w-10 h-10" scale={0.45} />
+                                        <div className="border-none relative pointer-events-none shrink-0">
+                                            <Avatar url={null} frameId={nextFrame.id} containerClass="w-8 h-8 sm:w-10 sm:h-10" scale={0.4} />
                                         </div>
                                     </div>
                                 </div>
                             ) : (
-                                <div className="bg-[#106EBE]/10 text-[#106EBE] dark:text-[#0FFCBE] text-xs font-black uppercase tracking-wider text-center py-4 rounded-xl mt-6 border-none">All Frames Unlocked!</div>
+                                <div className="bg-[#106EBE]/10 text-[#106EBE] dark:text-[#0FFCBE] text-[10px] sm:text-xs font-black uppercase tracking-wider text-center py-3 sm:py-4 rounded-xl mt-4 sm:mt-6 border-none">All Frames Unlocked!</div>
                             )}
                         </div>
                     </div>
@@ -280,161 +280,160 @@ export default function Profile({ supabase }) {
                 {/* ========================================== */}
                 {/* 2. SPLIT LAYOUT (SETTINGS & AVATARS) */}
                 {/* ========================================== */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch border-none">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch border-none">
 
-                    <div className="lg:col-span-5 bg-white dark:bg-zinc-800/40 rounded-[2.5rem] p-8 sm:p-10 flex flex-col border-none transition-colors backdrop-blur-2xl relative overflow-hidden">
+                    <div className="lg:col-span-5 bg-white dark:bg-zinc-800/40 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 flex flex-col border-none transition-colors backdrop-blur-2xl relative overflow-hidden">
 
                         {notification && (
-                            <div className="absolute top-6 left-6 right-6 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
-                                <div className={`p-4 rounded-2xl text-sm font-bold flex items-center gap-3 border-none backdrop-blur-xl ${notification.type === 'success' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'}`}>
-                                    {notification.type === 'error' ? <AlertTriangle className="w-5 h-5 shrink-0 border-none" /> : <Check className="w-5 h-5 shrink-0 border-none" />}
+                            <div className="absolute top-4 sm:top-6 left-4 sm:left-6 right-4 sm:right-6 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
+                                <div className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl text-[11px] sm:text-sm font-bold flex items-center gap-2 sm:gap-3 border-none backdrop-blur-xl ${notification.type === 'success' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'}`}>
+                                    {notification.type === 'error' ? <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 border-none" /> : <Check className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 border-none" />}
                                     <span className="border-none">{notification.message}</span>
                                 </div>
                             </div>
                         )}
 
-                        <div className="flex items-center gap-4 mb-10 border-none relative z-10">
-                            <Settings className="w-7 h-7 text-zinc-800 dark:text-zinc-200 border-none shrink-0" />
+                        <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-10 border-none relative z-10">
+                            <Settings className="w-6 h-6 sm:w-7 sm:h-7 text-zinc-800 dark:text-zinc-200 border-none shrink-0" />
                             <div className="border-none">
-                                <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight leading-none mb-1.5 border-none">Account Setup</h2>
-                                <p className="text-xs text-zinc-500 font-medium border-none">Manage your identity.</p>
+                                <h2 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white tracking-tight leading-none mb-1 sm:mb-1.5 border-none">Account Setup</h2>
+                                <p className="text-[10px] sm:text-xs text-zinc-500 font-medium border-none">Manage your identity.</p>
                             </div>
                         </div>
 
                         <form onSubmit={handleUpdateProfile} className="flex flex-col flex-1 border-none relative z-10">
-                            <div className="flex flex-col gap-6 border-none">
-                                <div className="flex flex-col gap-2.5 border-none">
-                                    <label className="text-[11px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest border-none">Display Name</label>
-                                    <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} required className="w-full bg-zinc-50 dark:bg-zinc-900/50 py-4 px-5 rounded-2xl text-zinc-900 dark:text-white text-sm focus:outline-none focus:bg-zinc-100 dark:focus:bg-zinc-800 transition-colors font-bold border-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700" placeholder="Enter your display name" />
+                            <div className="flex flex-col gap-4 sm:gap-6 border-none">
+                                <div className="flex flex-col gap-2 border-none">
+                                    <label className="text-[10px] sm:text-[11px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest border-none">Display Name</label>
+                                    <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} required className="w-full bg-zinc-50 dark:bg-zinc-900/50 py-3 sm:py-4 px-4 sm:px-5 rounded-xl sm:rounded-2xl text-zinc-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:bg-zinc-100 dark:focus:bg-zinc-800 transition-colors font-bold border-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700" placeholder="Enter your display name" />
                                 </div>
-                                <div className="flex flex-col gap-2.5 border-none">
-                                    <label className="text-[11px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest border-none">Avatar URL</label>
-                                    <input type="url" value={editAvatarUrl} onChange={(e) => setEditAvatarUrl(e.target.value)} className="w-full bg-zinc-50 dark:bg-zinc-900/50 py-4 px-5 rounded-2xl text-zinc-900 dark:text-white text-sm focus:outline-none focus:bg-zinc-100 dark:focus:bg-zinc-800 transition-colors font-bold border-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700" placeholder="https://image-url.com/..." />
+                                <div className="flex flex-col gap-2 border-none">
+                                    <label className="text-[10px] sm:text-[11px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest border-none">Avatar URL</label>
+                                    <input type="url" value={editAvatarUrl} onChange={(e) => setEditAvatarUrl(e.target.value)} className="w-full bg-zinc-50 dark:bg-zinc-900/50 py-3 sm:py-4 px-4 sm:px-5 rounded-xl sm:rounded-2xl text-zinc-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:bg-zinc-100 dark:focus:bg-zinc-800 transition-colors font-bold border-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700" placeholder="https://image-url.com/..." />
                                 </div>
 
-                                <div className="bg-zinc-50 dark:bg-zinc-800/30 rounded-2xl p-6 flex gap-4 items-start border-none mt-2">
-                                    <Info className="w-5 h-5 text-[#106EBE] border-none shrink-0 mt-0.5" />
+                                <div className="bg-zinc-50 dark:bg-zinc-800/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 flex gap-3 sm:gap-4 items-start border-none mt-1 sm:mt-2">
+                                    <Info className="w-4 h-4 sm:w-5 sm:h-5 text-[#106EBE] border-none shrink-0 mt-0.5" />
                                     <div className="flex-1 border-none">
-                                        <h4 className="text-[11px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest border-none">Image Hosting</h4>
-                                        <div className="flex gap-3 mt-3 border-none">
-                                            <a href="https://imgbb.com/" target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] px-4 py-2 rounded-xl flex items-center gap-1.5 transition-colors border-none">ImgBB <ExternalLink className="w-3 h-3" /></a>
-                                            <a href="https://goonbox.com/" target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] px-4 py-2 rounded-xl flex items-center gap-1.5 transition-colors border-none">Goonbox <ExternalLink className="w-3 h-3" /></a>
+                                        <h4 className="text-[10px] sm:text-[11px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest border-none">Image Hosting</h4>
+                                        <div className="flex gap-2 sm:gap-3 mt-2 sm:mt-3 border-none flex-wrap">
+                                            <a href="https://imgbb.com/" target="_blank" rel="noopener noreferrer" className="text-[10px] sm:text-xs font-bold text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl flex items-center gap-1 sm:gap-1.5 transition-colors border-none">ImgBB <ExternalLink className="w-2.5 h-2.5 sm:w-3 sm:h-3" /></a>
+                                            <a href="https://goonbox.com/" target="_blank" rel="noopener noreferrer" className="text-[10px] sm:text-xs font-bold text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl flex items-center gap-1 sm:gap-1.5 transition-colors border-none">Goonbox <ExternalLink className="w-2.5 h-2.5 sm:w-3 sm:h-3" /></a>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* LIKE & RIWAYAT (THUMBNAIL HORIZONTAL MAX 3 SEJAJAR, WARNA PUTIH) */}
-                                <div className="flex flex-col gap-6 pt-4 border-t border-zinc-200/50 dark:border-zinc-800/50 border-none">
+                                {/* 🔥 LIKE & RIWAYAT (THUMBNAIL HORIZONTAL MAX 3 SEJAJAR, WARNA PUTIH, LAZY LOAD) 🔥 */}
+                                <div className="flex flex-col gap-5 sm:gap-6 pt-3 sm:pt-4 border-t border-zinc-200/50 dark:border-zinc-800/50 border-none">
 
                                     {/* Like */}
-                                    <div className="flex flex-col gap-2.5 border-none">
-                                        <h4 className="text-xs font-bold text-zinc-800 dark:text-white border-none">Like Terakhir Saya</h4>
+                                    <div className="flex flex-col gap-2 sm:gap-2.5 border-none">
+                                        <h4 className="text-[11px] sm:text-xs font-bold text-zinc-800 dark:text-white border-none">Like</h4>
                                         {likedVideos.length > 0 ? (
-                                            <div className="grid grid-cols-3 gap-2 border-none">
+                                            <div className="grid grid-cols-3 gap-1.5 sm:gap-2 border-none">
                                                 {likedVideos.map(vid => (
-                                                    <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group relative aspect-video rounded-xl overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none shadow-sm block" title={vid.title}>
-                                                        <img src={getImageUrl(vid.img)} alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" />
+                                                    <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group relative aspect-video rounded-lg sm:rounded-xl overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none shadow-sm block" title={vid.title}>
+                                                        <img src={getImageUrl(vid.img)} loading="lazy" alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" />
                                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center border-none z-10">
-                                                            <Play className="w-4 h-4 text-white fill-current border-none" />
+                                                            <span className="text-[8px] sm:text-[10px] text-white font-bold truncate px-1 text-center border-none drop-shadow-md">{vid.title}</span>
                                                         </div>
                                                     </a>
                                                 ))}
                                             </div>
                                         ) : (
-                                            <p className="text-xs text-zinc-400 dark:text-zinc-500 pl-1 border-none">Belum ada video disukai</p>
+                                            <p className="text-[10px] sm:text-xs text-zinc-400 dark:text-zinc-500 pl-1 border-none">Belum ada video disukai</p>
                                         )}
                                     </div>
 
                                     {/* Tonton */}
-                                    <div className="flex flex-col gap-2.5 border-none">
-                                        <h4 className="text-xs font-bold text-zinc-800 dark:text-white border-none">Tontonan Terakhir Saya</h4>
+                                    <div className="flex flex-col gap-2 sm:gap-2.5 border-none">
+                                        <h4 className="text-[11px] sm:text-xs font-bold text-zinc-800 dark:text-white border-none">Tonton</h4>
                                         {historyVideos.length > 0 ? (
-                                            <div className="grid grid-cols-3 gap-2 border-none">
+                                            <div className="grid grid-cols-3 gap-1.5 sm:gap-2 border-none">
                                                 {historyVideos.map(vid => (
-                                                    <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group relative aspect-video rounded-xl overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none shadow-sm block" title={vid.title}>
-                                                        <img src={getImageUrl(vid.img)} alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" />
+                                                    <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group relative aspect-video rounded-lg sm:rounded-xl overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none shadow-sm block" title={vid.title}>
+                                                        <img src={getImageUrl(vid.img)} loading="lazy" alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" />
                                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center border-none z-10">
-                                                            <Play className="w-4 h-4 text-white fill-current border-none" />
+                                                            <span className="text-[8px] sm:text-[10px] text-white font-bold truncate px-1 text-center border-none drop-shadow-md">{vid.title}</span>
                                                         </div>
                                                     </a>
                                                 ))}
                                             </div>
                                         ) : (
-                                            <p className="text-xs text-zinc-400 dark:text-zinc-500 pl-1 border-none">Belum ada riwayat tontonan</p>
+                                            <p className="text-[10px] sm:text-xs text-zinc-400 dark:text-zinc-500 pl-1 border-none">Belum ada riwayat tontonan</p>
                                         )}
                                     </div>
 
                                 </div>
 
-                                <div className="flex flex-col items-start gap-1.5 mt-2 border-none">
-                                    <div className="flex items-start gap-3 border-none">
-                                        <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5 border-none" />
+                                <div className="flex flex-col items-start gap-1 sm:gap-1.5 mt-2 sm:mt-4 border-none">
+                                    <div className="flex items-start gap-2 sm:gap-3 border-none">
+                                        <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 shrink-0 mt-0.5 border-none" />
                                         <div className="flex flex-col border-none">
-                                            <h4 className="text-[13px] font-black text-red-500 mb-0.5 tracking-tight border-none">Danger Zone</h4>
-                                            <p className="text-[11px] sm:text-[12px] text-zinc-500 dark:text-zinc-400 leading-relaxed border-none">
+                                            <h4 className="text-[11px] sm:text-[13px] font-black text-red-500 mb-0.5 tracking-tight border-none">Danger Zone</h4>
+                                            <p className="text-[10px] sm:text-[12px] text-zinc-500 dark:text-zinc-400 leading-relaxed border-none">
                                                 Menghapus akun akan menghilangkan semua data profil dan riwayat Anda secara permanen.
                                             </p>
                                         </div>
                                     </div>
-                                    <button type="button" onClick={() => setShowDeleteConfirm(true)} className="mt-1 ml-8 text-[11px] font-black text-red-500 hover:text-red-600 underline underline-offset-4 outline-none border-none cursor-pointer transition-colors uppercase tracking-widest">
+                                    <button type="button" onClick={() => setShowDeleteConfirm(true)} className="mt-1 ml-6 sm:ml-8 text-[10px] sm:text-[11px] font-black text-red-500 hover:text-red-600 underline underline-offset-4 outline-none border-none cursor-pointer transition-colors uppercase tracking-widest">
                                         Hapus Akun Saya
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="mt-auto pt-8 flex flex-col sm:flex-row gap-4 border-none">
-                                <button type="submit" disabled={isSaving || !editName.trim()} className="flex-1 bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 dark:disabled:text-zinc-500 text-white py-4 rounded-2xl text-sm font-black transition-colors flex items-center justify-center gap-2 border-none cursor-pointer">
-                                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin border-none" /> : <Save className="w-4 h-4 border-none" />} {isSaving ? 'SAVING...' : 'SAVE CHANGES'}
+                            <div className="mt-6 sm:mt-auto pt-6 sm:pt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 border-none">
+                                <button type="submit" disabled={isSaving || !editName.trim()} className="flex-1 bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 dark:disabled:text-zinc-500 text-white py-3 sm:py-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black transition-colors flex items-center justify-center gap-2 border-none cursor-pointer">
+                                    {isSaving ? <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin border-none" /> : <Save className="w-3 h-3 sm:w-4 sm:h-4 border-none" />} {isSaving ? 'SAVING...' : 'SAVE CHANGES'}
                                 </button>
-                                <button type="button" onClick={handleLogout} className="flex-1 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 py-4 rounded-2xl text-sm font-black transition-colors flex items-center justify-center gap-2 border-none cursor-pointer">
-                                    <LogOut className="w-4 h-4 border-none" /> LOG OUT
+                                <button type="button" onClick={handleLogout} className="flex-1 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black transition-colors flex items-center justify-center gap-2 border-none cursor-pointer">
+                                    <LogOut className="w-3 h-3 sm:w-4 sm:h-4 border-none" /> LOG OUT
                                 </button>
                             </div>
                         </form>
                     </div>
 
-                    {/* KANAN: AVATAR BORDERS */}
-                    <div className="lg:col-span-7 bg-white dark:bg-zinc-800/40 rounded-[2.5rem] p-8 sm:p-10 flex flex-col border-none transition-colors backdrop-blur-2xl">
-                        <div className="flex items-center gap-4 mb-6 border-none">
-                            <Hexagon className="w-7 h-7 text-teal-600 dark:text-[#0FFCBE] border-none shrink-0" />
+                    <div className="lg:col-span-7 bg-white dark:bg-zinc-800/40 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 flex flex-col border-none transition-colors backdrop-blur-2xl">
+                        <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 border-none">
+                            <Hexagon className="w-6 h-6 sm:w-7 sm:h-7 text-teal-600 dark:text-[#0FFCBE] border-none shrink-0" />
                             <div className="border-none">
-                                <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight leading-none mb-1.5 border-none">Avatar Borders</h2>
-                                <p className="text-xs text-zinc-500 font-medium border-none">Select your active display border.</p>
+                                <h2 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white tracking-tight leading-none mb-1 sm:mb-1.5 border-none">Avatar Borders</h2>
+                                <p className="text-[10px] sm:text-xs text-zinc-500 font-medium border-none">Select your active display border.</p>
                             </div>
                         </div>
 
-                        <div className="flex items-start gap-3 w-full mb-8 border-none">
-                            <Info className="w-5 h-5 text-[#106EBE] dark:text-[#0FFCBE] shrink-0 mt-0.5 border-none" />
+                        <div className="flex items-start gap-2.5 sm:gap-3 w-full mb-6 sm:mb-8 border-none">
+                            <Info className="w-4 h-4 sm:w-5 sm:h-5 text-[#106EBE] dark:text-[#0FFCBE] shrink-0 mt-0.5 border-none" />
                             <div className="flex flex-col border-none">
-                                <h4 className="text-[13px] sm:text-[14px] font-black text-zinc-900 dark:text-white mb-1 tracking-tight border-none">
+                                <h4 className="text-[11px] sm:text-[14px] font-black text-zinc-900 dark:text-white mb-0.5 sm:mb-1 tracking-tight border-none">
                                     Kumpulkan Poin untuk Membuka Avatar!
                                 </h4>
-                                <p className="text-[11px] sm:text-[13px] text-zinc-500 dark:text-zinc-400 leading-relaxed border-none">
+                                <p className="text-[10px] sm:text-[13px] text-zinc-500 dark:text-zinc-400 leading-relaxed border-none">
                                     Berinteraksilah dengan komunitas! Setiap kali Anda memberikan <strong className="text-zinc-700 dark:text-zinc-300 font-bold border-none">Like</strong> atau <strong className="text-zinc-700 dark:text-zinc-300 font-bold border-none">Komentar</strong> di video, poin Anda akan bertambah. Kumpulkan poin sebanyak-banyaknya untuk membuka bingkai avatar animasi eksklusif.
                                 </p>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 border-none">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 border-none">
                             {FRAME_OPTIONS.map(frame => {
                                 const isLocked = currentPoints < frame.unlockPoints;
                                 const isActive = editFrame === frame.id;
 
                                 return (
-                                    <div key={frame.id} onClick={() => { if (!isLocked) setEditFrame(frame.id); }} className={`relative flex flex-col items-center p-6 rounded-[2rem] transition-all duration-300 border-none ${isActive ? 'bg-[#106EBE]/5 dark:bg-[#106EBE]/10 scale-[1.02] z-10' : isLocked ? 'bg-zinc-50 dark:bg-zinc-900/40 opacity-40 cursor-not-allowed grayscale' : 'bg-zinc-50 dark:bg-zinc-900/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer'}`}>
-                                        {isActive && <span className="absolute -top-3 bg-[#106EBE] dark:text-zinc-950 text-white text-[9px] font-black px-3 py-1 rounded-lg z-30 uppercase tracking-widest border-none">Active</span>}
+                                    <div key={frame.id} onClick={() => { if (!isLocked) setEditFrame(frame.id); }} className={`relative flex flex-col items-center p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] transition-all duration-300 border-none ${isActive ? 'bg-[#106EBE]/5 dark:bg-[#106EBE]/10 scale-[1.02] z-10' : isLocked ? 'bg-zinc-50 dark:bg-zinc-900/40 opacity-40 cursor-not-allowed grayscale' : 'bg-zinc-50 dark:bg-zinc-900/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer'}`}>
+                                        {isActive && <span className="absolute -top-2.5 sm:-top-3 bg-[#106EBE] dark:text-zinc-950 text-white text-[8px] sm:text-[9px] font-black px-2 sm:px-3 py-0.5 sm:py-1 rounded-md sm:rounded-lg z-30 uppercase tracking-widest border-none">Active</span>}
 
-                                        <div className="h-24 flex items-center justify-center mt-3 mb-6 w-full pointer-events-none border-none">
-                                            <Avatar url={editAvatarUrl} frameId={frame.id} containerClass="w-16 h-16" scale={0.7} />
+                                        <div className="h-20 sm:h-24 flex items-center justify-center mt-2 sm:mt-3 mb-4 sm:mb-6 w-full pointer-events-none border-none">
+                                            <Avatar url={editAvatarUrl} frameId={frame.id} containerClass="w-12 h-12 sm:w-16 sm:h-16" scale={0.7} />
                                         </div>
 
-                                        <div className="text-center w-full mt-auto mb-5 border-none">
-                                            <p className="text-xs font-black text-zinc-900 dark:text-white mb-1 border-none leading-tight">{frame.name}</p>
-                                            <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-bold tracking-wide border-none">{frame.unlockPoints === 0 ? 'Free' : `${frame.unlockPoints.toLocaleString()} Pts`}</p>
+                                        <div className="text-center w-full mt-auto mb-4 sm:mb-5 border-none">
+                                            <p className="text-[11px] sm:text-xs font-black text-zinc-900 dark:text-white mb-0.5 sm:mb-1 border-none leading-tight">{frame.name}</p>
+                                            <p className="text-[9px] sm:text-[10px] text-zinc-400 dark:text-zinc-500 font-bold tracking-wide border-none">{frame.unlockPoints === 0 ? 'Free' : `${frame.unlockPoints.toLocaleString()} Pts`}</p>
                                         </div>
 
-                                        <div className="h-7 flex items-center justify-center w-full border-none">
-                                            {isActive ? <div className="w-7 h-7 rounded-full bg-[#106EBE] flex items-center justify-center border-none"><Check className="w-4 h-4 text-white border-none" /></div> : isLocked ? <div className="w-7 h-7 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center border-none"><Lock className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600 border-none" /></div> : <div className="w-7 h-7 rounded-full bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 flex items-center justify-center transition-colors border-none"></div>}
+                                        <div className="h-6 sm:h-7 flex items-center justify-center w-full border-none">
+                                            {isActive ? <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#106EBE] flex items-center justify-center border-none"><Check className="w-3 h-3 sm:w-4 sm:h-4 text-white border-none" /></div> : isLocked ? <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center border-none"><Lock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-zinc-400 dark:text-zinc-600 border-none" /></div> : <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 flex items-center justify-center transition-colors border-none"></div>}
                                         </div>
                                     </div>
                                 );
@@ -450,26 +449,26 @@ export default function Profile({ supabase }) {
                 <div className="fixed inset-0 z-[200] bg-white/80 dark:bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300 border-none">
                     <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 sm:p-8 max-w-sm w-full shadow-2xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col items-center text-center animate-in zoom-in-95 duration-300 border-none">
 
-                        <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-2 border-none tracking-tight">Hapus Akun Permanen?</h3>
+                        <h3 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white mb-2 border-none tracking-tight">Hapus Akun Permanen?</h3>
 
-                        <p className="text-[13px] text-zinc-500 dark:text-zinc-400 mb-8 leading-relaxed border-none">
+                        <p className="text-[11px] sm:text-[13px] text-zinc-500 dark:text-zinc-400 mb-6 sm:mb-8 leading-relaxed border-none">
                             Semua data profil, poin, bingkai avatar, dan riwayat komentar Anda akan lenyap dan tidak dapat dipulihkan.
                         </p>
 
-                        <div className="flex w-full gap-3 border-none">
+                        <div className="flex w-full gap-2 sm:gap-3 border-none">
                             <button
                                 onClick={() => setShowDeleteConfirm(false)}
                                 disabled={isDeleting}
-                                className="flex-1 py-3.5 rounded-xl font-bold text-[13px] bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors border-none disabled:opacity-50 cursor-pointer"
+                                className="flex-1 py-3 sm:py-3.5 rounded-xl font-bold text-[11px] sm:text-[13px] bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors border-none disabled:opacity-50 cursor-pointer"
                             >
                                 Batal
                             </button>
                             <button
                                 onClick={executeDeleteAccount}
                                 disabled={isDeleting}
-                                className="flex-1 py-3.5 rounded-xl font-bold text-[13px] bg-red-500 text-white hover:bg-red-600 transition-colors border-none flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                                className="flex-1 py-3 sm:py-3.5 rounded-xl font-bold text-[11px] sm:text-[13px] bg-red-500 text-white hover:bg-red-600 transition-colors border-none flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                             >
-                                {isDeleting ? <Loader2 className="w-4 h-4 animate-spin border-none" /> : null}
+                                {isDeleting ? <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin border-none" /> : null}
                                 {isDeleting ? 'Menghapus...' : 'Ya, Hapus'}
                             </button>
                         </div>
