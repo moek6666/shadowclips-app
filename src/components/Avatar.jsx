@@ -31,16 +31,20 @@ export default function Avatar({ url, frameId, containerClass = "w-12 h-12", sca
             {/* Base Size 100px yang akan membesar/mengecil mengikuti prop 'scale' */}
             <div style={{ transform: `scale(${scale})`, width: '100px', height: '100px' }} className="absolute flex items-center justify-center border-none">
 
-                {/* Layer WebP Animation */}
+                {/* 🚀 LAYER ANIMASI WEBP 🚀 */}
                 {hasFrame && (
-                    <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center scale-[1.40] border-none">
+                    <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center scale-[1.45] border-none">
                         <img src={selectedFrame.imageUrl} alt="Frame" className="w-full h-full object-contain border-none" />
                     </div>
                 )}
 
-                {/* Foto Profil Utama (Presisi 82px) */}
-                <div className="w-[82px] h-[82px] rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center border-none relative z-10">
-                    {url ? <img src={url} alt="Profile" className="w-full h-full object-cover border-none" /> : <User className="w-1/2 h-1/2 text-zinc-400 dark:text-zinc-600 border-none" />}
+                {/* 📸 FOTO PROFIL (Diperbesar ke 90px agar gambar wajah / karakter jauh lebih jelas dan penuh) 📸 */}
+                <div className="w-[90px] h-[90px] rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center border-none relative z-10 shadow-sm">
+                    {url ? (
+                        <img src={url} alt="Profile" className="w-full h-full object-cover border-none" />
+                    ) : (
+                        <User className="w-1/2 h-1/2 text-zinc-400 dark:text-zinc-600 border-none" />
+                    )}
                 </div>
 
             </div>

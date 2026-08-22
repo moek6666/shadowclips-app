@@ -1,28 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Loader2, Send, MessageSquare, ChevronDown, Smile, Bold, Italic, Code, Link as LinkIcon, Quote, X, BadgeCheck, Crown, LogIn } from 'lucide-react';
+import { Loader2, Send, MessageSquare, ChevronDown, Bold, Italic, Code, Link as LinkIcon, Quote, X, BadgeCheck, Crown, LogIn } from 'lucide-react';
 import ModalLogin from './ModalLogin';
-import Avatar from './Avatar'; // 🔥 IMPORT KOMPONEN AVATAR ANIMASI KITA 🔥
+import Avatar from './Avatar';
 
-// DAFTAR EMOJI 3D
+// ==========================================
+// 🔥 DATABASE EMOJI 3D (STABIL & ANTI-BROKEN) 🔥
+// ==========================================
 const animatedEmojis = {
-    ':keren:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Smilies/Smiling%20Face%20with%20Sunglasses.png',
-    ':love:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Smilies/Smiling%20Face%20with%20Heart-Eyes.png',
-    ':api:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Travel%20and%20places/Fire.png',
-    ':ketawa:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Smilies/Rolling%20on%20the%20Floor%20Laughing.png',
-    ':roket:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Travel%20and%20places/Rocket.png',
-    ':nangis:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Smilies/Loudly%20Crying%20Face.png',
-    ':jempol:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Hand%20gestures/Thumbs%20Up.png',
-    ':wow:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Smilies/Star-Struck.png',
-    ':pesta:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Smilies/Partying%20Face.png',
-    ':mohon:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Smilies/Pleading%20Face.png',
-    ':mikir:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Smilies/Thinking%20Face.png',
-    ':marah:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Smilies/Pouting%20Face.png',
-    ':tepuk:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Hand%20gestures/Clapping%20Hands.png',
-    ':doa:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Hand%20gestures/Folded%20Hands.png',
-    ':mahkota:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Objects/Crown.png',
-    ':seratus:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Symbols/Hundred%20Points.png',
-    ':hati:': 'https://cdn.jsdelivr.net/gh/Tarikul-Islam-Anik/Animated-Fluent-Emojis@master/Emojis/Symbols/Red%20Heart.png'
+    ':love:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Smiling%20Face%20with%20Heart-Eyes.png',
+    ':api:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Fire.png',
+    ':ketawa:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Rolling%20on%20the%20Floor%20Laughing.png',
+    ':jempol:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Hand%20gestures/Thumbs%20Up.png',
+    ':marah:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Angry%20Face.png',
+    ':mahkota:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Crown.png',
 };
+
+const topEmojis = [
+    { code: ':love:', url: animatedEmojis[':love:'] },
+    { code: ':api:', url: animatedEmojis[':api:'] },
+    { code: ':ketawa:', url: animatedEmojis[':ketawa:'] },
+    { code: ':jempol:', url: animatedEmojis[':jempol:'] },
+    { code: ':marah:', url: animatedEmojis[':marah:'] },
+    { code: ':mahkota:', url: animatedEmojis[':mahkota:'] },
+];
+
+// 🔥 DATABASE SENSOR KATA KASAR / SENSITIF (Bisa Bos tambah sendiri nanti) 🔥
+const BAD_WORDS = [
+    'anjing', 'babi', 'bangsat', 'kontol', 'memek', 'ngentot',
+    'goblok', 'tolol', 'bajingan', 'pepek', 'asu', 'jembut', 'peler', 'lonte'
+];
 
 export default function Komentar({ videoId, onCommentSuccess, supabase }) {
     const [comments, setComments] = useState([]);
@@ -186,7 +192,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
         html = html.replace(/\n/g, '<br/>');
 
         html = html.replace(/(:[a-zA-Z0-9_]+:)/g, (match) => {
-            if (animatedEmojis[match]) return `<img src="${animatedEmojis[match]}" alt="${match}" title="${match}" class="inline-block w-6 h-6 sm:w-7 sm:h-7 align-bottom drop-shadow-md hover:scale-125 transition-transform duration-300 border-none select-none" draggable="false" />`;
+            if (animatedEmojis[match]) return `<img src="${animatedEmojis[match]}" alt="${match}" title="${match}" class="inline-block w-[22px] h-[22px] sm:w-[24px] sm:h-[24px] object-contain shrink-0 align-middle drop-shadow-sm hover:scale-125 transition-transform duration-300 border-none select-none mx-0.5" draggable="false" />`;
             return match;
         });
         return html;
@@ -201,9 +207,31 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
 
         const targetParentId = replyTo ? (replyTo.parent_id || replyTo.id) : null;
         const isAdmin = profile?.is_admin || false;
-        const statusKomentar = isAdmin ? 'approved' : 'pending';
         const userEmail = session.user.email;
         const userName = profile?.name || userEmail.split('@')[0];
+
+        // 🔥 SISTEM AUTO-FILTER & AUTO-APPROVE KELAS DEWA 🔥
+        const contentLower = content.toLowerCase();
+        const isContentSensitive = BAD_WORDS.some(word => contentLower.includes(word));
+
+        let statusKomentar = 'pending';
+        let notifMessage = '';
+        let isErrorNotif = false;
+
+        if (isAdmin) {
+            // Admin kebal filter, langsung tayang
+            statusKomentar = 'approved';
+            notifMessage = 'Komentar Admin berhasil ditayangkan!';
+        } else if (isContentSensitive) {
+            // User menggunakan kata kotor/sensitif, masuk antrean pending
+            statusKomentar = 'pending';
+            notifMessage = '⚠️ Mengandung kata sensitif. Menunggu moderasi Admin.';
+            isErrorNotif = true; // Menggunakan warna merah/peringatan
+        } else {
+            // User baik-baik, langsung AUTO-APPROVE! Bos tidak perlu repot.
+            statusKomentar = 'approved';
+            notifMessage = 'Komentar berhasil ditayangkan!';
+        }
 
         const newCommentPayload = {
             video_id: String(videoId),
@@ -219,6 +247,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
             const { data: insertedData, error } = await supabase.from('comments').insert(newCommentPayload).select().single();
             if (error) throw error;
 
+            // Masukkan ke state UI (Jika statusnya pending, UI akan memberinya efek buram sementara)
             setComments(prev => [insertedData, ...(prev || [])]);
 
             setUserProfiles(prev => ({
@@ -231,17 +260,14 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                 }
             }));
 
+            // Tambah Poin jika bukan admin
             if (!isAdmin) {
                 await supabase.rpc('increment_user_points', { p_email: userEmail, p_points: 5 }).catch(() => { });
             }
 
-            if (isAdmin) {
-                setNotification({ type: 'success', message: 'Komentar Admin ditayangkan!' });
-                setTimeout(() => setNotification(null), 3000);
-            } else {
-                setNotification({ type: 'success', message: 'Komentar terkirim! Menunggu persetujuan.' });
-                setTimeout(() => setNotification(null), 4000);
-            }
+            // Tampilkan Notifikasi Sesuai Kondisi Filter
+            setNotification({ type: isErrorNotif ? 'error' : 'success', message: notifMessage });
+            setTimeout(() => setNotification(null), 4000);
 
             setContent('');
             setReplyTo(null);
@@ -270,33 +296,36 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                 <form onSubmit={handleSubmit} className="animate-in fade-in duration-300 border-none">
                     <div className="flex items-center justify-between px-4 sm:px-5 py-4 bg-zinc-50 dark:bg-zinc-900/40 border-none">
                         {session?.user ? (
-                            <div className="flex items-center gap-3">
-                                {/* 🔥 AVATAR KITA DI INPUT KOMENTAR 🔥 */}
-                                <div className="relative shrink-0 flex items-center justify-center">
-                                    <Avatar url={profile?.avatar_url} frameId={profile?.active_frame} containerClass="w-10 h-10" scale={0.4} />
-                                    {isMeAdmin ? (
-                                        <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 z-30"><BadgeCheck className="w-4 h-4 text-[#106EBE] dark:text-[#0FFCBE] fill-white dark:fill-[#106EBE]" /></div>
-                                    ) : isMePremium ? (
-                                        <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm z-30"><Crown className="w-4 h-4 text-amber-500 fill-amber-500/20" /></div>
-                                    ) : null}
+                            <div className="flex items-center gap-4 border-none">
+                                {/* AVATAR FORM INPUT */}
+                                <div className="relative shrink-0 flex items-center justify-center border-none">
+                                    <Avatar url={profile?.avatar_url} frameId={profile?.active_frame} containerClass="w-12 h-12 sm:w-14 sm:h-14" scale={0.56} />
                                 </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[13px] sm:text-[14px] font-bold text-zinc-900 dark:text-white leading-tight flex items-center gap-1.5 transition-colors">
+                                <div className="flex flex-col border-none">
+                                    <span className="text-[13px] sm:text-[15px] font-bold text-zinc-900 dark:text-white leading-tight flex items-center gap-1.5 transition-colors border-none">
                                         {userName}
-                                        {isMeAdmin && <span className="bg-[#106EBE] text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest shrink-0 shadow-sm">Admin</span>}
-                                        {isMePremium && !isMeAdmin && <span className="bg-amber-400 text-amber-950 text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest shrink-0 shadow-sm">VIP</span>}
+                                        {isMeAdmin && (
+                                            <span className="flex items-center gap-1 bg-[#106EBE] text-white text-[9px] font-black pl-1.5 pr-1 py-0.5 rounded uppercase tracking-widest shrink-0 shadow-sm border-none">
+                                                ADMIN <BadgeCheck className="w-[11px] h-[11px] text-[#106EBE] fill-white border-none" />
+                                            </span>
+                                        )}
+                                        {isMePremium && !isMeAdmin && (
+                                            <span className="flex items-center gap-1 bg-amber-400 text-amber-950 text-[9px] font-black pl-1.5 pr-1 py-0.5 rounded uppercase tracking-widest shrink-0 shadow-sm border-none">
+                                                VIP <Crown className="w-[11px] h-[11px] text-amber-950 fill-amber-950/20 border-none" />
+                                            </span>
+                                        )}
                                     </span>
-                                    <span className="text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400 truncate max-w-[150px] sm:max-w-none transition-colors">{session.user.email}</span>
+                                    <span className="text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400 truncate max-w-[150px] sm:max-w-none transition-colors border-none">{session.user.email}</span>
                                 </div>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-zinc-500 shadow-md border-none transition-colors">
-                                    <MessageSquare className="w-5 h-5" />
+                            <div className="flex items-center gap-4 border-none">
+                                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-zinc-500 shadow-md border-none transition-colors">
+                                    <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 border-none" />
                                 </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[13px] sm:text-[14px] font-bold text-zinc-800 dark:text-zinc-300 leading-tight transition-colors">Guest Mode</span>
-                                    <span className="text-[10px] sm:text-[11px] font-medium text-zinc-500 transition-colors">Sign in is required to post a comment</span>
+                                <div className="flex flex-col border-none">
+                                    <span className="text-[13px] sm:text-[15px] font-bold text-zinc-800 dark:text-zinc-300 leading-tight transition-colors border-none">Guest Mode</span>
+                                    <span className="text-[10px] sm:text-[11px] font-medium text-zinc-500 transition-colors border-none">Sign in is required to post a comment</span>
                                 </div>
                             </div>
                         )}
@@ -308,28 +337,25 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                         <button type="button" onClick={() => insertFormat('code')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Code"><Code className="w-4 h-4" /></button>
                         <button type="button" onClick={() => insertFormat('link')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Link"><LinkIcon className="w-4 h-4" /></button>
                         <button type="button" onClick={() => insertFormat('quote')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Quote"><Quote className="w-4 h-4" /></button>
-                        <div className="h-4 w-[1px] bg-zinc-300 dark:bg-zinc-600 mx-1 shrink-0 transition-colors"></div>
 
-                        <div className="relative flex items-center group/emoji h-full py-1">
-                            <button type="button" className="hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors outline-none border-none shrink-0" title="Insert 3D Emoji"><Smile className="w-4 h-4" /></button>
-                            <div className="absolute top-full left-0 pt-2 hidden group-hover/emoji:block z-50 min-w-max animate-in fade-in zoom-in-95 duration-200">
-                                <div className="grid grid-cols-4 sm:grid-cols-5 gap-2.5 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl p-3 sm:p-4 rounded-2xl shadow-lg border border-zinc-200 dark:border-zinc-700/50 w-56 sm:w-64 max-h-52 overflow-y-auto custom-scrollbar">
-                                    {Object.entries(animatedEmojis).map(([code, url]) => (
-                                        <button key={code} type="button" onClick={() => insertEmoji(code)} className="hover:scale-125 transition-transform duration-300 flex items-center justify-center p-1 outline-none border-none" title={code.replace(/:/g, '')}>
-                                            <img src={url} className="w-7 h-7 sm:w-8 sm:h-8 drop-shadow-sm border-none" alt={code} />
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+                        <div className="h-4 w-[1px] bg-zinc-300 dark:bg-zinc-600 mx-1 shrink-0 transition-colors border-none"></div>
+
+                        <div className="flex items-center gap-3 ml-1 flex-1 border-none">
+                            {topEmojis.map((emoji) => (
+                                <button key={emoji.code} type="button" onClick={() => insertEmoji(emoji.code)} className="hover:scale-125 transition-transform duration-300 outline-none border-none shrink-0" title={emoji.code.replace(/:/g, '')}>
+                                    <img src={emoji.url} className="w-[20px] h-[20px] sm:w-[24px] sm:h-[24px] object-contain shrink-0 drop-shadow-sm border-none select-none" alt={emoji.code} draggable="false" />
+                                </button>
+                            ))}
                         </div>
 
                         {replyTo && (
                             <div className="ml-auto flex items-center gap-2 bg-[#106EBE]/10 dark:bg-[#106EBE]/20 text-[#106EBE] px-3 py-1 rounded-lg border-none shrink-0">
-                                <span className="text-[10px] sm:text-[11px] font-bold truncate max-w-[100px] sm:max-w-[150px]">Replying to @{replyTo.name}</span>
-                                <button type="button" onClick={cancelReply} className="hover:bg-[#106EBE]/20 dark:hover:bg-[#106EBE]/30 rounded-full p-0.5 outline-none border-none"><X className="w-3.5 h-3.5" /></button>
+                                <span className="text-[10px] sm:text-[11px] font-bold truncate max-w-[100px] sm:max-w-[150px] border-none">Replying to @{replyTo.name}</span>
+                                <button type="button" onClick={cancelReply} className="hover:bg-[#106EBE]/20 dark:hover:bg-[#106EBE]/30 rounded-full p-0.5 outline-none border-none"><X className="w-3.5 h-3.5 border-none" /></button>
                             </div>
                         )}
                     </div>
+
                     <div className="relative bg-white dark:bg-zinc-900/40 border-none transition-colors">
                         <textarea ref={textareaRef} value={content} onChange={handleInputChange} placeholder="Type your comment here..." className={`w-full bg-transparent px-4 sm:px-5 py-5 text-[13px] sm:text-[14px] text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none resize-y border-none transition-colors ${isInline ? 'min-h-[100px]' : 'min-h-[140px]'}`} required />
                         <div className="absolute bottom-3 right-4 text-[9px] sm:text-[10px] font-medium text-zinc-400 dark:text-zinc-500 select-none border-none">{content.length}/2000</div>
@@ -338,17 +364,17 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                         {session?.user ? (
                             <>
                                 <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2 sm:gap-4 border-none">
-                                    {notification && <span className={`text-[11px] sm:text-[12px] font-medium animate-in fade-in border-none text-center ${notification.type === 'success' ? 'text-[#106EBE] dark:text-[#0FFCBE]' : 'text-red-500 dark:text-red-400'}`}>{notification.message}</span>}
+                                    {notification && <span className={`text-[11px] sm:text-[12px] font-bold animate-in fade-in border-none text-center ${notification.type === 'success' ? 'text-[#106EBE] dark:text-[#0FFCBE]' : 'text-red-500 dark:text-red-400'}`}>{notification.message}</span>}
                                 </div>
-                                <button type="submit" disabled={isSubmitting || !content.trim()} className="w-full sm:w-auto bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-300 dark:disabled:bg-zinc-700 disabled:text-zinc-500 text-white px-8 py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold text-[13px] transition-all shadow-sm outline-none border-none shrink-0">
-                                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} Post Comment
+                                <button type="submit" disabled={isSubmitting || !content.trim()} className="w-full sm:w-auto bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-300 dark:disabled:bg-zinc-700 disabled:text-zinc-500 text-white px-8 py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold text-[13px] transition-all shadow-sm outline-none border-none shrink-0 cursor-pointer">
+                                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin border-none" /> : <Send className="w-4 h-4 border-none" />} Post Comment
                                 </button>
                             </>
                         ) : (
-                            <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4">
-                                <span className="text-[11px] sm:text-[12px] font-medium text-zinc-500 dark:text-zinc-400 text-center sm:text-left flex-1">Sign in safely with Google to post your comment.</span>
+                            <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4 border-none">
+                                <span className="text-[11px] sm:text-[12px] font-medium text-zinc-500 dark:text-zinc-400 text-center sm:text-left flex-1 border-none">Sign in safely with Google to post your comment.</span>
                                 <button type="button" onClick={() => setIsLoginModalOpen(true)} className="w-full sm:w-auto bg-white dark:bg-white hover:bg-zinc-100 dark:hover:bg-zinc-200 text-zinc-900 px-6 py-3 rounded-xl flex items-center justify-center gap-2.5 font-bold text-[13px] transition-all shadow-sm outline-none border border-zinc-200 dark:border-transparent shrink-0 cursor-pointer">
-                                    <LogIn className="w-4 h-4" /> Sign in to Post
+                                    <LogIn className="w-4 h-4 border-none" /> Sign in to Post
                                 </button>
                             </div>
                         )}
@@ -359,17 +385,17 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
     };
 
     return (
-        <div className="w-full mt-6 mb-8 font-sans">
+        <div className="w-full mt-6 mb-8 font-sans border-none">
             <ModalLogin isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} supabase={supabase} />
             {!replyTo && renderAuthOrForm(false)}
             <div className="flex items-center justify-between mb-8 pb-2 border-none">
                 <div className="flex items-center gap-2 border-none">
-                    <MessageSquare className="w-5 h-5 text-zinc-900 dark:text-white transition-colors" />
-                    <h3 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white tracking-tight transition-colors">Comments</h3>
+                    <MessageSquare className="w-5 h-5 text-zinc-900 dark:text-white transition-colors border-none" />
+                    <h3 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white tracking-tight transition-colors border-none">Comments</h3>
                     <span className="bg-zinc-200 dark:bg-zinc-800/60 text-[#106EBE] dark:text-[#0FFCBE] text-xs sm:text-sm font-black px-2.5 py-0.5 rounded-full border-none transition-colors">{safeComments.length}</span>
                 </div>
                 <div className="flex items-center gap-1 text-[11px] sm:text-xs font-bold text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition-colors border-none">
-                    Newest First <ChevronDown className="w-4 h-4" />
+                    Newest First <ChevronDown className="w-4 h-4 border-none" />
                 </div>
             </div>
 
@@ -385,24 +411,24 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                             <div key={comment.id} className="flex flex-col gap-3 border-none">
                                 <div className={`flex gap-3 sm:gap-4 group border-none transition-all duration-500 ${comment.status === 'pending' ? 'opacity-50' : ''}`}>
 
-                                    {/* 🔥 AVATAR USER DI LIST KOMENTAR 🔥 */}
-                                    <div className="relative shrink-0 flex items-center justify-center">
-                                        <Avatar url={comment.avatar_url} frameId={frameId} containerClass="w-10 h-10 sm:w-12 sm:h-12" scale={0.48} />
-                                        {isAdmin ? (
-                                            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm z-30" title="Verified Admin"><BadgeCheck className="w-4 h-4 sm:w-5 sm:h-5 text-[#106EBE] dark:text-[#0FFCBE] fill-white dark:fill-[#106EBE]" /></div>
-                                        ) : isPremium ? (
-                                            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm z-30" title="Premium VIP Member"><Crown className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 fill-amber-500/20" /></div>
-                                        ) : null}
+                                    <div className="relative shrink-0 flex items-start sm:items-center justify-center border-none">
+                                        <Avatar url={comment.avatar_url} frameId={frameId} containerClass="w-12 h-12 sm:w-14 sm:h-14 mt-1 sm:mt-0" scale={0.56} />
                                     </div>
 
-                                    <div className={`flex-1 min-w-0 flex flex-col p-4 sm:p-5 rounded-[1.2rem] sm:rounded-[1.5rem] border-none transition-colors ${isAdmin ? 'bg-gradient-to-br from-white dark:from-zinc-800/80 to-[#106EBE]/5 dark:to-[#106EBE]/20 shadow-sm dark:shadow-[0_5px_20px_rgba(16,110,190,0.15)]' : isPremium ? 'bg-gradient-to-br from-white dark:from-zinc-800/80 to-amber-500/5 dark:to-amber-500/10 shadow-sm dark:shadow-[0_5px_15px_rgba(245,158,11,0.1)]' : 'bg-white dark:bg-zinc-800/60 shadow-sm dark:shadow-none'}`}>
+                                    <div className={`flex-1 min-w-0 flex flex-col p-4 sm:p-5 rounded-[1.2rem] sm:rounded-[1.5rem] border-none transition-colors ${isAdmin ? 'bg-[#106EBE]/5 dark:bg-[#106EBE]/10 border border-[#106EBE]/20 dark:border-transparent shadow-sm dark:shadow-[0_5px_20px_rgba(16,110,190,0.15)]' : isPremium ? 'bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 dark:border-transparent shadow-sm dark:shadow-[0_5px_15px_rgba(245,158,11,0.1)]' : 'bg-white dark:bg-zinc-800/60 shadow-sm dark:shadow-none border border-transparent'}`}>
                                         <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
-
-                                            {/* 🔥 NAMA & LABEL ADMIN/VIP DI KOMENTAR 🔥 */}
-                                            <span className={`text-[13px] sm:text-[14px] font-bold flex items-center flex-wrap gap-1.5 ${isAdmin ? 'text-[#106EBE] dark:text-[#0FFCBE]' : isPremium ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-white'}`}>
+                                            <span className={`text-[13px] sm:text-[15px] font-bold flex items-center flex-wrap gap-1.5 border-none ${isAdmin ? 'text-[#106EBE] dark:text-[#0FFCBE]' : isPremium ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-white'}`}>
                                                 {comment.name}
-                                                {isAdmin && <span className="bg-[#106EBE] text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest shrink-0 shadow-sm">Admin</span>}
-                                                {isPremium && !isAdmin && <span className="bg-amber-400 text-amber-950 text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest shrink-0 shadow-sm">VIP</span>}
+                                                {isAdmin && (
+                                                    <span className="flex items-center gap-1 bg-[#106EBE] text-white text-[9px] font-black pl-1.5 pr-1 py-0.5 rounded uppercase tracking-widest shrink-0 shadow-sm border-none">
+                                                        ADMIN <BadgeCheck className="w-[11px] h-[11px] text-[#106EBE] fill-white border-none" />
+                                                    </span>
+                                                )}
+                                                {isPremium && !isAdmin && (
+                                                    <span className="flex items-center gap-1 bg-amber-400 text-amber-950 text-[9px] font-black pl-1.5 pr-1 py-0.5 rounded uppercase tracking-widest shrink-0 shadow-sm border-none">
+                                                        VIP <Crown className="w-[11px] h-[11px] text-amber-950 fill-amber-950/20 border-none" />
+                                                    </span>
+                                                )}
                                             </span>
 
                                             <span className="text-[10px] sm:text-[11px] font-medium text-zinc-400 dark:text-zinc-400 border-none transition-colors">{timeAgo(comment.created_at)}</span>
@@ -410,7 +436,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                                         </div>
                                         <div className="text-[12px] sm:text-[14px] text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none transition-colors" dangerouslySetInnerHTML={{ __html: parseMarkdown(comment.content) }} />
                                         <div className="flex items-center gap-4 mt-3 pt-3 border-none">
-                                            <button onClick={() => handleReplyClick(comment)} className="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400 font-bold hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors outline-none border-none">Reply</button>
+                                            <button onClick={() => handleReplyClick(comment)} className="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400 font-bold hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors outline-none border-none cursor-pointer">Reply</button>
                                         </div>
                                     </div>
                                 </div>
@@ -428,29 +454,33 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                                                 <div key={reply.id} className="flex flex-col gap-3 border-none">
                                                     <div className={`flex gap-2.5 sm:gap-3 group border-none transition-all duration-500 ${reply.status === 'pending' ? 'opacity-50' : ''}`}>
 
-                                                        {/* 🔥 AVATAR USER DI BALASAN KOMENTAR 🔥 */}
-                                                        <div className="relative shrink-0 flex items-center justify-center">
-                                                            <Avatar url={reply.avatar_url} frameId={replyFrameId} containerClass="w-8 h-8 sm:w-10 sm:h-10" scale={0.38} />
-                                                            {isReplyAdmin ? <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm z-30" title="Verified Admin"><BadgeCheck className="w-3.5 h-3.5 text-[#106EBE] dark:text-[#0FFCBE] fill-white dark:fill-[#106EBE]" /></div> : isReplyPremium ? <div className="absolute -bottom-1 -right-1 bg-white dark:bg-zinc-900 rounded-full p-0.5 shadow-sm z-30" title="Premium VIP Member"><Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" /></div> : null}
+                                                        <div className="relative shrink-0 flex items-start sm:items-center justify-center border-none">
+                                                            <Avatar url={reply.avatar_url} frameId={replyFrameId} containerClass="w-10 h-10 sm:w-12 sm:h-12 mt-0.5 sm:mt-0" scale={0.48} />
                                                         </div>
 
-                                                        <div className={`flex-1 min-w-0 flex flex-col p-3 sm:p-4 rounded-xl sm:rounded-[1.2rem] border-none transition-colors ${isReplyAdmin ? 'bg-gradient-to-br from-white dark:from-zinc-800/60 to-[#106EBE]/5 dark:to-[#106EBE]/15 shadow-sm dark:shadow-[0_5px_15px_rgba(16,110,190,0.1)]' : isReplyPremium ? 'bg-gradient-to-br from-white dark:from-zinc-800/60 to-amber-500/5 dark:to-amber-500/10 shadow-sm' : 'bg-zinc-50 dark:bg-zinc-800/40 shadow-sm dark:shadow-none'}`}>
+                                                        <div className={`flex-1 min-w-0 flex flex-col p-3 sm:p-4 rounded-xl sm:rounded-[1.2rem] border-none transition-colors ${isReplyAdmin ? 'bg-[#106EBE]/5 dark:bg-[#106EBE]/10 border border-[#106EBE]/20 dark:border-transparent shadow-sm dark:shadow-[0_5px_15px_rgba(16,110,190,0.1)]' : isReplyPremium ? 'bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 dark:border-transparent shadow-sm' : 'bg-zinc-50 dark:bg-zinc-800/40 shadow-sm dark:shadow-none border border-transparent'}`}>
                                                             <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
-
-                                                                {/* 🔥 NAMA & LABEL DI BALASAN 🔥 */}
-                                                                <span className={`text-[11px] sm:text-[13px] font-bold flex items-center flex-wrap gap-1.5 ${isReplyAdmin ? 'text-[#106EBE] dark:text-[#0FFCBE]' : isReplyPremium ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-white'}`}>
+                                                                <span className={`text-[11px] sm:text-[14px] font-bold flex items-center flex-wrap gap-1.5 border-none ${isReplyAdmin ? 'text-[#106EBE] dark:text-[#0FFCBE]' : isReplyPremium ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-white'}`}>
                                                                     {reply.name}
-                                                                    {isReplyAdmin && <span className="bg-[#106EBE] text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest shrink-0 shadow-sm">Admin</span>}
-                                                                    {isReplyPremium && !isReplyAdmin && <span className="bg-amber-400 text-amber-950 text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest shrink-0 shadow-sm">VIP</span>}
+                                                                    {isReplyAdmin && (
+                                                                        <span className="flex items-center gap-1 bg-[#106EBE] text-white text-[9px] font-black pl-1.5 pr-1 py-0.5 rounded uppercase tracking-widest shrink-0 shadow-sm border-none">
+                                                                            ADMIN <BadgeCheck className="w-[11px] h-[11px] text-[#106EBE] fill-white border-none" />
+                                                                        </span>
+                                                                    )}
+                                                                    {isReplyPremium && !isReplyAdmin && (
+                                                                        <span className="flex items-center gap-1 bg-amber-400 text-amber-950 text-[9px] font-black pl-1.5 pr-1 py-0.5 rounded uppercase tracking-widest shrink-0 shadow-sm border-none">
+                                                                            VIP <Crown className="w-[11px] h-[11px] text-amber-950 fill-amber-950/20 border-none" />
+                                                                        </span>
+                                                                    )}
                                                                 </span>
 
                                                                 <span className="text-[9px] sm:text-[10px] font-medium text-zinc-400 dark:text-zinc-400 border-none transition-colors">{timeAgo(reply.created_at)}</span>
                                                                 {reply.status === 'pending' && <span className="px-2 py-0.5 rounded-[6px] text-[9px] sm:text-[10px] uppercase tracking-widest font-black bg-amber-500 text-white shadow-sm border-none transition-colors animate-pulse">Menunggu Persetujuan</span>}
                                                             </div>
                                                             <div className="text-[11px] sm:text-[13px] text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none transition-colors">
-                                                                <span className="text-[#106EBE] font-bold mr-1 border-none">@{comment.name}</span><span dangerouslySetInnerHTML={{ __html: parseMarkdown(reply.content) }} />
+                                                                <span className="text-[#106EBE] font-bold mr-1 border-none">@{comment.name}</span> <span dangerouslySetInnerHTML={{ __html: parseMarkdown(reply.content) }} />
                                                             </div>
-                                                            <div className="flex items-center gap-4 mt-3 pt-2 border-none"><button onClick={() => handleReplyClick(reply)} className="text-[9px] sm:text-[10px] text-zinc-500 dark:text-zinc-400 font-bold hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors outline-none border-none">Reply</button></div>
+                                                            <div className="flex items-center gap-4 mt-3 pt-2 border-none"><button onClick={() => handleReplyClick(reply)} className="text-[9px] sm:text-[10px] text-zinc-500 dark:text-zinc-400 font-bold hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors outline-none border-none cursor-pointer">Reply</button></div>
                                                         </div>
                                                     </div>
                                                     {replyTo && replyTo.id === reply.id && <div className="ml-10 sm:ml-13 animate-in slide-in-from-top-2 fade-in duration-300 border-none">{renderAuthOrForm(true)}</div>}
