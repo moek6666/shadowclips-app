@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Play, ShieldCheck, ThumbsUp, MessageSquare, Unlock, Download, Users, Lightbulb, Crown, Globe, Star } from 'lucide-react';
+import { Play, ShieldCheck, ThumbsUp, MessageSquare, Unlock, Download, Users, Lightbulb, Crown, Globe, Star, Sparkles, Zap } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 export default function Tutorial({ supabase }) {
     const [isScrolled, setIsScrolled] = useState(false);
     const [searchInput, setSearchInput] = useState('');
+
+    // Default active tab adalah 'guide'
     const [activeTab, setActiveTab] = useState('guide');
 
     // STATE UNTUK FITUR DUA BAHASA (BILINGUAL)
@@ -26,25 +28,37 @@ export default function Tutorial({ supabase }) {
     // ==========================================
     const dict = {
         id: {
-            titleGuide: 'Cara Akses & Keuntungan VIP',
-            descGuide: 'Panduan singkat langkah demi langkah untuk membuka video premium, tautan unduhan kecepatan tinggi, dan mengenal eksklusivitas member VIP.',
+            // Titles
+            titleGuide: 'Cara Akses Video',
+            descGuide: 'Panduan singkat langkah demi langkah untuk membuka video premium dan mendapatkan tautan unduhan kecepatan tinggi.',
+            titleVip: 'Hak Istimewa Premium VIP',
+            descVip: 'Tingkatkan pengalaman Anda dengan fitur eksklusif, tampilan mewah, dan kebebasan penuh di komunitas ShadowClips.',
             titleConcept: 'Filosofi Komunitas Kami',
             descConcept: 'Memahami alasan kami menggunakan sistem berbasis interaksi alih-alih biaya langganan bulanan yang mahal.',
-            tabGuide: 'Panduan & VIP',
+
+            // Tabs (Sekarang kapital di awal kata saja)
+            tabGuide: 'Panduan Akses',
+            tabVip: 'Keuntungan VIP',
             tabConcept: 'Mengapa Login?',
             langBtn: 'Switch to English',
 
-            // Tab 1: Panduan
+            // Tab 1: Panduan (Guide)
             step1Title: 'Login dengan Aman',
             step1Desc: 'Untuk berinteraksi dengan konten premium kami, Anda harus login menggunakan akun Google. Proses ini cepat, aman, dan tanpa perlu mendaftar ribet.',
             step2Title: 'Like & Komentar',
             step2Desc: 'Dukung para kreator! Klik tombol Like dan tinggalkan Komentar yang bermakna di kolom diskusi di bawah video yang terkunci.',
             step3Title: 'Nikmati Streaming & Download',
-            step3Desc: 'Setelah Anda berhasil menyukai dan memposting komentar, pemutar video eksklusif dan tautan unduhan berkecepatan tinggi akan langsung terbuka.',
-            step4Title: 'Upgrade ke Premium VIP',
-            step4Desc: 'Jadilah elit komunitas! Member VIP mendapatkan lencana Mahkota Emas eksklusif di komentar, akses ke bingkai Avatar Animasi spesial (Shadow, Dragon, dll), dan melewati antrean moderasi komentar.',
+            step3Desc: 'Setelah Anda berhasil menyukai dan memposting komentar, pemutar video eksklusif dan tautan unduhan berkecepatan tinggi akan langsung terbuka untuk Anda nikmati.',
 
-            // Tab 2: Konsep
+            // Tab 2: VIP Benefits
+            vip1Title: 'Bingkai Avatar Animasi',
+            vip1Desc: 'Buka koleksi bingkai avatar animasi eksklusif (seperti efek Naga, Api, atau Neon) yang membuat profil Anda sangat mencolok dan hidup.',
+            vip2Title: 'Lencana Mahkota Emas',
+            vip2Desc: 'Nama Anda di kolom komentar akan dihiasi dengan lencana khusus "VIP" (Mahkota Emas) yang melambangkan status elit Anda di hadapan pengguna lain.',
+            vip3Title: 'Bebas Antrean (Auto-Approve)',
+            vip3Desc: 'Berbeda dengan member standar yang komentarnya harus disortir, komentar Anda kebal moderasi manual dan akan langsung tayang detik itu juga!',
+
+            // Tab 3: Konsep
             c1Title: 'Tanpa Paywall, Hanya Interaksi',
             c1Desc: 'Kami percaya konten premium harus bisa diakses semua orang. Daripada membebankan biaya langganan bulanan atau memaksa Anda menonton iklan yang mengganggu, kami menggunakan sistem berbasis interaksi. Dukungan Anda adalah mata uang di sini.',
             c2Title: 'Membangun Komunitas Asli',
@@ -55,11 +69,17 @@ export default function Tutorial({ supabase }) {
             c4Desc: 'Kami hanya menggunakan profil Google Anda untuk autentikasi dasar (Nama & Avatar). Kami tidak memiliki akses ke kata sandi, email pribadi, atau data rahasia Anda. 100% aman.'
         },
         en: {
-            titleGuide: 'How to Unlock & VIP Perks',
-            descGuide: 'A quick step-by-step guide to unlocking premium videos, high-speed download links, and exploring VIP exclusive benefits.',
+            // Titles
+            titleGuide: 'How to Unlock Videos',
+            descGuide: 'A quick step-by-step guide to unlocking premium videos and getting high-speed download links.',
+            titleVip: 'Premium VIP Privileges',
+            descVip: 'Elevate your experience with exclusive features, luxurious displays, and ultimate freedom in the ShadowClips community.',
             titleConcept: 'Our Community Philosophy',
             descConcept: 'Understanding why we use an engagement-based unlock system instead of expensive paid monthly subscriptions.',
-            tabGuide: 'Access Guide & VIP',
+
+            // Tabs
+            tabGuide: 'Access Guide',
+            tabVip: 'VIP Benefits',
             tabConcept: 'Why Login?',
             langBtn: 'Ganti ke Indonesia',
 
@@ -69,11 +89,17 @@ export default function Tutorial({ supabase }) {
             step2Title: 'Like & Comment',
             step2Desc: 'Show some love to the creators! Click the Like button and leave a meaningful Comment in the discussion section below the locked video.',
             step3Title: 'Enjoy Stream & Downloads',
-            step3Desc: 'Once you have successfully liked and posted a comment, the exclusive video player and the high-speed download links will instantly unlock.',
-            step4Title: 'Upgrade to Premium VIP',
-            step4Desc: 'Become the community elite! VIP Members get an exclusive Gold Crown badge in comments, access to special Animated Avatar borders (Shadow, Dragon, etc.), and bypass comment moderation queues.',
+            step3Desc: 'Once you have successfully liked and posted a comment, the exclusive video player and the high-speed download links will instantly unlock for you to enjoy.',
 
-            // Tab 2: Concept
+            // Tab 2: VIP Benefits
+            vip1Title: 'Exclusive Animated Avatars',
+            vip1Desc: 'Unlock a collection of exclusive WebP animated avatar borders (like Dragon, Fire, or Neon effects) that make your profile stand out and come alive.',
+            vip2Title: 'Gold Crown Badge',
+            vip2Desc: 'Your name in the comment section will be decorated with a special "VIP" (Crown) badge, symbolizing your elite status among other users.',
+            vip3Title: 'Bypass Moderation',
+            vip3Desc: 'Unlike standard members whose comments must be sorted, your comments are immune to manual moderation and will go live instantly!',
+
+            // Tab 3: Concept
             c1Title: 'No Paywalls, Just Engagement',
             c1Desc: 'We believe premium content should be accessible to everyone. Instead of charging monthly fees or forcing you through annoying ads, we use an engagement-based system. Your interaction is your currency.',
             c2Title: 'Building an Authentic Community',
@@ -89,6 +115,7 @@ export default function Tutorial({ supabase }) {
 
     const tabs = [
         { id: 'guide', label: text.tabGuide, icon: <Unlock className="w-5 h-5" /> },
+        { id: 'vip', label: text.tabVip, icon: <Crown className="w-5 h-5" /> },
         { id: 'concept', label: text.tabConcept, icon: <Lightbulb className="w-5 h-5" /> }
     ];
 
@@ -103,10 +130,14 @@ export default function Tutorial({ supabase }) {
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-none">
                         <div className="border-none max-w-2xl">
                             <h1 className="text-3xl sm:text-5xl font-black text-zinc-900 dark:text-white mb-4 tracking-tight transition-colors border-none leading-tight">
-                                {activeTab === 'guide' ? text.titleGuide : text.titleConcept}
+                                {activeTab === 'guide' && text.titleGuide}
+                                {activeTab === 'vip' && text.titleVip}
+                                {activeTab === 'concept' && text.titleConcept}
                             </h1>
                             <p className="text-zinc-600 dark:text-zinc-400 text-base sm:text-lg transition-colors border-none leading-relaxed">
-                                {activeTab === 'guide' ? text.descGuide : text.descConcept}
+                                {activeTab === 'guide' && text.descGuide}
+                                {activeTab === 'vip' && text.descVip}
+                                {activeTab === 'concept' && text.descConcept}
                             </p>
                         </div>
 
@@ -130,13 +161,14 @@ export default function Tutorial({ supabase }) {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`flex items-center gap-3.5 px-4 py-3 md:py-4 rounded-xl text-left font-black transition-all group whitespace-nowrap border-none outline-none ${activeTab === tab.id ? 'bg-[#106EBE]/10 text-[#106EBE] dark:text-[#0FFCBE]' : 'text-zinc-500 dark:text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900/50'
+                                    // 🔥 PERBAIKAN UPPERCASE DIHILANGKAN, TAMPILAN LEBIH KALEM 🔥
+                                    className={`flex items-center gap-3.5 px-4 py-3 md:py-4 rounded-xl text-left transition-all group whitespace-nowrap border-none outline-none ${activeTab === tab.id ? 'bg-[#106EBE]/10 text-[#106EBE] dark:text-[#0FFCBE] font-black' : 'text-zinc-500 dark:text-zinc-500 font-bold hover:text-zinc-800 dark:hover:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900/50'
                                         }`}
                                 >
                                     <span className={`transition-colors border-none ${activeTab === tab.id ? 'text-[#106EBE] dark:text-[#0FFCBE]' : 'text-zinc-400 dark:text-zinc-600 group-hover:text-zinc-600 dark:group-hover:text-zinc-400'}`}>
                                         {tab.icon}
                                     </span>
-                                    <span className="tracking-wide text-[13px] sm:text-sm uppercase border-none">{tab.label}</span>
+                                    <span className="tracking-wide text-[14px] sm:text-[15px] border-none">{tab.label}</span>
                                 </button>
                             ))}
                         </div>
@@ -145,7 +177,7 @@ export default function Tutorial({ supabase }) {
                     {/* Konten Utama */}
                     <div className="flex-1 relative min-h-[400px] border-none">
 
-                        {/* TAB 1: PANDUAN AKSES & VIP */}
+                        {/* 🚀 TAB 1: PANDUAN AKSES 🚀 */}
                         {activeTab === 'guide' && (
                             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-10 max-w-3xl border-none">
                                 <div className="flex flex-col gap-10 sm:gap-14 border-none">
@@ -192,17 +224,56 @@ export default function Tutorial({ supabase }) {
                                         </div>
                                     </div>
 
-                                    {/* 🚀 KEUNTUNGAN VIP KHUSUS 🚀 */}
-                                    <div className="flex gap-5 sm:gap-8 group border-none mt-4 p-6 sm:p-8 bg-gradient-to-br from-amber-500/10 dark:from-amber-500/5 to-transparent rounded-[2rem] border border-amber-500/20 dark:border-amber-500/10">
-                                        <div className="shrink-0 flex items-center justify-center w-12 h-12 bg-amber-500 rounded-full shadow-[0_0_20px_rgba(245,158,11,0.4)] border-none mt-1">
-                                            <Crown className="w-6 h-6 text-white border-none" />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 🚀 TAB 2: KEUNTUNGAN VIP KHUSUS (DESAIN SERAGAM DENGAN PANDUAN) 🚀 */}
+                        {activeTab === 'vip' && (
+                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-10 max-w-3xl border-none">
+                                <div className="flex flex-col gap-10 sm:gap-14 border-none">
+
+                                    <div className="flex gap-5 sm:gap-8 group border-none">
+                                        <div className="text-4xl sm:text-5xl font-black text-zinc-200 dark:text-zinc-800/80 transition-colors duration-500 group-hover:text-amber-500 dark:group-hover:text-amber-500 tracking-tighter leading-none mt-1 select-none border-none">
+                                            01
                                         </div>
                                         <div className="pt-1 border-none">
-                                            <h3 className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-500 mb-2 tracking-tight transition-colors border-none">
-                                                {text.step4Title}
+                                            <h3 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white mb-2 tracking-tight flex items-center flex-wrap gap-2 transition-colors border-none">
+                                                {text.vip1Title}
+                                                <span className="flex items-center gap-1.5 ml-1 text-zinc-400 dark:text-zinc-500 border-none"><Sparkles className="w-4 h-4 border-none" /></span>
                                             </h3>
-                                            <p className="text-zinc-700 dark:text-zinc-300 text-[13px] sm:text-sm leading-relaxed transition-colors border-none font-medium">
-                                                {text.step4Desc}
+                                            <p className="text-zinc-600 dark:text-zinc-400 text-[13px] sm:text-sm leading-relaxed transition-colors border-none">
+                                                {text.vip1Desc}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-5 sm:gap-8 group border-none">
+                                        <div className="text-4xl sm:text-5xl font-black text-zinc-200 dark:text-zinc-800/80 transition-colors duration-500 group-hover:text-amber-500 dark:group-hover:text-amber-500 tracking-tighter leading-none mt-1 select-none border-none">
+                                            02
+                                        </div>
+                                        <div className="pt-1 border-none">
+                                            <h3 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white mb-2 tracking-tight flex items-center flex-wrap gap-2 transition-colors border-none">
+                                                {text.vip2Title}
+                                                <span className="flex items-center gap-1.5 ml-1 text-zinc-400 dark:text-zinc-500 border-none"><Crown className="w-4 h-4 border-none" /></span>
+                                            </h3>
+                                            <p className="text-zinc-600 dark:text-zinc-400 text-[13px] sm:text-sm leading-relaxed transition-colors border-none">
+                                                {text.vip2Desc}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-5 sm:gap-8 group border-none">
+                                        <div className="text-4xl sm:text-5xl font-black text-zinc-200 dark:text-zinc-800/80 transition-colors duration-500 group-hover:text-amber-500 dark:group-hover:text-amber-500 tracking-tighter leading-none mt-1 select-none border-none">
+                                            03
+                                        </div>
+                                        <div className="pt-1 border-none">
+                                            <h3 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white mb-2 tracking-tight flex items-center flex-wrap gap-2 transition-colors border-none">
+                                                {text.vip3Title}
+                                                <span className="flex items-center gap-1.5 ml-1 text-zinc-400 dark:text-zinc-500 border-none"><Zap className="w-4 h-4 border-none" /></span>
+                                            </h3>
+                                            <p className="text-zinc-600 dark:text-zinc-400 text-[13px] sm:text-sm leading-relaxed transition-colors border-none">
+                                                {text.vip3Desc}
                                             </p>
                                         </div>
                                     </div>
@@ -211,7 +282,7 @@ export default function Tutorial({ supabase }) {
                             </div>
                         )}
 
-                        {/* TAB 2: FILOSOFI KOMUNITAS (MENGAPA LOGIN?) */}
+                        {/* 🚀 TAB 3: FILOSOFI KOMUNITAS (MENGAPA LOGIN?) 🚀 */}
                         {activeTab === 'concept' && (
                             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-10 max-w-3xl border-none">
                                 <div className="flex flex-col gap-10 sm:gap-12 pt-2 border-none">
