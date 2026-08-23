@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Mail, Lock, Loader2 } from 'lucide-react';
+import { X, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { Turnstile } from '@marsidev/react-turnstile';
 
@@ -19,6 +19,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     // State untuk Satpam Cloudflare
     const [captchaToken, setCaptchaToken] = useState(null);
@@ -42,12 +43,19 @@ function ModalLogin({ isOpen, onClose, supabase }) {
             if (isLogin) {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
-                onClose();
+                onClose(); // Sukses login, tutup modal
             } else {
-                const { error } = await supabase.auth.signUp({ email, password });
+                // 🔥 PERBAIKAN: Tambahkan Redirect URL agar email mengarah ke halaman sukses kita
+                const { error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        emailRedirectTo: `${window.location.origin}/verified-success`
+                    }
+                });
                 if (error) throw error;
 
-                // REDIRECT KE HALAMAN VERIFIKASI Kustom
+                // REDIRECT KE HALAMAN CEK EMAIL
                 window.location.href = '/verify-email';
             }
         } catch (err) {
@@ -96,9 +104,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                 onClick={(e) => e.stopPropagation()}
             >
 
-                {/* ========================================== */}
-                {/* 1. KOLOM KIRI (OTOMATIS MENYESUAIKAN TERANG / GELAP) */}
-                {/* ========================================== */}
+                {/* KOLOM KIRI (GRADIENT ZINC GELAP PROFESIONAL) */}
                 <div className="hidden md:flex md:w-[45%] relative items-center justify-center p-10 bg-gradient-to-br from-zinc-100 via-zinc-200 to-zinc-300 dark:from-zinc-900 dark:via-zinc-950 dark:to-black border-none overflow-hidden rounded-l-[2.5rem] transition-colors">
 
                     <div className="relative z-10 text-center flex flex-col items-center border-none w-full">
@@ -110,12 +116,10 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                             />
                         </div>
 
-                        {/* Nama Brand */}
                         <h3 className="text-3xl font-black text-zinc-900 dark:text-white mb-4 tracking-tight border-none leading-none transition-colors">
                             Shadow<span className="text-zinc-500 dark:text-zinc-400">Clips</span>
                         </h3>
 
-                        {/* Garis Aksen Solid */}
                         <div className="w-12 h-1 bg-zinc-400 dark:bg-zinc-700 rounded-full mb-6 transition-colors"></div>
 
                         <p className="text-[13px] text-zinc-600 dark:text-zinc-400 font-medium leading-relaxed border-none px-4 drop-shadow-sm transition-colors">
@@ -124,9 +128,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                     </div>
                 </div>
 
-                {/* ========================================== */}
-                {/* 2. KOLOM KANAN (FORM LOGIN UTAMA) */}
-                {/* ========================================== */}
+                {/* KOLOM KANAN (FORM LOGIN UTAMA) */}
                 <div className="w-full md:w-[55%] p-8 sm:p-10 relative flex flex-col justify-center border-none bg-white dark:bg-zinc-900/50 transition-colors">
 
                     <button
@@ -179,7 +181,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
 
                     <form onSubmit={handleEmailAuth} className="flex flex-col gap-4 border-none">
                         <div className="relative border-none">
-                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 border-none" />
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 border-none pointer-events-none" />
                             <input
                                 type="email"
                                 placeholder="Email address"
@@ -189,17 +191,30 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                 className="w-full bg-zinc-100 dark:bg-zinc-950 py-3.5 pl-12 pr-4 rounded-2xl text-zinc-900 dark:text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#106EBE]/50 transition-all border-none font-medium text-[15px]"
                             />
                         </div>
-                        <div className="relative border-none mb-2">
-                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 border-none" />
+
+                        {/* INPUT PASSWORD SHOW/HIDE */}
+                        <div className="relative border-none mb-2 group">
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 border-none pointer-events-none" />
                             <input
-                                type="password"
+                                type={showPassword ? "text" : "password"}
                                 placeholder="Password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                                 minLength={6}
-                                className="w-full bg-zinc-100 dark:bg-zinc-950 py-3.5 pl-12 pr-4 rounded-2xl text-zinc-900 dark:text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#106EBE]/50 transition-all border-none font-medium text-[15px]"
+                                className="w-full bg-zinc-100 dark:bg-zinc-950 py-3.5 pl-12 pr-12 rounded-2xl text-zinc-900 dark:text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#106EBE]/50 transition-all border-none font-medium text-[15px]"
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 focus:outline-none bg-transparent border-none outline-none cursor-pointer transition-colors"
+                            >
+                                {showPassword ? (
+                                    <EyeOff className="w-5 h-5" />
+                                ) : (
+                                    <Eye className="w-5 h-5" />
+                                )}
+                            </button>
                         </div>
 
                         <div className="flex justify-center w-full overflow-hidden py-1 border-none">
