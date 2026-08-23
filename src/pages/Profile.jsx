@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Shield, Crown, Settings, LogOut, Save, Loader2, AlertTriangle, BadgeCheck, Info, Star, Lock, Check, ExternalLink, Hexagon } from 'lucide-react';
+import { Shield, Crown, Settings, LogOut, Save, Loader2, AlertTriangle, BadgeCheck, Info, Star, Lock, Check, ExternalLink, Hexagon, Play } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Avatar, { FRAME_OPTIONS } from '../components/Avatar';
@@ -212,10 +212,10 @@ export default function Profile({ supabase }) {
         <div className="flex flex-col min-h-screen bg-zinc-50 dark:bg-zinc-900 transition-colors duration-300 font-sans border-none">
             <Navbar isScrolled={true} supabase={supabase} />
 
-            <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-36 pb-16 border-none">
+            <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-36 pb-16 border-none">
 
                 {/* ========================================== */}
-                {/* 1. HERO SECTION (Responsif untuk HP) */}
+                {/* 1. HERO SECTION */}
                 {/* ========================================== */}
                 <section className="bg-white dark:bg-zinc-800/40 rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden relative mb-6 sm:mb-8 border-none transition-colors duration-300 backdrop-blur-3xl">
                     <div className="absolute inset-0 bg-cover bg-center opacity-10 dark:opacity-20 blur-[80px] scale-[1.5] pointer-events-none transition-all duration-700 border-none" style={{ backgroundImage: `url("${headerBgUrl}")` }}></div>
@@ -228,11 +228,11 @@ export default function Profile({ supabase }) {
                         </div>
 
                         <div className="flex-1 text-center lg:text-left z-20 border-none">
-                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-zinc-900 dark:text-white flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 mb-1.5 sm:mb-2 tracking-tight border-none transition-all">
-                                <span className="truncate max-w-full">{displayName}</span>
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-zinc-900 dark:text-white flex items-center justify-center lg:justify-start gap-2 sm:gap-3 mb-1.5 sm:mb-2 tracking-tight border-none transition-all">
+                                {displayName}
                                 {profile.is_admin && <BadgeCheck className="w-6 h-6 sm:w-7 sm:h-7 text-[#106EBE] fill-white dark:fill-[#106EBE] dark:text-zinc-900 shrink-0 border-none" />}
                             </h1>
-                            <p className="text-zinc-500 dark:text-zinc-400 text-xs sm:text-sm mb-4 sm:mb-6 font-medium border-none break-all">{session.user.email}</p>
+                            <p className="text-zinc-500 dark:text-zinc-400 text-xs sm:text-sm mb-4 sm:mb-6 font-medium border-none">{session.user.email}</p>
 
                             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 border-none">
                                 {profile.is_premium && (
@@ -280,167 +280,184 @@ export default function Profile({ supabase }) {
                 {/* ========================================== */}
                 {/* 2. SPLIT LAYOUT (SETTINGS & AVATARS) */}
                 {/* ========================================== */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch border-none">
+                {/* 🔥 FORM UTAMA MEMBUNGKUS SELURUH GRID AGAR TOMBOL BISA DIPINDAH KE BAWAH 🔥 */}
+                <form onSubmit={handleUpdateProfile} className="w-full border-none">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch border-none">
 
-                    <div className="lg:col-span-5 bg-white dark:bg-zinc-800/40 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 flex flex-col border-none transition-colors backdrop-blur-2xl relative overflow-hidden">
+                        {/* KIRI: Pengaturan Akun & Riwayat */}
+                        <div className="lg:col-span-5 order-1 bg-white dark:bg-zinc-800/40 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 flex flex-col border-none transition-colors backdrop-blur-2xl relative overflow-hidden">
 
-                        {notification && (
-                            <div className="absolute top-4 sm:top-6 left-4 sm:left-6 right-4 sm:right-6 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
-                                <div className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl text-[11px] sm:text-sm font-bold flex items-center gap-2 sm:gap-3 border-none backdrop-blur-xl ${notification.type === 'success' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'}`}>
-                                    {notification.type === 'error' ? <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 border-none" /> : <Check className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 border-none" />}
-                                    <span className="border-none">{notification.message}</span>
+                            {notification && (
+                                <div className="absolute top-4 sm:top-6 left-4 sm:left-6 right-4 sm:right-6 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
+                                    <div className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl text-[11px] sm:text-sm font-bold flex items-center gap-2 sm:gap-3 border-none backdrop-blur-xl ${notification.type === 'success' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'}`}>
+                                        {notification.type === 'error' ? <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 border-none" /> : <Check className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 border-none" />}
+                                        <span className="border-none">{notification.message}</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-10 border-none relative z-10">
+                                <Settings className="w-6 h-6 sm:w-7 sm:h-7 text-zinc-800 dark:text-zinc-200 border-none shrink-0" />
+                                <div className="border-none">
+                                    <h2 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white tracking-tight leading-none mb-1 sm:mb-1.5 border-none">Account Setup</h2>
+                                    <p className="text-[10px] sm:text-xs text-zinc-500 font-medium border-none">Manage your identity.</p>
                                 </div>
                             </div>
-                        )}
 
-                        <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-10 border-none relative z-10">
-                            <Settings className="w-6 h-6 sm:w-7 sm:h-7 text-zinc-800 dark:text-zinc-200 border-none shrink-0" />
-                            <div className="border-none">
-                                <h2 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white tracking-tight leading-none mb-1 sm:mb-1.5 border-none">Account Setup</h2>
-                                <p className="text-[10px] sm:text-xs text-zinc-500 font-medium border-none">Manage your identity.</p>
-                            </div>
-                        </div>
+                            <div className="flex flex-col flex-1 border-none relative z-10">
+                                <div className="flex flex-col gap-4 sm:gap-6 border-none">
+                                    <div className="flex flex-col gap-2 border-none">
+                                        <label className="text-[10px] sm:text-[11px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest border-none">Display Name</label>
+                                        <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} required className="w-full bg-zinc-50 dark:bg-zinc-900/50 py-3 sm:py-4 px-4 sm:px-5 rounded-xl sm:rounded-2xl text-zinc-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:bg-zinc-100 dark:focus:bg-zinc-800 transition-colors font-bold border-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700" placeholder="Enter your display name" />
+                                    </div>
+                                    <div className="flex flex-col gap-2 border-none">
+                                        <label className="text-[10px] sm:text-[11px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest border-none">Avatar URL</label>
+                                        <input type="url" value={editAvatarUrl} onChange={(e) => setEditAvatarUrl(e.target.value)} className="w-full bg-zinc-50 dark:bg-zinc-900/50 py-3 sm:py-4 px-4 sm:px-5 rounded-xl sm:rounded-2xl text-zinc-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:bg-zinc-100 dark:focus:bg-zinc-800 transition-colors font-bold border-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700" placeholder="https://image-url.com/..." />
+                                    </div>
 
-                        <form onSubmit={handleUpdateProfile} className="flex flex-col flex-1 border-none relative z-10">
-                            <div className="flex flex-col gap-4 sm:gap-6 border-none">
-                                <div className="flex flex-col gap-2 border-none">
-                                    <label className="text-[10px] sm:text-[11px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest border-none">Display Name</label>
-                                    <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} required className="w-full bg-zinc-50 dark:bg-zinc-900/50 py-3 sm:py-4 px-4 sm:px-5 rounded-xl sm:rounded-2xl text-zinc-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:bg-zinc-100 dark:focus:bg-zinc-800 transition-colors font-bold border-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700" placeholder="Enter your display name" />
-                                </div>
-                                <div className="flex flex-col gap-2 border-none">
-                                    <label className="text-[10px] sm:text-[11px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest border-none">Avatar URL</label>
-                                    <input type="url" value={editAvatarUrl} onChange={(e) => setEditAvatarUrl(e.target.value)} className="w-full bg-zinc-50 dark:bg-zinc-900/50 py-3 sm:py-4 px-4 sm:px-5 rounded-xl sm:rounded-2xl text-zinc-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:bg-zinc-100 dark:focus:bg-zinc-800 transition-colors font-bold border-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700" placeholder="https://image-url.com/..." />
-                                </div>
-
-                                <div className="bg-zinc-50 dark:bg-zinc-800/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 flex gap-3 sm:gap-4 items-start border-none mt-1 sm:mt-2">
-                                    <Info className="w-4 h-4 sm:w-5 sm:h-5 text-[#106EBE] border-none shrink-0 mt-0.5" />
-                                    <div className="flex-1 border-none">
-                                        <h4 className="text-[10px] sm:text-[11px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest border-none">Image Hosting</h4>
-                                        <div className="flex gap-2 sm:gap-3 mt-2 sm:mt-3 border-none flex-wrap">
-                                            <a href="https://imgbb.com/" target="_blank" rel="noopener noreferrer" className="text-[10px] sm:text-xs font-bold text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl flex items-center gap-1 sm:gap-1.5 transition-colors border-none">ImgBB <ExternalLink className="w-2.5 h-2.5 sm:w-3 sm:h-3" /></a>
-                                            <a href="https://goonbox.com/" target="_blank" rel="noopener noreferrer" className="text-[10px] sm:text-xs font-bold text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl flex items-center gap-1 sm:gap-1.5 transition-colors border-none">Goonbox <ExternalLink className="w-2.5 h-2.5 sm:w-3 sm:h-3" /></a>
+                                    <div className="bg-zinc-50 dark:bg-zinc-800/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 flex gap-3 sm:gap-4 items-start border-none mt-1 sm:mt-2">
+                                        <Info className="w-4 h-4 sm:w-5 sm:h-5 text-[#106EBE] border-none shrink-0 mt-0.5" />
+                                        <div className="flex-1 border-none">
+                                            <h4 className="text-[10px] sm:text-[11px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest border-none">Image Hosting</h4>
+                                            <div className="flex gap-2 sm:gap-3 mt-2 sm:mt-3 border-none flex-wrap">
+                                                <a href="https://imgbb.com/" target="_blank" rel="noopener noreferrer" className="text-[10px] sm:text-xs font-bold text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl flex items-center gap-1 sm:gap-1.5 transition-colors border-none">ImgBB <ExternalLink className="w-2.5 h-2.5 sm:w-3 sm:h-3" /></a>
+                                                <a href="https://goonbox.com/" target="_blank" rel="noopener noreferrer" className="text-[10px] sm:text-xs font-bold text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl flex items-center gap-1 sm:gap-1.5 transition-colors border-none">Goonbox <ExternalLink className="w-2.5 h-2.5 sm:w-3 sm:h-3" /></a>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* 🔥 LIKE & RIWAYAT (THUMBNAIL HORIZONTAL MAX 3 SEJAJAR, WARNA PUTIH, LAZY LOAD) 🔥 */}
-                                <div className="flex flex-col gap-5 sm:gap-6 pt-3 sm:pt-4 border-t border-zinc-200/50 dark:border-zinc-800/50 border-none">
+                                    {/* LIKE & RIWAYAT (THUMBNAIL HORIZONTAL MAX 3 SEJAJAR, WARNA PUTIH, NORMAL FONT) */}
+                                    <div className="flex flex-col gap-5 sm:gap-6 pt-3 sm:pt-4 border-t border-zinc-200/50 dark:border-zinc-800/50 border-none">
 
-                                    {/* Like */}
-                                    <div className="flex flex-col gap-2 sm:gap-2.5 border-none">
-                                        <h4 className="text-[11px] sm:text-xs font-bold text-zinc-800 dark:text-white border-none">Like</h4>
-                                        {likedVideos.length > 0 ? (
-                                            <div className="grid grid-cols-3 gap-1.5 sm:gap-2 border-none">
-                                                {likedVideos.map(vid => (
-                                                    <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group relative aspect-video rounded-lg sm:rounded-xl overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none shadow-sm block" title={vid.title}>
-                                                        <img src={getImageUrl(vid.img)} loading="lazy" alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" />
-                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center border-none z-10">
-                                                            <span className="text-[8px] sm:text-[10px] text-white font-bold truncate px-1 text-center border-none drop-shadow-md">{vid.title}</span>
-                                                        </div>
-                                                    </a>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <p className="text-[10px] sm:text-xs text-zinc-400 dark:text-zinc-500 pl-1 border-none">Belum ada video disukai</p>
-                                        )}
-                                    </div>
-
-                                    {/* Tonton */}
-                                    <div className="flex flex-col gap-2 sm:gap-2.5 border-none">
-                                        <h4 className="text-[11px] sm:text-xs font-bold text-zinc-800 dark:text-white border-none">Tonton</h4>
-                                        {historyVideos.length > 0 ? (
-                                            <div className="grid grid-cols-3 gap-1.5 sm:gap-2 border-none">
-                                                {historyVideos.map(vid => (
-                                                    <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group relative aspect-video rounded-lg sm:rounded-xl overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none shadow-sm block" title={vid.title}>
-                                                        <img src={getImageUrl(vid.img)} loading="lazy" alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" />
-                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center border-none z-10">
-                                                            <span className="text-[8px] sm:text-[10px] text-white font-bold truncate px-1 text-center border-none drop-shadow-md">{vid.title}</span>
-                                                        </div>
-                                                    </a>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <p className="text-[10px] sm:text-xs text-zinc-400 dark:text-zinc-500 pl-1 border-none">Belum ada riwayat tontonan</p>
-                                        )}
-                                    </div>
-
-                                </div>
-
-                                <div className="flex flex-col items-start gap-1 sm:gap-1.5 mt-2 sm:mt-4 border-none">
-                                    <div className="flex items-start gap-2 sm:gap-3 border-none">
-                                        <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 shrink-0 mt-0.5 border-none" />
-                                        <div className="flex flex-col border-none">
-                                            <h4 className="text-[11px] sm:text-[13px] font-black text-red-500 mb-0.5 tracking-tight border-none">Danger Zone</h4>
-                                            <p className="text-[10px] sm:text-[12px] text-zinc-500 dark:text-zinc-400 leading-relaxed border-none">
-                                                Menghapus akun akan menghilangkan semua data profil dan riwayat Anda secara permanen.
-                                            </p>
+                                        {/* Like */}
+                                        <div className="flex flex-col gap-2 sm:gap-2.5 border-none">
+                                            <h4 className="text-[11px] sm:text-xs font-bold text-zinc-800 dark:text-white border-none">Like</h4>
+                                            {likedVideos.length > 0 ? (
+                                                <div className="grid grid-cols-3 gap-1.5 sm:gap-2 border-none">
+                                                    {likedVideos.map(vid => (
+                                                        <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group relative aspect-video rounded-lg sm:rounded-xl overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none shadow-sm block" title={vid.title}>
+                                                            <img src={getImageUrl(vid.img)} loading="lazy" alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" />
+                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center border-none z-10">
+                                                                <Play className="w-4 h-4 text-white fill-current border-none drop-shadow-md" />
+                                                            </div>
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p className="text-[10px] sm:text-xs text-zinc-400 dark:text-zinc-500 pl-1 border-none">Belum ada video disukai</p>
+                                            )}
                                         </div>
+
+                                        {/* Tonton */}
+                                        <div className="flex flex-col gap-2 sm:gap-2.5 border-none">
+                                            <h4 className="text-[11px] sm:text-xs font-bold text-zinc-800 dark:text-white border-none">Tonton</h4>
+                                            {historyVideos.length > 0 ? (
+                                                <div className="grid grid-cols-3 gap-1.5 sm:gap-2 border-none">
+                                                    {historyVideos.map(vid => (
+                                                        <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group relative aspect-video rounded-lg sm:rounded-xl overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none shadow-sm block" title={vid.title}>
+                                                            <img src={getImageUrl(vid.img)} loading="lazy" alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" />
+                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center border-none z-10">
+                                                                <Play className="w-4 h-4 text-white fill-current border-none drop-shadow-md" />
+                                                            </div>
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p className="text-[10px] sm:text-xs text-zinc-400 dark:text-zinc-500 pl-1 border-none">Belum ada riwayat tontonan</p>
+                                            )}
+                                        </div>
+
                                     </div>
-                                    <button type="button" onClick={() => setShowDeleteConfirm(true)} className="mt-1 ml-6 sm:ml-8 text-[10px] sm:text-[11px] font-black text-red-500 hover:text-red-600 underline underline-offset-4 outline-none border-none cursor-pointer transition-colors uppercase tracking-widest">
-                                        Hapus Akun Saya
+
+                                    <div className="flex flex-col items-start gap-1 sm:gap-1.5 mt-2 sm:mt-4 border-none">
+                                        <div className="flex items-start gap-2 sm:gap-3 border-none">
+                                            <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 shrink-0 mt-0.5 border-none" />
+                                            <div className="flex flex-col border-none">
+                                                <h4 className="text-[11px] sm:text-[13px] font-black text-red-500 mb-0.5 tracking-tight border-none">Danger Zone</h4>
+                                                <p className="text-[10px] sm:text-[12px] text-zinc-500 dark:text-zinc-400 leading-relaxed border-none">
+                                                    Menghapus akun akan menghilangkan semua data profil dan riwayat Anda secara permanen.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button type="button" onClick={() => setShowDeleteConfirm(true)} className="mt-1 ml-6 sm:ml-8 text-[10px] sm:text-[11px] font-black text-red-500 hover:text-red-600 underline underline-offset-4 outline-none border-none cursor-pointer transition-colors uppercase tracking-widest">
+                                            Hapus Akun Saya
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* 🔥 TOMBOL DESKTOP (Tampil HANYA di layar besar, posisi di bawah kolom kiri) 🔥 */}
+                                <div className="hidden lg:flex mt-auto pt-8 flex-col sm:flex-row gap-4 border-none">
+                                    <button type="submit" disabled={isSaving || !editName.trim()} className="flex-1 bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 dark:disabled:text-zinc-500 text-white py-4 rounded-2xl text-sm font-black transition-colors flex items-center justify-center gap-2 border-none cursor-pointer">
+                                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin border-none" /> : <Save className="w-4 h-4 border-none" />} {isSaving ? 'SAVING...' : 'SAVE CHANGES'}
+                                    </button>
+                                    <button type="button" onClick={handleLogout} className="flex-1 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 py-4 rounded-2xl text-sm font-black transition-colors flex items-center justify-center gap-2 border-none cursor-pointer">
+                                        <LogOut className="w-4 h-4 border-none" /> LOG OUT
                                     </button>
                                 </div>
                             </div>
+                        </div>
 
-                            <div className="mt-6 sm:mt-auto pt-6 sm:pt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 border-none">
-                                <button type="submit" disabled={isSaving || !editName.trim()} className="flex-1 bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 dark:disabled:text-zinc-500 text-white py-3 sm:py-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black transition-colors flex items-center justify-center gap-2 border-none cursor-pointer">
-                                    {isSaving ? <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin border-none" /> : <Save className="w-3 h-3 sm:w-4 sm:h-4 border-none" />} {isSaving ? 'SAVING...' : 'SAVE CHANGES'}
-                                </button>
-                                <button type="button" onClick={handleLogout} className="flex-1 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black transition-colors flex items-center justify-center gap-2 border-none cursor-pointer">
-                                    <LogOut className="w-3 h-3 sm:w-4 sm:h-4 border-none" /> LOG OUT
-                                </button>
+                        {/* KANAN: Pilihan Avatar Border */}
+                        <div className="lg:col-span-7 order-2 bg-white dark:bg-zinc-800/40 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 flex flex-col border-none transition-colors backdrop-blur-2xl">
+                            <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 border-none">
+                                <Hexagon className="w-6 h-6 sm:w-7 sm:h-7 text-teal-600 dark:text-[#0FFCBE] border-none shrink-0" />
+                                <div className="border-none">
+                                    <h2 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white tracking-tight leading-none mb-1 sm:mb-1.5 border-none">Avatar Borders</h2>
+                                    <p className="text-[10px] sm:text-xs text-zinc-500 font-medium border-none">Select your active display border.</p>
+                                </div>
                             </div>
-                        </form>
+
+                            <div className="flex items-start gap-2.5 sm:gap-3 w-full mb-6 sm:mb-8 border-none">
+                                <Info className="w-4 h-4 sm:w-5 sm:h-5 text-[#106EBE] dark:text-[#0FFCBE] shrink-0 mt-0.5 border-none" />
+                                <div className="flex flex-col border-none">
+                                    <h4 className="text-[11px] sm:text-[14px] font-black text-zinc-900 dark:text-white mb-0.5 sm:mb-1 tracking-tight border-none">
+                                        Kumpulkan Poin untuk Membuka Avatar!
+                                    </h4>
+                                    <p className="text-[10px] sm:text-[13px] text-zinc-500 dark:text-zinc-400 leading-relaxed border-none">
+                                        Berinteraksilah dengan komunitas! Setiap kali Anda memberikan <strong className="text-zinc-700 dark:text-zinc-300 font-bold border-none">Like</strong> atau <strong className="text-zinc-700 dark:text-zinc-300 font-bold border-none">Komentar</strong> di video, poin Anda akan bertambah. Kumpulkan poin sebanyak-banyaknya untuk membuka bingkai avatar animasi eksklusif.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 border-none">
+                                {FRAME_OPTIONS.map(frame => {
+                                    const isLocked = currentPoints < frame.unlockPoints;
+                                    const isActive = editFrame === frame.id;
+
+                                    return (
+                                        <div key={frame.id} onClick={() => { if (!isLocked) setEditFrame(frame.id); }} className={`relative flex flex-col items-center p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] transition-all duration-300 border-none ${isActive ? 'bg-[#106EBE]/5 dark:bg-[#106EBE]/10 scale-[1.02] z-10' : isLocked ? 'bg-zinc-50 dark:bg-zinc-900/40 opacity-40 cursor-not-allowed grayscale' : 'bg-zinc-50 dark:bg-zinc-900/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer'}`}>
+                                            {isActive && <span className="absolute -top-2.5 sm:-top-3 bg-[#106EBE] dark:text-zinc-950 text-white text-[8px] sm:text-[9px] font-black px-2 sm:px-3 py-0.5 sm:py-1 rounded-md sm:rounded-lg z-30 uppercase tracking-widest border-none">Active</span>}
+
+                                            <div className="h-20 sm:h-24 flex items-center justify-center mt-2 sm:mt-3 mb-4 sm:mb-6 w-full pointer-events-none border-none">
+                                                <Avatar url={editAvatarUrl} frameId={frame.id} containerClass="w-12 h-12 sm:w-16 sm:h-16" scale={0.7} />
+                                            </div>
+
+                                            <div className="text-center w-full mt-auto mb-4 sm:mb-5 border-none">
+                                                <p className="text-[11px] sm:text-xs font-black text-zinc-900 dark:text-white mb-0.5 sm:mb-1 border-none leading-tight">{frame.name}</p>
+                                                <p className="text-[9px] sm:text-[10px] text-zinc-400 dark:text-zinc-500 font-bold tracking-wide border-none">{frame.unlockPoints === 0 ? 'Free' : `${frame.unlockPoints.toLocaleString()} Pts`}</p>
+                                            </div>
+
+                                            <div className="h-6 sm:h-7 flex items-center justify-center w-full border-none">
+                                                {isActive ? <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#106EBE] flex items-center justify-center border-none"><Check className="w-3 h-3 sm:w-4 sm:h-4 text-white border-none" /></div> : isLocked ? <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center border-none"><Lock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-zinc-400 dark:text-zinc-600 border-none" /></div> : <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 flex items-center justify-center transition-colors border-none"></div>}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* 🔥 TOMBOL MOBILE (Tampil HANYA di HP, posisi di urutan ke-3 paling bawah) 🔥 */}
+                        <div className="lg:col-span-12 order-3 flex lg:hidden flex-col sm:flex-row gap-3 border-none mt-2 w-full">
+                            <button type="submit" disabled={isSaving || !editName.trim()} className="flex-1 bg-[#106EBE] hover:bg-[#0e5c9f] disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 dark:disabled:text-zinc-500 text-white py-3.5 sm:py-4 rounded-xl text-xs font-black transition-colors flex items-center justify-center gap-2 border-none cursor-pointer">
+                                {isSaving ? <Loader2 className="w-3 h-3 animate-spin border-none" /> : <Save className="w-3 h-3 border-none" />} {isSaving ? 'SAVING...' : 'SAVE CHANGES'}
+                            </button>
+                            <button type="button" onClick={handleLogout} className="flex-1 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 py-3.5 sm:py-4 rounded-xl text-xs font-black transition-colors flex items-center justify-center gap-2 border-none cursor-pointer">
+                                <LogOut className="w-3 h-3 border-none" /> LOG OUT
+                            </button>
+                        </div>
+
                     </div>
-
-                    <div className="lg:col-span-7 bg-white dark:bg-zinc-800/40 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 flex flex-col border-none transition-colors backdrop-blur-2xl">
-                        <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 border-none">
-                            <Hexagon className="w-6 h-6 sm:w-7 sm:h-7 text-teal-600 dark:text-[#0FFCBE] border-none shrink-0" />
-                            <div className="border-none">
-                                <h2 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white tracking-tight leading-none mb-1 sm:mb-1.5 border-none">Avatar Borders</h2>
-                                <p className="text-[10px] sm:text-xs text-zinc-500 font-medium border-none">Select your active display border.</p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-start gap-2.5 sm:gap-3 w-full mb-6 sm:mb-8 border-none">
-                            <Info className="w-4 h-4 sm:w-5 sm:h-5 text-[#106EBE] dark:text-[#0FFCBE] shrink-0 mt-0.5 border-none" />
-                            <div className="flex flex-col border-none">
-                                <h4 className="text-[11px] sm:text-[14px] font-black text-zinc-900 dark:text-white mb-0.5 sm:mb-1 tracking-tight border-none">
-                                    Kumpulkan Poin untuk Membuka Avatar!
-                                </h4>
-                                <p className="text-[10px] sm:text-[13px] text-zinc-500 dark:text-zinc-400 leading-relaxed border-none">
-                                    Berinteraksilah dengan komunitas! Setiap kali Anda memberikan <strong className="text-zinc-700 dark:text-zinc-300 font-bold border-none">Like</strong> atau <strong className="text-zinc-700 dark:text-zinc-300 font-bold border-none">Komentar</strong> di video, poin Anda akan bertambah. Kumpulkan poin sebanyak-banyaknya untuk membuka bingkai avatar animasi eksklusif.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 border-none">
-                            {FRAME_OPTIONS.map(frame => {
-                                const isLocked = currentPoints < frame.unlockPoints;
-                                const isActive = editFrame === frame.id;
-
-                                return (
-                                    <div key={frame.id} onClick={() => { if (!isLocked) setEditFrame(frame.id); }} className={`relative flex flex-col items-center p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] transition-all duration-300 border-none ${isActive ? 'bg-[#106EBE]/5 dark:bg-[#106EBE]/10 scale-[1.02] z-10' : isLocked ? 'bg-zinc-50 dark:bg-zinc-900/40 opacity-40 cursor-not-allowed grayscale' : 'bg-zinc-50 dark:bg-zinc-900/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer'}`}>
-                                        {isActive && <span className="absolute -top-2.5 sm:-top-3 bg-[#106EBE] dark:text-zinc-950 text-white text-[8px] sm:text-[9px] font-black px-2 sm:px-3 py-0.5 sm:py-1 rounded-md sm:rounded-lg z-30 uppercase tracking-widest border-none">Active</span>}
-
-                                        <div className="h-20 sm:h-24 flex items-center justify-center mt-2 sm:mt-3 mb-4 sm:mb-6 w-full pointer-events-none border-none">
-                                            <Avatar url={editAvatarUrl} frameId={frame.id} containerClass="w-12 h-12 sm:w-16 sm:h-16" scale={0.7} />
-                                        </div>
-
-                                        <div className="text-center w-full mt-auto mb-4 sm:mb-5 border-none">
-                                            <p className="text-[11px] sm:text-xs font-black text-zinc-900 dark:text-white mb-0.5 sm:mb-1 border-none leading-tight">{frame.name}</p>
-                                            <p className="text-[9px] sm:text-[10px] text-zinc-400 dark:text-zinc-500 font-bold tracking-wide border-none">{frame.unlockPoints === 0 ? 'Free' : `${frame.unlockPoints.toLocaleString()} Pts`}</p>
-                                        </div>
-
-                                        <div className="h-6 sm:h-7 flex items-center justify-center w-full border-none">
-                                            {isActive ? <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#106EBE] flex items-center justify-center border-none"><Check className="w-3 h-3 sm:w-4 sm:h-4 text-white border-none" /></div> : isLocked ? <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center border-none"><Lock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-zinc-400 dark:text-zinc-600 border-none" /></div> : <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 flex items-center justify-center transition-colors border-none"></div>}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
+                </form>
 
             </main>
             <Footer />
