@@ -98,7 +98,7 @@ export default function Navbar({ isScrolled, supabase }) {
 
     const fetchPremiumCategories = async () => {
         if (!supabase) return [];
-        const { data, error } = await supabase.from('videos').select('category').contains('labels', ['Premium Site']);
+        const { data, error } = await supabase.from('videos').select('category').contains('labels', ['Profesional Site']);
         if (error || !data) return [];
         return [...new Set(data.map(item => item.category))].filter(Boolean);
     };
@@ -145,7 +145,7 @@ export default function Navbar({ isScrolled, supabase }) {
                             </a>
                             <div className="relative group cursor-pointer py-2 ml-2 border-none">
                                 <div className={`flex items-center gap-1.5 transition-colors outline-none border-none ${pathname.startsWith('/category') ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE]'}`}>
-                                    <Crown className="w-4 h-4 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors border-none" /> Premium Site <ChevronDown className="w-3 h-3 group-hover:rotate-180 transition-transform duration-300 border-none" />
+                                    <Crown className="w-4 h-4 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors border-none" /> Profesional Site <ChevronDown className="w-3 h-3 group-hover:rotate-180 transition-transform duration-300 border-none" />
                                 </div>
                                 <div className="absolute top-full left-0 w-full h-4 bg-transparent border-none"></div>
                                 <div className="absolute top-[calc(100%+0.5rem)] left-0 w-56 bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 flex flex-col py-2 z-50 overflow-hidden transform origin-top-left scale-95 group-hover:scale-100">
@@ -273,7 +273,7 @@ export default function Navbar({ isScrolled, supabase }) {
 
                         <div className="flex flex-col gap-1">
                             <button onClick={() => setIsMobilePremiumOpen(!isMobilePremiumOpen)} className="flex items-center justify-between px-4 py-3.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold w-full text-left">
-                                <div className="flex items-center gap-3"><Crown className="w-5 h-5 text-[#106EBE]" /> Premium Site</div>
+                                <div className="flex items-center gap-3"><Crown className="w-5 h-5 text-[#106EBE]" /> Profesional Site</div>
                                 <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isMobilePremiumOpen ? 'rotate-180 text-[#106EBE]' : ''}`} />
                             </button>
                             <div className={`flex flex-col ml-8 overflow-hidden transition-all duration-300 ${isMobilePremiumOpen ? 'max-h-[500px] opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>

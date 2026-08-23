@@ -98,8 +98,8 @@ export default function DetailCategory({ supabase }) {
 
                                     </div>
 
-                                    {/* 🔥 IKLAN BANNER (Disesuaikan untuk format 500x200) 🔥 */}
-                                    {(index + 1) % 8 === 0 && (
+                                    {/* 🔥 IKLAN BANNER (HANYA TAMPIL 1 KALI SETELAH VIDEO KE-8) 🔥 */}
+                                    {index === 7 && (
                                         <div className="col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4 flex items-center justify-center py-4 sm:py-6 border-none w-full">
                                             <IklanCustom
                                                 imgUrl="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/Tiger.webp"
