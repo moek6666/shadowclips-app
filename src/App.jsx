@@ -14,7 +14,8 @@ const Koleksi = lazy(() => import('./pages/Koleksi'));
 const Jelajahi = lazy(() => import('./pages/Jelajahi'));
 const Tutorial = lazy(() => import('./pages/Tutorial'));
 const Profile = lazy(() => import('./pages/Profile'));
-const VerifyEmail = lazy(() => import('./pages/VerifyEmail')); 
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
+const VerifiedSuccess = lazy(() => import('./pages/VerifiedSuccess')); 
 
 // ROUTING FOLDER BARU
 const DetailCategory = lazy(() => import('./pages/Category/DetailCategory'));
@@ -70,7 +71,7 @@ export default function App() {
             <AntiAdBlock />
             <ExoclickPopunder />
 
-            {/* PERBAIKAN: Border dihapus total, mengandalkan shadow halus agar seamless */}
+            {/* Floating Help Button */}
             <a
                 href="/tutorial"
                 className={`fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-50 bg-white dark:bg-zinc-950 backdrop-blur-xl p-2.5 pr-5 rounded-full flex items-center gap-3 transition-all duration-500 hover:scale-105 group outline-none border-none focus:outline-none shadow-xl dark:shadow-[0_15px_40px_rgba(0,0,0,0.9)] ${showFloatingAd ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}
@@ -92,7 +93,7 @@ export default function App() {
                     <div className="w-14 h-14 border-4 border-zinc-200 dark:border-zinc-800 border-t-[#106EBE] dark:border-t-[#106EBE] rounded-full animate-spin shadow-[0_0_20px_rgba(16,110,190,0.2)] dark:shadow-[0_0_20px_rgba(16,110,190,0.5)]"></div>
                 </div>
             }>
-                {/* LOGIKA ROUTING BARU */}
+                {/* LOGIKA ROUTING BARU - Ditambahkan /verified-success */}
                 {pathname.startsWith('/streaming/') ? (
                     <Streaming supabase={supabase} />
                 ) : pathname.startsWith('/page/') ? (
@@ -111,8 +112,10 @@ export default function App() {
                     <Jelajahi supabase={supabase} />
                 ) : pathname === '/profile' ? (
                     <Profile supabase={supabase} />
-                ) : pathname === '/verify-email' ? ( // 🔥 RUTE BARU DITAMBAHKAN DI SINI
+                ) : pathname === '/verify-email' ? (
                     <VerifyEmail />
+                ) : pathname === '/verified-success' ? ( // 🔥 RUTE BARU DIDAFTARKAN DI SINI 🔥
+                    <VerifiedSuccess />
                 ) : (
                     <Home supabase={supabase} />
                 )}
