@@ -47,12 +47,8 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                 const { error } = await supabase.auth.signUp({ email, password });
                 if (error) throw error;
 
-                setErrorMsg('Registrasi berhasil! Silakan cek email Anda untuk verifikasi.');
-                setIsLogin(true);
-
-                // Reset Satpam setelah berhasil daftar agar tidak stuck
-                if (turnstileRef.current) turnstileRef.current.reset();
-                setCaptchaToken(null);
+                // REDIRECT KE HALAMAN VERIFIKASI Kustom
+                window.location.href = '/verify-email';
             }
         } catch (err) {
             setErrorMsg(err.message || 'Terjadi kesalahan sistem.');
@@ -92,7 +88,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
 
     return (
         <div
-            className="fixed inset-0 z-[200] bg-white/80 dark:bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300 border-none transition-colors"
+            className="fixed inset-0 z-[200] bg-zinc-900/60 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300 border-none transition-colors"
             onClick={onClose}
         >
             <div
@@ -101,13 +97,11 @@ function ModalLogin({ isOpen, onClose, supabase }) {
             >
 
                 {/* ========================================== */}
-                {/* 1. KOLOM KIRI (GRADIENT ZINC GELAP PROFESIONAL) */}
+                {/* 1. KOLOM KIRI (OTOMATIS MENYESUAIKAN TERANG / GELAP) */}
                 {/* ========================================== */}
-                <div className="hidden md:flex md:w-[45%] relative items-center justify-center p-10 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black border-none overflow-hidden rounded-l-[2.5rem]">
+                <div className="hidden md:flex md:w-[45%] relative items-center justify-center p-10 bg-gradient-to-br from-zinc-100 via-zinc-200 to-zinc-300 dark:from-zinc-900 dark:via-zinc-950 dark:to-black border-none overflow-hidden rounded-l-[2.5rem] transition-colors">
 
-                    {/* Konten Text Centered */}
                     <div className="relative z-10 text-center flex flex-col items-center border-none w-full">
-
                         <div className="flex items-center justify-center mb-8 border-none w-full">
                             <img
                                 src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/shadow.webp"
@@ -117,24 +111,23 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                         </div>
 
                         {/* Nama Brand */}
-                        <h3 className="text-3xl font-black text-white mb-4 tracking-tight border-none leading-none">
-                            Shadow<span className="text-zinc-400">Clips</span>
+                        <h3 className="text-3xl font-black text-zinc-900 dark:text-white mb-4 tracking-tight border-none leading-none transition-colors">
+                            Shadow<span className="text-zinc-500 dark:text-zinc-400">Clips</span>
                         </h3>
 
                         {/* Garis Aksen Solid */}
-                        <div className="w-12 h-1 bg-zinc-700 rounded-full mb-6"></div>
+                        <div className="w-12 h-1 bg-zinc-400 dark:bg-zinc-700 rounded-full mb-6 transition-colors"></div>
 
-                        <p className="text-[13px] text-zinc-400 font-medium leading-relaxed border-none px-4 drop-shadow-md">
+                        <p className="text-[13px] text-zinc-600 dark:text-zinc-400 font-medium leading-relaxed border-none px-4 drop-shadow-sm transition-colors">
                             Akses ribuan konten profesional, bangun identitas digital Anda, dan terhubung dengan jaringan komunitas tanpa batas.
                         </p>
-
                     </div>
                 </div>
 
                 {/* ========================================== */}
                 {/* 2. KOLOM KANAN (FORM LOGIN UTAMA) */}
                 {/* ========================================== */}
-                <div className="w-full md:w-[55%] p-8 sm:p-10 relative flex flex-col justify-center border-none bg-zinc-900/50">
+                <div className="w-full md:w-[55%] p-8 sm:p-10 relative flex flex-col justify-center border-none bg-white dark:bg-zinc-900/50 transition-colors">
 
                     <button
                         type="button"
