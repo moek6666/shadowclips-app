@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, memo } from 'react';
 import { X, Mail, Lock, Loader2, Eye, EyeOff, User, MonitorPlay, Zap, Radio, Play, ArrowLeft } from 'lucide-react';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { Turnstile } from '@marsidev/react-turnstile';
@@ -13,6 +13,30 @@ export default function ModalLoginWrapper(props) {
     );
 }
 
+// =========================================================================
+// KOMPONEN WIDGET TELEGRAM (ANTI HILANG)
+// Menggunakan memo() agar React tidak menghapus tombol saat form diketik
+// =========================================================================
+const TelegramWidget = memo(() => {
+    const containerRef = useRef(null);
+
+    useEffect(() => {
+        if (containerRef.current && containerRef.current.children.length === 0) {
+            const script = document.createElement('script');
+            script.src = 'https://telegram.org/js/telegram-widget.js?22';
+            script.setAttribute('data-telegram-login', 'shadowclipsauth_bot');
+            script.setAttribute('data-size', 'large');
+            script.setAttribute('data-radius', '8');
+            script.setAttribute('data-request-access', 'write');
+            script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+            script.async = true;
+            containerRef.current.appendChild(script);
+        }
+    }, []);
+
+    return <div ref={containerRef} className="flex justify-center items-center w-full h-[40px] overflow-hidden rounded-[8px] bg-transparent" />;
+});
+
 function ModalLogin({ isOpen, onClose, supabase }) {
     const [isLogin, setIsLogin] = useState(true);
     const [isForgotPass, setIsForgotPass] = useState(false);
@@ -26,68 +50,60 @@ function ModalLogin({ isOpen, onClose, supabase }) {
     const [captchaToken, setCaptchaToken] = useState(null);
     const turnstileRef = useRef(null);
 
-    // ==========================================
-    // LISTENER BALASAN DARI POPUP TELEGRAM
-    // ==========================================
+    // =========================================================================
+    // LISTENER DATA DARI WIDGET TELEGRAM (DIJAMIN DIEKSEKUSI)
+    // =========================================================================
     useEffect(() => {
-        const handleTelegramMessage = async (event) => {
-            // Pastikan pesan hanya dari server resmi Telegram OAuth
-            if (!event.origin.includes('oauth.telegram.org')) return;
+        window.onTelegramAuth = async (user) => {
+            if (!supabase) return;
+
+            console.log("Data Telegram Berhasil Diterima Web:", user);
+            setLoading(true);
+            setErrorMsg('');
 
             try {
-                // Parsing data aman
-                let data = event.data;
-                if (typeof data === 'string') {
-                    data = JSON.parse(data);
+                // 1. Eksekusi fungsi master di database Supabase
+                const { data: rpcData, error: rpcError } = await supabase.rpc('handle_telegram_auth', {
+                    p_telegram_id: user.id,
+                    p_first_name: user.first_name,
+                    p_username: user.username || `user_${user.id}`,
+                    p_photo_url: user.photo_url || null
+                });
+
+                if (rpcError) {
+                    console.error("Supabase DB Error:", rpcError);
+                    throw new Error('Gagal menyimpan profil ke database.');
                 }
 
-                // Jika login sukses di popup
-                if (data.event === 'auth_result' && data.result) {
-                    const user = data.result;
-                    if (!supabase) return;
+                // 2. Login menggunakan kredensial sintetis dari database
+                const { error: signInError } = await supabase.auth.signInWithPassword({
+                    email: rpcData.email,
+                    password: rpcData.password,
+                });
 
-                    setLoading(true);
-                    setErrorMsg('');
-
-                    // 1. Eksekusi fungsi master di database Supabase
-                    const { data: rpcData, error: rpcError } = await supabase.rpc('handle_telegram_auth', {
-                        p_telegram_id: user.id,
-                        p_first_name: user.first_name,
-                        p_username: user.username || `user_${user.id}`,
-                        p_photo_url: user.photo_url || null
-                    });
-
-                    if (rpcError) throw rpcError;
-                    if (!rpcData || !rpcData.success) throw new Error('Gagal memproses otorisasi Telegram.');
-
-                    // 2. Login menggunakan kredensial sintetis dari database
-                    const { error: signInError } = await supabase.auth.signInWithPassword({
-                        email: rpcData.email,
-                        password: rpcData.password,
-                    });
-
-                    if (signInError) throw signInError;
-
-                    // 3. Sukses, tutup modal dan refresh navbar
-                    onClose();
-                    window.location.reload();
+                if (signInError) {
+                    console.error("Supabase Auth Error:", signInError);
+                    throw new Error('Gagal memulai sesi login.');
                 }
+
+                // 3. Sukses! Tutup modal dan refresh agar Navbar update
+                onClose();
+                window.location.reload();
             } catch (err) {
-                console.error("Telegram Auth Error:", err);
-                setErrorMsg(err.message || 'Gagal memproses akun di database.');
+                console.error("Gagal Total Telegram Auth:", err);
+                setErrorMsg(err.message || 'Terjadi kesalahan sistem.');
                 setLoading(false);
             }
         };
 
-        window.addEventListener('message', handleTelegramMessage);
-        return () => window.removeEventListener('message', handleTelegramMessage);
+        // Bersihkan fungsi global saat komponen ditutup agar aman
+        return () => {
+            window.onTelegramAuth = undefined;
+        };
     }, [supabase, onClose]);
 
     if (!isOpen) return null;
 
-    // ==========================================
-    // FUNGSI AUTH EMAIL & PASSWORD
-    // ==========================================
     const handleEmailAuth = async (e) => {
         e.preventDefault();
         if (!supabase || !captchaToken) {
@@ -140,9 +156,6 @@ function ModalLogin({ isOpen, onClose, supabase }) {
         }
     };
 
-    // ==========================================
-    // FUNGSI AUTH GOOGLE
-    // ==========================================
     const handleGoogleSuccess = async (credentialResponse) => {
         if (!supabase) return;
         setLoading(true);
@@ -158,37 +171,13 @@ function ModalLogin({ isOpen, onClose, supabase }) {
             onClose();
             window.location.reload();
         } catch (err) {
-            console.error("ID Token Error:", err);
             setErrorMsg('Autentikasi Google ditolak oleh sistem.');
-        } finally {
             setLoading(false);
         }
     };
 
     const handleGoogleError = () => {
         setErrorMsg('Proses login Google dibatalkan atau gagal.');
-    };
-
-    // ==========================================
-    // FUNGSI AUTH TELEGRAM (MANUAL DIRECT POPUP)
-    // ==========================================
-    const handleTelegramLogin = () => {
-        // Ambil origin website Bos secara dinamis (https://shadowclips.asia)
-        const currentOrigin = encodeURIComponent(window.location.origin);
-
-        // Buat URL popup dengan parameter `origin` yang dipaksakan masuk
-        const telegramOAuthUrl = `https://oauth.telegram.org/auth?bot_id=8470100626&origin=${currentOrigin}&embed=1&request_access=write`;
-
-        const width = 550;
-        const height = 470;
-        const left = (window.innerWidth - width) / 2;
-        const top = (window.innerHeight - height) / 2;
-
-        window.open(
-            telegramOAuthUrl,
-            'TelegramAuth',
-            `width=${width},height=${height},top=${top},left=${left}`
-        );
     };
 
     return (
@@ -202,7 +191,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
             >
 
                 {/* ========================================== */}
-                {/* KOLOM KIRI (POSTER & FITUR LENGKAP)        */}
+                {/* KOLOM KIRI (POSTER & FITUR)                */}
                 {/* ========================================== */}
                 <div className="hidden md:flex flex-col w-[55%] p-10 lg:p-12 relative overflow-hidden bg-slate-100 dark:bg-[#07090D] border-none transition-colors">
 
@@ -272,7 +261,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                 </div>
 
                 {/* ========================================== */}
-                {/* KOLOM KANAN (FORM LOGIN / FORGOT PASS)     */}
+                {/* KOLOM KANAN (FORM LOGIN)                   */}
                 {/* ========================================== */}
                 <div className="w-full md:w-[45%] p-8 sm:p-12 flex flex-col justify-center relative bg-white dark:bg-[#0E1116]">
                     <button
@@ -418,22 +407,8 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                         </div>
                                     </div>
 
-                                    {/* TOMBOL TELEGRAM (MANUAL DIRECT POPUP FIX) */}
-                                    <button
-                                        type="button"
-                                        onClick={handleTelegramLogin}
-                                        disabled={loading}
-                                        className="w-full h-[40px] flex items-center justify-center gap-2 bg-slate-100 dark:bg-[#161921] hover:bg-slate-200 dark:hover:bg-[#1E222D] text-slate-700 dark:text-zinc-200 rounded-[8px] font-medium transition-colors cursor-pointer disabled:cursor-not-allowed border-none"
-                                    >
-                                        {loading ? (
-                                            <Loader2 className="w-4 h-4 animate-spin text-[#2AABEE]" />
-                                        ) : (
-                                            <svg className="w-4 h-4 text-[#2AABEE]" viewBox="0 0 24 24" fill="currentColor">
-                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.03-1.99 1.27-5.62 3.72-.53.36-1.01.54-1.44.53-.47-.01-1.38-.26-2.06-.48-.83-.27-1.49-.42-1.43-.89.03-.25.38-.51 1.06-.78 4.15-1.81 6.92-3.01 8.31-3.6 3.95-1.66 4.77-1.95 5.3-1.96.12 0 .39.03.56.17.15.12.19.28.21.4-.02.11-.02.32-.17 1.2z" />
-                                            </svg>
-                                        )}
-                                        <span className="text-[13px] font-medium">Telegram</span>
-                                    </button>
+                                    {/* TOMBOL TELEGRAM WIDGET ASLI (TIDAK AKAN DIBLOKIR) */}
+                                    <TelegramWidget />
                                 </div>
                             </>
                         )}
