@@ -26,56 +26,11 @@ function ModalLogin({ isOpen, onClose, supabase }) {
     const [captchaToken, setCaptchaToken] = useState(null);
     const turnstileRef = useRef(null);
 
-    // Menangkap respons Telegram melalui window message listener yang aman & handal
-    React.useEffect(() => {
-        const handleTelegramMessage = async (event) => {
-            if (!event.origin.includes('oauth.telegram.org')) return;
-
-            try {
-                const data = JSON.parse(event.data);
-                if (data.event === 'auth_result' && data.result) {
-                    const user = data.result;
-                    if (!supabase) return;
-
-                    setLoading(true);
-                    setErrorMsg('');
-
-                    // 1. Kirim data ke fungsi master Supabase (handle_telegram_auth)
-                    const { data: rpcData, error: rpcError } = await supabase.rpc('handle_telegram_auth', {
-                        p_telegram_id: user.id,
-                        p_first_name: user.first_name,
-                        p_username: user.username || `user_${user.id}`,
-                        p_photo_url: user.photo_url || null
-                    });
-
-                    if (rpcError) throw rpcError;
-                    if (!rpcData || !rpcData.success) throw new Error('Gagal memproses otorisasi Telegram.');
-
-                    // 2. Login otomatis menggunakan kredensial sintetis
-                    const { error: signInError } = await supabase.auth.signInWithPassword({
-                        email: rpcData.email,
-                        password: rpcData.password,
-                    });
-
-                    if (signInError) throw signInError;
-
-                    // 3. Tutup modal dan refresh total agar navbar langsung berubah statusnya
-                    onClose();
-                    window.location.reload();
-                }
-            } catch (err) {
-                console.error("Telegram Auth Error:", err);
-                setErrorMsg(err.message || 'Gagal memproses autentikasi Telegram.');
-                setLoading(false);
-            }
-        };
-
-        window.addEventListener('message', handleTelegramMessage);
-        return () => window.removeEventListener('message', handleTelegramMessage);
-    }, [supabase]);
-
     if (!isOpen) return null;
 
+    // ==========================================
+    // FUNGSI AUTH EMAIL & PASSWORD
+    // ==========================================
     const handleEmailAuth = async (e) => {
         e.preventDefault();
         if (!supabase || !captchaToken) {
@@ -111,7 +66,16 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                 window.location.href = '/verify-email';
             }
         } catch (err) {
-            setErrorMsg(err.message || 'Terjadi kesalahan sistem.');
+            let customError = err.message;
+            if (customError.includes("Password should contain at least one character of each")) {
+                customError = "Password terlalu lemah. Gunakan minimal 1 huruf besar, angka, dan simbol.";
+            } else if (customError.includes("Invalid login credentials")) {
+                customError = "Email/Password salah, atau akun belum diverifikasi via email.";
+            } else if (customError.includes("For security purposes, you can only request this once every")) {
+                customError = "Anda sudah meminta reset password baru-baru ini. Silakan cek email Anda.";
+            }
+
+            setErrorMsg(customError || 'Terjadi kesalahan sistem.');
             if (turnstileRef.current) turnstileRef.current.reset();
             setCaptchaToken(null);
         } finally {
@@ -119,6 +83,9 @@ function ModalLogin({ isOpen, onClose, supabase }) {
         }
     };
 
+    // ==========================================
+    // FUNGSI AUTH GOOGLE
+    // ==========================================
     const handleGoogleSuccess = async (credentialResponse) => {
         if (!supabase) return;
         setLoading(true);
@@ -133,8 +100,8 @@ function ModalLogin({ isOpen, onClose, supabase }) {
             if (error) throw error;
             onClose();
             window.location.reload();
-
         } catch (err) {
+            console.error("ID Token Error:", err);
             setErrorMsg('Autentikasi Google ditolak oleh sistem.');
         } finally {
             setLoading(false);
@@ -145,18 +112,90 @@ function ModalLogin({ isOpen, onClose, supabase }) {
         setErrorMsg('Proses login Google dibatalkan atau gagal.');
     };
 
-    // Fungsi membuka popup resmi Telegram OAuth dengan Bot ID Anda (8470100626)
-    const handleTelegramLogin = () => {
-        const width = 550;
-        const height = 470;
-        const left = (window.innerWidth - width) / 2;
-        const top = (window.innerHeight - height) / 2;
+    // ==========================================
+    // FUNGSI AUTH TELEGRAM (NEW OIDC FLOW)
+    // ==========================================
+    const executeTelegramAuth = () => {
+        window.Telegram.Login.auth(
+            {
+                client_id: 8470100626, // Bot ID yang sudah didaftarkan di BotFather
+                request_access: 'write'
+            },
+            async (data) => {
+                if (!data) {
+                    setLoading(false);
+                    return;
+                }
 
-        window.open(
-            `https://oauth.telegram.org/auth?bot_id=8470100626&origin=${encodeURIComponent(window.location.origin)}&embed=1&request_access=write`,
-            'TelegramAuth',
-            `width=${width},height=${height},top=${top},left=${left}`
+                if (data.error) {
+                    console.error("Telegram Auth Error:", data.error);
+                    setErrorMsg("Login Telegram gagal: " + data.error);
+                    setLoading(false);
+                    return;
+                }
+
+                // Struktur kembalian OIDC baru biasanya ada di data.user
+                const user = data.user || data;
+
+                if (user && user.id) {
+                    try {
+                        setLoading(true);
+                        setErrorMsg('');
+
+                        // 1. Kirim ke Fungsi Master Supabase
+                        const { data: rpcData, error: rpcError } = await supabase.rpc('handle_telegram_auth', {
+                            p_telegram_id: user.id,
+                            p_first_name: user.first_name,
+                            p_username: user.username || `user_${user.id}`,
+                            p_photo_url: user.photo_url || null
+                        });
+
+                        if (rpcError) throw rpcError;
+                        if (!rpcData || !rpcData.success) throw new Error('Gagal memproses otorisasi Telegram.');
+
+                        // 2. Login menggunakan kredensial sintetis dari database
+                        const { error: signInError } = await supabase.auth.signInWithPassword({
+                            email: rpcData.email,
+                            password: rpcData.password,
+                        });
+
+                        if (signInError) throw signInError;
+
+                        // 3. Sukses, tutup modal dan refresh navbar
+                        onClose();
+                        window.location.reload();
+                    } catch (err) {
+                        console.error("Supabase Sync Error:", err);
+                        setErrorMsg(err.message || "Gagal sinkronisasi akun dengan database.");
+                        setLoading(false);
+                    }
+                }
+            }
         );
+    };
+
+    const handleTelegramLogin = () => {
+        setLoading(true);
+        setErrorMsg('');
+
+        // Memuat script telegram-login.js secara dinamis saat tombol diklik
+        if (!window.Telegram || !window.Telegram.Login) {
+            const script = document.createElement('script');
+            script.src = 'https://telegram.org/js/telegram-login.js';
+            script.async = true;
+            script.onload = () => {
+                setLoading(false);
+                executeTelegramAuth();
+            };
+            script.onerror = () => {
+                setLoading(false);
+                setErrorMsg('Gagal memuat sistem login Telegram. Periksa koneksi Anda.');
+            };
+            document.body.appendChild(script);
+        } else {
+            setLoading(false);
+            executeTelegramAuth();
+        }
     };
 
     return (
@@ -168,7 +207,12 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                 className="relative w-full max-w-[1000px] bg-white dark:bg-[#0E1116] rounded-2xl md:rounded-[1.5rem] shadow-2xl shadow-slate-300/50 dark:shadow-[0_20px_60px_rgba(0,0,0,0.9)] animate-in zoom-in-95 duration-300 border-none overflow-hidden flex flex-col md:flex-row min-h-[600px] transition-colors"
                 onClick={(e) => e.stopPropagation()}
             >
+
+                {/* ========================================== */}
+                {/* KOLOM KIRI (POSTER & FITUR LENGKAP)        */}
+                {/* ========================================== */}
                 <div className="hidden md:flex flex-col w-[55%] p-10 lg:p-12 relative overflow-hidden bg-slate-100 dark:bg-[#07090D] border-none transition-colors">
+
                     <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500/10 dark:bg-blue-600/20 blur-[100px] rounded-full pointer-events-none z-0"></div>
                     <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-500/10 dark:bg-blue-600/15 blur-[100px] rounded-full pointer-events-none z-0"></div>
 
@@ -234,6 +278,9 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                     </div>
                 </div>
 
+                {/* ========================================== */}
+                {/* KOLOM KANAN (FORM LOGIN / FORGOT PASS)     */}
+                {/* ========================================== */}
                 <div className="w-full md:w-[45%] p-8 sm:p-12 flex flex-col justify-center relative bg-white dark:bg-[#0E1116]">
                     <button
                         type="button"
@@ -362,6 +409,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3 w-full mb-6">
+                                    {/* TOMBOL GOOGLE */}
                                     <div className="relative w-full h-[40px] rounded-[8px] bg-slate-100 dark:bg-[#161921] hover:bg-slate-200 dark:hover:bg-[#1E222D] transition-colors cursor-pointer overflow-hidden">
                                         <div className="absolute inset-0 flex items-center justify-center gap-2 text-slate-700 dark:text-zinc-200 pointer-events-none">
                                             <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -377,15 +425,20 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                         </div>
                                     </div>
 
-                                    {/* Tombol Interaktif Telegram Pop-up OAuth */}
+                                    {/* TOMBOL TELEGRAM (NEW OIDC API) */}
                                     <button
                                         type="button"
                                         onClick={handleTelegramLogin}
-                                        className="w-full h-[40px] flex items-center justify-center gap-2 bg-slate-100 dark:bg-[#161921] hover:bg-slate-200 dark:hover:bg-[#1E222D] text-slate-700 dark:text-zinc-200 rounded-[8px] font-medium transition-colors cursor-pointer border-none"
+                                        disabled={loading}
+                                        className="w-full h-[40px] flex items-center justify-center gap-2 bg-slate-100 dark:bg-[#161921] hover:bg-slate-200 dark:hover:bg-[#1E222D] text-slate-700 dark:text-zinc-200 rounded-[8px] font-medium transition-colors cursor-pointer disabled:cursor-not-allowed border-none"
                                     >
-                                        <svg className="w-4 h-4 text-[#2AABEE]" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.03-1.99 1.27-5.62 3.72-.53.36-1.01.54-1.44.53-.47-.01-1.38-.26-2.06-.48-.83-.27-1.49-.42-1.43-.89.03-.25.38-.51 1.06-.78 4.15-1.81 6.92-3.01 8.31-3.6 3.95-1.66 4.77-1.95 5.3-1.96.12 0 .39.03.56.17.15.12.19.28.21.4-.02.11-.02.32-.17 1.2z" />
-                                        </svg>
+                                        {loading ? (
+                                            <Loader2 className="w-4 h-4 animate-spin text-[#2AABEE]" />
+                                        ) : (
+                                            <svg className="w-4 h-4 text-[#2AABEE]" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.03-1.99 1.27-5.62 3.72-.53.36-1.01.54-1.44.53-.47-.01-1.38-.26-2.06-.48-.83-.27-1.49-.42-1.43-.89.03-.25.38-.51 1.06-.78 4.15-1.81 6.92-3.01 8.31-3.6 3.95-1.66 4.77-1.95 5.3-1.96.12 0 .39.03.56.17.15.12.19.28.21.4-.02.11-.02.32-.17 1.2z" />
+                                            </svg>
+                                        )}
                                         <span className="text-[13px] font-medium">Telegram</span>
                                     </button>
                                 </div>
