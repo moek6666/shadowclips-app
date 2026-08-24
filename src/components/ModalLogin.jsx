@@ -27,21 +27,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
     const turnstileRef = useRef(null);
 
     // =========================================================================
-    // 1. MEMUAT SCRIPT TELEGRAM OIDC TERBARU DI BACKGROUND
-    // =========================================================================
-    useEffect(() => {
-        if (!document.querySelector('script[src*="oauth.telegram.org"]')) {
-            const script = document.createElement('script');
-            script.src = 'https://oauth.telegram.org/js/telegram-login.js?5';
-            script.async = true;
-            // Memasukkan kredensial Bos agar API siap saat tombol diklik
-            script.setAttribute('data-client-id', '8470100626');
-            document.head.appendChild(script);
-        }
-    }, []);
-
-    // =========================================================================
-    // 2. FUNGSI PEMROSESAN DATA KE SUPABASE (LOGIKA BARU)
+    // 1. FUNGSI PEMROSESAN DATA KE SUPABASE
     // =========================================================================
     const handleTelegramData = useCallback(async (data) => {
         if (!supabase) return;
@@ -49,7 +35,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
         setErrorMsg('');
 
         try {
-            // Parsing format OIDC/Message agar tidak meleset
+            // Parsing format dari popup
             let rawData = data;
             if (typeof rawData === 'string') {
                 try { rawData = JSON.parse(rawData); } catch (e) { }
@@ -96,7 +82,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
     }, [supabase, onClose]);
 
     // =========================================================================
-    // 3. LISTENER UNTUK FALLBACK POPUP JIKA API DIBLOKIR BROWSER
+    // 2. LISTENER UNTUK MENANGKAP BALASAN DARI POPUP
     // =========================================================================
     useEffect(() => {
         const handleMessage = (event) => {
@@ -187,42 +173,26 @@ function ModalLogin({ isOpen, onClose, supabase }) {
     };
 
     // =========================================================================
-    // 4. KLIK TOMBOL TELEGRAM CUSTOM
+    // 3. KLIK TOMBOL TELEGRAM (MURNI MANUAL, TANPA SCRIPT LUAR)
     // =========================================================================
     const handleTelegramLogin = () => {
         setLoading(true);
         setErrorMsg('');
 
-        // Coba gunakan API senyap dari Telegram
-        if (window.Telegram && window.Telegram.Login) {
-            window.Telegram.Login.auth(
-                { client_id: 8470100626, request_access: 'write' },
-                (data) => {
-                    if (!data) {
-                        setLoading(false);
-                        return;
-                    }
-                    if (data.error) {
-                        setErrorMsg(data.error);
-                        setLoading(false);
-                        return;
-                    }
-                    handleTelegramData(data);
-                }
-            );
-        } else {
-            // Jika script lambat dimuat, gunakan metode popup manual
-            const currentOrigin = encodeURIComponent(window.location.origin);
-            const telegramOAuthUrl = `https://oauth.telegram.org/auth?bot_id=8470100626&origin=${currentOrigin}&embed=1&request_access=write`;
+        // KITA PAKSA ORIGINNYA AGAR ERROR "ORIGIN REQUIRED" HILANG
+        const domainOrigin = encodeURIComponent("https://shadowclips.asia");
+        const telegramOAuthUrl = `https://oauth.telegram.org/auth?bot_id=8470100626&origin=${domainOrigin}&embed=1&request_access=write`;
 
-            const width = 550;
-            const height = 470;
-            const left = (window.innerWidth - width) / 2;
-            const top = (window.innerHeight - height) / 2;
+        const width = 550;
+        const height = 470;
+        const left = (window.innerWidth - width) / 2;
+        const top = (window.innerHeight - height) / 2;
 
-            window.open(telegramOAuthUrl, 'TelegramAuth', `width=${width},height=${height},top=${top},left=${left}`);
-            setTimeout(() => setLoading(false), 5000); // Hapus indikator loading jika popup ditutup manual
-        }
+        // Buka popup manual
+        window.open(telegramOAuthUrl, 'TelegramAuth', `width=${width},height=${height},top=${top},left=${left}`);
+
+        // Hapus indikator loading setelah beberapa saat
+        setTimeout(() => setLoading(false), 4000);
     };
 
     return (
@@ -452,7 +422,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                         </div>
                                     </div>
 
-                                    {/* TOMBOL TELEGRAM CUSTOM ASLI (BISA DIKLIK, LOGIKA BARU) */}
+                                    {/* TOMBOL TELEGRAM KITA */}
                                     <button
                                         type="button"
                                         onClick={handleTelegramLogin}
