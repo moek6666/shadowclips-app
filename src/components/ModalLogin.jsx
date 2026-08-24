@@ -117,7 +117,6 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                     redirectTo: `${window.location.origin}/profile`
                 }
             });
-
             if (error) throw error;
         } catch (err) {
             console.error("Discord Login Error:", err);
