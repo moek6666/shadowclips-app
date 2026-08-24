@@ -42,7 +42,8 @@ function ModalLogin({ isOpen, onClose, supabase }) {
 
         try {
             if (isForgotPass) {
-                // Logika Kirim Email Reset Password
+                // 🔥 LOGIKA RESET PASSWORD DIPERBAIKI 🔥
+                // Menggunakan window.location.origin memastikan URL selalu valid (localhost atau shadowclips.asia)
                 const { error } = await supabase.auth.resetPasswordForEmail(email, {
                     redirectTo: `${window.location.origin}/update-password`,
                 });
@@ -69,6 +70,8 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                 customError = "Password terlalu lemah. Gunakan minimal 1 huruf besar, angka, dan simbol.";
             } else if (customError.includes("Invalid login credentials")) {
                 customError = "Email/Password salah, atau akun belum diverifikasi via email.";
+            } else if (customError.includes("For security purposes, you can only request this once every")) {
+                customError = "Anda sudah meminta reset password baru-baru ini. Silakan cek email Anda atau tunggu beberapa saat.";
             }
 
             setErrorMsg(customError || 'Terjadi kesalahan sistem.');
