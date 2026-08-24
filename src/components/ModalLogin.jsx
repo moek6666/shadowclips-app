@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { X, Mail, Lock, Loader2, Eye, EyeOff, User, MonitorPlay, Zap, Radio, Play, ArrowLeft } from 'lucide-react';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { Turnstile } from '@marsidev/react-turnstile';
@@ -25,6 +25,55 @@ function ModalLogin({ isOpen, onClose, supabase }) {
 
     const [captchaToken, setCaptchaToken] = useState(null);
     const turnstileRef = useRef(null);
+    const telegramButtonRef = useRef(null);
+
+    // Integrasi Widget Resmi Telegram & Penyimpanan Avatar
+    useEffect(() => {
+        window.onTelegramAuth = async (user) => {
+            if (!supabase) return;
+            setLoading(true);
+            setErrorMsg('');
+
+            try {
+                const { data: rpcData, error: rpcError } = await supabase.rpc('handle_telegram_auth', {
+                    p_telegram_id: user.id,
+                    p_first_name: user.first_name,
+                    p_username: user.username || `user_${user.id}`,
+                    p_photo_url: user.photo_url || null
+                });
+
+                if (rpcError) throw rpcError;
+                if (!rpcData || !rpcData.success) throw new Error('Gagal memproses otorisasi Telegram.');
+
+                const { error: signInError } = await supabase.auth.signInWithPassword({
+                    email: rpcData.email,
+                    password: rpcData.password,
+                });
+
+                if (signInError) throw signInError;
+
+                onClose();
+                window.location.reload();
+
+            } catch (err) {
+                console.error("Telegram Auth Error:", err);
+                setErrorMsg(err.message || 'Gagal memproses autentikasi Telegram.');
+                setLoading(false);
+            }
+        };
+
+        if (isOpen && telegramButtonRef.current && !telegramButtonRef.current.hasChildNodes()) {
+            const script = document.createElement('script');
+            script.src = 'https://telegram.org/js/telegram-widget.js?22';
+            script.setAttribute('data-telegram-login', 'shadowclipsauth_bot');
+            script.setAttribute('data-size', 'large');
+            script.setAttribute('data-radius', '8');
+            script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+            script.setAttribute('data-request-access', 'write');
+            script.async = true;
+            telegramButtonRef.current.appendChild(script);
+        }
+    }, [isOpen, supabase]);
 
     if (!isOpen) return null;
 
@@ -106,7 +155,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
         setErrorMsg('Proses login Google dibatalkan atau gagal.');
     };
 
-    const handleTelegramLogin = () => {
+    const handleTelegramFallback = () => {
         const width = 550;
         const height = 470;
         const left = (window.innerWidth - width) / 2;
@@ -130,15 +179,13 @@ function ModalLogin({ isOpen, onClose, supabase }) {
             >
 
                 {/* ========================================== */}
-                {/* 1. KOLOM KIRI (LENGKAP DENGAN IKON & POSTER)*/}
+                {/* 1. KOLOM KIRI (KEMBALI KE POSTER CEWEK)    */}
                 {/* ========================================== */}
                 <div className="hidden md:flex flex-col w-[55%] p-10 lg:p-12 relative overflow-hidden bg-slate-100 dark:bg-[#07090D] border-none transition-colors">
 
-                    {/* Efek Cahaya / Ambient Glow */}
                     <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500/10 dark:bg-blue-600/20 blur-[100px] rounded-full pointer-events-none z-0"></div>
                     <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-500/10 dark:bg-blue-600/15 blur-[100px] rounded-full pointer-events-none z-0"></div>
 
-                    {/* KARTU GAMBAR (FADE OUT MASKING) */}
                     <div
                         className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-85 dark:opacity-90 transition-opacity"
                         style={{
@@ -146,28 +193,21 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                             maskImage: 'linear-gradient(to top right, transparent 10%, black 85%)'
                         }}
                     >
-                        {/* Card 1 (Cia) */}
                         <div className="absolute top-[5%] -left-[5%] w-48 h-72 rounded-2xl shadow-2xl transform -rotate-6 overflow-hidden bg-zinc-800 border border-white/10">
                             <img src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/Login%20BG/Cia.webp" alt="Poster Cia" className="w-full h-full object-cover" />
                         </div>
-
-                        {/* Card 2 (Rizkysuryai) */}
                         <div className="absolute top-[12%] left-[28%] w-56 h-80 rounded-2xl shadow-2xl transform rotate-3 overflow-hidden bg-zinc-800 z-10 border border-white/15">
                             <img src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/Login%20BG/Rizkysuryai.webp" alt="Poster Rizkysuryai" className="w-full h-full object-cover" />
                         </div>
-
-                        {/* Card 3 (Khofifah) */}
+                        {/* Kembali menggunakan gambar Khofifah */}
                         <div className="absolute top-[5%] -right-[5%] w-48 h-72 rounded-2xl shadow-2xl transform rotate-6 overflow-hidden bg-zinc-800 border border-white/10">
                             <img src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/Login%20BG/Khofifah.webp" alt="Poster Khofifah" className="w-full h-full object-cover" />
                         </div>
                     </div>
 
-                    {/* Gradient Fade Lembut */}
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-100 via-slate-100/60 to-transparent dark:from-[#07090D] dark:via-[#07090D]/70 dark:to-transparent z-0 pointer-events-none"></div>
 
-                    {/* KONTEN KIRI (LOGO, TEKS, DAN 4 GRID FITUR LENGKAP) */}
                     <div className="relative z-10 flex flex-col h-full justify-end pb-2 lg:pb-4">
-
                         <div className="flex flex-col gap-2 mb-6">
                             <div className="flex items-center gap-3">
                                 <img
@@ -184,7 +224,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                             </p>
                         </div>
 
-                        {/* Feature Grid (Exclusive, Viral, DeepFake, Live) */}
+                        {/* 4 GRID FITUR LENGKAP */}
                         <div className="grid grid-cols-2 gap-x-4 gap-y-4">
                             <div className="flex flex-col gap-1">
                                 <MonitorPlay className="w-5 h-5 lg:w-6 lg:h-6 text-[#3b82f6] mb-0.5" strokeWidth={2} />
@@ -207,7 +247,6 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                 <p className="text-[11px] text-slate-500 dark:text-zinc-400 leading-snug font-medium">Record or replay streaming</p>
                             </div>
                         </div>
-
                     </div>
                 </div>
 
@@ -359,7 +398,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
 
                                     <button
                                         type="button"
-                                        onClick={handleTelegramLogin}
+                                        onClick={handleTelegramFallback}
                                         className="w-full h-[40px] flex items-center justify-center gap-2 bg-slate-100 dark:bg-[#161921] hover:bg-slate-200 dark:hover:bg-[#1E222D] text-slate-700 dark:text-zinc-200 rounded-[8px] font-medium transition-colors cursor-pointer border-none"
                                     >
                                         <svg className="w-4 h-4 text-[#2AABEE]" viewBox="0 0 24 24" fill="currentColor">
