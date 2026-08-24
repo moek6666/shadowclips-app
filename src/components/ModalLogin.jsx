@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, memo } from 'react';
+import React, { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { X, Mail, Lock, Loader2, Eye, EyeOff, User, MonitorPlay, Zap, Radio, Play, ArrowLeft } from 'lucide-react';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { Turnstile } from '@marsidev/react-turnstile';
@@ -14,27 +14,39 @@ export default function ModalLoginWrapper(props) {
 }
 
 // =========================================================================
-// KOMPONEN WIDGET TELEGRAM (ANTI HILANG)
-// Menggunakan memo() agar React tidak menghapus tombol saat form diketik
+// WIDGET TELEGRAM OIDC TERBARU (Sesuai Kode Bawaan yang Bos Temukan)
 // =========================================================================
-const TelegramWidget = memo(() => {
+const TelegramWidget = memo(({ onAuth }) => {
     const containerRef = useRef(null);
 
     useEffect(() => {
-        if (containerRef.current && containerRef.current.children.length === 0) {
+        // Daftarkan fungsi global agar bisa dipanggil oleh script Telegram
+        window.onTelegramAuthCallback = (data) => {
+            onAuth(data);
+        };
+
+        // Injeksi script resmi OIDC Telegram persis seperti temuan Bos
+        if (containerRef.current && containerRef.current.children.length === 1) {
             const script = document.createElement('script');
-            script.src = 'https://telegram.org/js/telegram-widget.js?22';
-            script.setAttribute('data-telegram-login', 'shadowclipsauth_bot');
-            script.setAttribute('data-size', 'large');
-            script.setAttribute('data-radius', '8');
-            script.setAttribute('data-request-access', 'write');
-            script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+            script.src = 'https://oauth.telegram.org/js/telegram-login.js?5';
             script.async = true;
+            script.setAttribute('data-client-id', '8470100626'); // Client ID Bot Bos
+            script.setAttribute('data-onauth', 'onTelegramAuthCallback(data)');
+            script.setAttribute('data-request-access', 'write');
             containerRef.current.appendChild(script);
         }
-    }, []);
 
-    return <div ref={containerRef} className="flex justify-center items-center w-full h-[40px] overflow-hidden rounded-[8px] bg-transparent" />;
+        return () => {
+            window.onTelegramAuthCallback = undefined;
+        };
+    }, [onAuth]);
+
+    return (
+        <div ref={containerRef} className="w-full flex items-center justify-center bg-slate-100 dark:bg-[#161921] hover:bg-slate-200 dark:hover:bg-[#1E222D] rounded-[8px] h-[40px] overflow-hidden transition-colors">
+            {/* Tombol pemicu bawaan Telegram */}
+            <button className="tg-auth-button" data-style="icon">Sign In with Telegram</button>
+        </div>
+    );
 });
 
 function ModalLogin({ isOpen, onClose, supabase }) {
@@ -51,55 +63,51 @@ function ModalLogin({ isOpen, onClose, supabase }) {
     const turnstileRef = useRef(null);
 
     // =========================================================================
-    // LISTENER DATA DARI WIDGET TELEGRAM (DIJAMIN DIEKSEKUSI)
+    // HANDLER DATA DARI TELEGRAM KE SUPABASE
     // =========================================================================
-    useEffect(() => {
-        window.onTelegramAuth = async (user) => {
-            if (!supabase) return;
+    const handleTelegramData = useCallback(async (data) => {
+        if (!supabase) return;
 
-            console.log("Data Telegram Berhasil Diterima Web:", user);
-            setLoading(true);
-            setErrorMsg('');
+        setLoading(true);
+        setErrorMsg('');
 
-            try {
-                // 1. Eksekusi fungsi master di database Supabase
-                const { data: rpcData, error: rpcError } = await supabase.rpc('handle_telegram_auth', {
-                    p_telegram_id: user.id,
-                    p_first_name: user.first_name,
-                    p_username: user.username || `user_${user.id}`,
-                    p_photo_url: user.photo_url || null
-                });
+        try {
+            // Struktur payload OIDC terbaru
+            const user = data.user || data;
+            console.log("Data Telegram (OIDC) Diterima:", user);
 
-                if (rpcError) {
-                    console.error("Supabase DB Error:", rpcError);
-                    throw new Error('Gagal menyimpan profil ke database.');
-                }
+            // 1. Eksekusi fungsi master di database Supabase
+            const { data: rpcData, error: rpcError } = await supabase.rpc('handle_telegram_auth', {
+                p_telegram_id: user.id,
+                p_first_name: user.first_name,
+                p_username: user.username || `user_${user.id}`,
+                p_photo_url: user.photo_url || null
+            });
 
-                // 2. Login menggunakan kredensial sintetis dari database
-                const { error: signInError } = await supabase.auth.signInWithPassword({
-                    email: rpcData.email,
-                    password: rpcData.password,
-                });
-
-                if (signInError) {
-                    console.error("Supabase Auth Error:", signInError);
-                    throw new Error('Gagal memulai sesi login.');
-                }
-
-                // 3. Sukses! Tutup modal dan refresh agar Navbar update
-                onClose();
-                window.location.reload();
-            } catch (err) {
-                console.error("Gagal Total Telegram Auth:", err);
-                setErrorMsg(err.message || 'Terjadi kesalahan sistem.');
-                setLoading(false);
+            if (rpcError) {
+                console.error("Supabase RPC Error:", rpcError);
+                throw new Error('Gagal menyimpan profil Telegram ke database.');
             }
-        };
 
-        // Bersihkan fungsi global saat komponen ditutup agar aman
-        return () => {
-            window.onTelegramAuth = undefined;
-        };
+            // 2. Login menggunakan kredensial sintetis dari database
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+                email: rpcData.email,
+                password: rpcData.password,
+            });
+
+            if (signInError) {
+                console.error("Supabase Auth Error:", signInError);
+                throw new Error('Gagal memulai sesi login Supabase.');
+            }
+
+            // 3. Sukses! Tutup modal dan refresh agar Navbar update
+            onClose();
+            window.location.reload();
+        } catch (err) {
+            console.error("Gagal Total Telegram Auth:", err);
+            setErrorMsg(err.message || 'Terjadi kesalahan saat otorisasi Telegram.');
+            setLoading(false);
+        }
     }, [supabase, onClose]);
 
     if (!isOpen) return null;
@@ -171,6 +179,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
             onClose();
             window.location.reload();
         } catch (err) {
+            console.error("ID Token Error:", err);
             setErrorMsg('Autentikasi Google ditolak oleh sistem.');
             setLoading(false);
         }
@@ -407,8 +416,8 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                         </div>
                                     </div>
 
-                                    {/* TOMBOL TELEGRAM WIDGET ASLI (TIDAK AKAN DIBLOKIR) */}
-                                    <TelegramWidget />
+                                    {/* TOMBOL OIDC TELEGRAM (Penemuan Bos!) */}
+                                    <TelegramWidget onAuth={handleTelegramData} />
                                 </div>
                             </>
                         )}
