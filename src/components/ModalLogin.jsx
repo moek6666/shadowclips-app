@@ -27,7 +27,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
     const turnstileRef = useRef(null);
 
     // =========================================================================
-    // 1. FUNGSI PEMROSESAN DATA KE SUPABASE
+    // 1. FUNGSI BARU: MENGIRIM DATA KE EDGE FUNCTION (BACKEND)
     // =========================================================================
     const handleTelegramData = useCallback(async (data) => {
         if (!supabase) return;
@@ -35,7 +35,6 @@ function ModalLogin({ isOpen, onClose, supabase }) {
         setErrorMsg('');
 
         try {
-            // Parsing format dari popup
             let rawData = data;
             if (typeof rawData === 'string') {
                 try { rawData = JSON.parse(rawData); } catch (e) { }
@@ -52,26 +51,27 @@ function ModalLogin({ isOpen, onClose, supabase }) {
 
             if (!user || !user.id) throw new Error("Data Telegram tidak lengkap.");
 
-            // Eksekusi fungsi master di database Supabase
-            const { data: rpcData, error: rpcError } = await supabase.rpc('handle_telegram_auth', {
-                p_telegram_id: user.id,
-                p_first_name: user.first_name,
-                p_username: user.username || `user_${user.id}`,
-                p_photo_url: user.photo_url || null
+            // PANGGIL EDGE FUNCTION YANG BARU BOS DEPLOY
+            const { data: edgeData, error: edgeError } = await supabase.functions.invoke('telegram-auth', {
+                body: {
+                    telegram_id: user.id,
+                    first_name: user.first_name,
+                    username: user.username || `user_${user.id}`,
+                    photo_url: user.photo_url || null
+                }
             });
 
-            if (rpcError) throw rpcError;
-            if (!rpcData || !rpcData.success) throw new Error('Gagal memproses otorisasi Telegram.');
+            if (edgeError) throw edgeError;
+            if (!edgeData || !edgeData.success) throw new Error(edgeData?.error || 'Gagal diproses oleh backend.');
 
-            // Login sesi menggunakan kredensial sintetis dari database
+            // Edge Function sukses membuat akun/skema! Sekarang login...
             const { error: signInError } = await supabase.auth.signInWithPassword({
-                email: rpcData.email,
-                password: rpcData.password,
+                email: edgeData.email,
+                password: edgeData.password,
             });
 
             if (signInError) throw signInError;
 
-            // Sukses, tutup modal dan refresh navbar
             onClose();
             window.location.reload();
         } catch (err) {
@@ -172,15 +172,11 @@ function ModalLogin({ isOpen, onClose, supabase }) {
         setErrorMsg('Proses login Google dibatalkan atau gagal.');
     };
 
-    // =========================================================================
-    // 3. KLIK TOMBOL TELEGRAM (MURNI MANUAL, TANPA SCRIPT LUAR)
-    // =========================================================================
     const handleTelegramLogin = () => {
         setLoading(true);
         setErrorMsg('');
 
-        // KITA PAKSA ORIGINNYA AGAR ERROR "ORIGIN REQUIRED" HILANG
-        const domainOrigin = encodeURIComponent("https://shadowclips.asia");
+        const domainOrigin = encodeURIComponent(window.location.origin);
         const telegramOAuthUrl = `https://oauth.telegram.org/auth?bot_id=8470100626&origin=${domainOrigin}&embed=1&request_access=write`;
 
         const width = 550;
@@ -188,10 +184,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
         const left = (window.innerWidth - width) / 2;
         const top = (window.innerHeight - height) / 2;
 
-        // Buka popup manual
         window.open(telegramOAuthUrl, 'TelegramAuth', `width=${width},height=${height},top=${top},left=${left}`);
-
-        // Hapus indikator loading setelah beberapa saat
         setTimeout(() => setLoading(false), 4000);
     };
 
@@ -205,9 +198,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                 onClick={(e) => e.stopPropagation()}
             >
 
-                {/* ========================================== */}
-                {/* KOLOM KIRI (POSTER & FITUR)                */}
-                {/* ========================================== */}
+                {/* KOLOM KIRI (POSTER) */}
                 <div className="hidden md:flex flex-col w-[55%] p-10 lg:p-12 relative overflow-hidden bg-slate-100 dark:bg-[#07090D] border-none transition-colors">
 
                     <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500/10 dark:bg-blue-600/20 blur-[100px] rounded-full pointer-events-none z-0"></div>
@@ -275,9 +266,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                     </div>
                 </div>
 
-                {/* ========================================== */}
-                {/* KOLOM KANAN (FORM LOGIN)                   */}
-                {/* ========================================== */}
+                {/* KOLOM KANAN (FORM) */}
                 <div className="w-full md:w-[45%] p-8 sm:p-12 flex flex-col justify-center relative bg-white dark:bg-[#0E1116]">
                     <button
                         type="button"
@@ -405,8 +394,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                     <div className="h-px bg-slate-200 dark:bg-zinc-800 flex-1"></div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3 w-full mb-6">
-                                    {/* TOMBOL GOOGLE */}
+                                <div className="grid grid-cols-2 gap-3 w-full mb-4">
                                     <div className="relative w-full h-[40px] rounded-[8px] bg-slate-100 dark:bg-[#161921] hover:bg-slate-200 dark:hover:bg-[#1E222D] transition-colors cursor-pointer overflow-hidden">
                                         <div className="absolute inset-0 flex items-center justify-center gap-2 text-slate-700 dark:text-zinc-200 pointer-events-none">
                                             <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -422,7 +410,6 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                         </div>
                                     </div>
 
-                                    {/* TOMBOL TELEGRAM KITA */}
                                     <button
                                         type="button"
                                         onClick={handleTelegramLogin}
@@ -439,6 +426,50 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                         <span className="text-[13px] font-medium">Telegram</span>
                                     </button>
                                 </div>
+
+                                {/* ========================================== */}
+                                {/* TOMBOL MERAH UNTUK TES EDGE FUNCTION       */}
+                                {/* ========================================== */}
+                                <button
+                                    type="button"
+                                    onClick={async () => {
+                                        try {
+                                            alert("1. Memanggil Edge Function di Backend...");
+                                            const { data: edgeData, error: edgeError } = await supabase.functions.invoke('telegram-auth', {
+                                                body: {
+                                                    telegram_id: 999888777,
+                                                    first_name: "Tembus Backend",
+                                                    username: "backend_test",
+                                                    photo_url: "https://shadowclips.asia/dummy.jpg"
+                                                }
+                                            });
+
+                                            if (edgeError) {
+                                                alert("❌ FUNGSI ERROR: " + edgeError.message);
+                                                return;
+                                            }
+
+                                            alert("✅ BACKEND SUKSES! Data: " + JSON.stringify(edgeData));
+
+                                            const { error: signInError } = await supabase.auth.signInWithPassword({
+                                                email: edgeData.email,
+                                                password: edgeData.password,
+                                            });
+
+                                            if (signInError) {
+                                                alert("❌ GAGAL BIKIN SESI: " + signInError.message);
+                                            } else {
+                                                alert("✅ SESI LOGIN SUKSES! Navbar harusnya berubah sekarang.");
+                                                window.location.reload();
+                                            }
+                                        } catch (e) {
+                                            alert("❌ FATAL ERROR: " + e.message);
+                                        }
+                                    }}
+                                    className="w-full h-[40px] bg-red-600 hover:bg-red-700 text-white rounded-[8px] mb-4 font-bold cursor-pointer border-none"
+                                >
+                                    🔥 TEST TEMBAK BACKEND (KLIK INI)
+                                </button>
                             </>
                         )}
 
