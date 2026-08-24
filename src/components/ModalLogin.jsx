@@ -27,7 +27,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
     const turnstileRef = useRef(null);
     const telegramButtonRef = useRef(null);
 
-    // Integrasi Widget Resmi Telegram & Penyimpanan Avatar
+    // Integrasi Widget Telegram, RPC Supabase, dan Paksa Refresh Sesi
     useEffect(() => {
         window.onTelegramAuth = async (user) => {
             if (!supabase) return;
@@ -35,6 +35,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
             setErrorMsg('');
 
             try {
+                // 1. Eksekusi fungsi RPC database
                 const { data: rpcData, error: rpcError } = await supabase.rpc('handle_telegram_auth', {
                     p_telegram_id: user.id,
                     p_first_name: user.first_name,
@@ -45,15 +46,19 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                 if (rpcError) throw rpcError;
                 if (!rpcData || !rpcData.success) throw new Error('Gagal memproses otorisasi Telegram.');
 
-                const { error: signInError } = await supabase.auth.signInWithPassword({
+                // 2. Login menggunakan kredensial sintetis
+                const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
                     email: rpcData.email,
                     password: rpcData.password,
                 });
 
                 if (signInError) throw signInError;
 
+                // 3. Tutup modal dan muat ulang halaman agar Navbar langsung berubah statusnya
                 onClose();
-                window.location.reload();
+                setTimeout(() => {
+                    window.location.reload();
+                }, 300);
 
             } catch (err) {
                 console.error("Telegram Auth Error:", err);
@@ -100,6 +105,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
                 onClose();
+                window.location.reload();
             } else {
                 const { error } = await supabase.auth.signUp({
                     email,
@@ -142,6 +148,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
 
             if (error) throw error;
             onClose();
+            window.location.reload();
 
         } catch (err) {
             console.error("ID Token Error:", err);
@@ -179,7 +186,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
             >
 
                 {/* ========================================== */}
-                {/* 1. KOLOM KIRI (KEMBALI KE POSTER CEWEK)    */}
+                {/* 1. KOLOM KIRI (POSTER & FITUR LENGKAP)     */}
                 {/* ========================================== */}
                 <div className="hidden md:flex flex-col w-[55%] p-10 lg:p-12 relative overflow-hidden bg-slate-100 dark:bg-[#07090D] border-none transition-colors">
 
@@ -199,7 +206,6 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                         <div className="absolute top-[12%] left-[28%] w-56 h-80 rounded-2xl shadow-2xl transform rotate-3 overflow-hidden bg-zinc-800 z-10 border border-white/15">
                             <img src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/Login%20BG/Rizkysuryai.webp" alt="Poster Rizkysuryai" className="w-full h-full object-cover" />
                         </div>
-                        {/* Kembali menggunakan gambar Khofifah */}
                         <div className="absolute top-[5%] -right-[5%] w-48 h-72 rounded-2xl shadow-2xl transform rotate-6 overflow-hidden bg-zinc-800 border border-white/10">
                             <img src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/Login%20BG/Khofifah.webp" alt="Poster Khofifah" className="w-full h-full object-cover" />
                         </div>
@@ -224,7 +230,6 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                             </p>
                         </div>
 
-                        {/* 4 GRID FITUR LENGKAP */}
                         <div className="grid grid-cols-2 gap-x-4 gap-y-4">
                             <div className="flex flex-col gap-1">
                                 <MonitorPlay className="w-5 h-5 lg:w-6 lg:h-6 text-[#3b82f6] mb-0.5" strokeWidth={2} />
