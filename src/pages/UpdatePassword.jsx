@@ -9,17 +9,40 @@ export default function UpdatePassword({ supabase }) {
     const [successMsg, setSuccessMsg] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [isReady, setIsReady] = useState(false);
 
-    // Mengecek apakah user benar-benar datang dari link reset password
+    // Menangkap sesi pemulihan dari URL yang dikirim Supabase
     useEffect(() => {
-        const checkUserSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                setErrorMsg('Sesi tidak valid atau telah kedaluwarsa. Silakan minta link reset password baru.');
+        if (!supabase) return;
+
+        const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'PASSWORD_RECOVERY') {
+                setIsReady(true);
             }
+        });
+
+        // Cek manual jika sesi sudah aktif terbaca
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                setIsReady(true);
+            } else {
+                // Berikan waktu sejenak untuk parsing hash URL jika lambat
+                setTimeout(() => {
+                    supabase.auth.getSession().then(({ data: { session: retrySession } }) => {
+                        if (retrySession) {
+                            setIsReady(true);
+                        } else {
+                            setErrorMsg('Link reset password tidak valid atau sudah kedaluwarsa. Silakan ajukan ulang.');
+                        }
+                    });
+                }, 1000);
+            }
+        });
+
+        return () => {
+            authListener.subscription.unsubscribe();
         };
-        checkUserSession();
-    }, [supabase.auth]);
+    }, [supabase]);
 
     const handleUpdatePassword = async (e) => {
         e.preventDefault();
@@ -45,13 +68,12 @@ export default function UpdatePassword({ supabase }) {
 
             if (error) throw error;
 
-            setSuccessMsg('Password berhasil diperbarui! Anda sekarang bisa login dengan password baru.');
+            setSuccessMsg('Password berhasil diperbarui! Mengalihkan ke beranda...');
             setPassword('');
             setConfirmPassword('');
 
-            // Opsi: Redirect otomatis ke halaman login setelah 3 detik
             setTimeout(() => {
-                window.location.href = '/'; // Sesuaikan dengan route login web Bos
+                window.location.href = '/';
             }, 3000);
 
         } catch (err) {
@@ -64,7 +86,6 @@ export default function UpdatePassword({ supabase }) {
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-[#0A0D14] flex items-center justify-center p-4 transition-colors">
 
-            {/* Ambient Glow Effects */}
             <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-transparent dark:bg-blue-600/20 blur-[100px] rounded-full pointer-events-none z-0 transition-colors"></div>
             <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-transparent dark:bg-blue-600/10 blur-[100px] rounded-full pointer-events-none z-0 transition-colors"></div>
 
@@ -77,10 +98,10 @@ export default function UpdatePassword({ supabase }) {
                         className="w-14 h-14 mb-5 object-contain border-none"
                     />
                     <h2 className="text-[28px] sm:text-3xl font-black tracking-tighter text-slate-900 dark:text-white mb-2 border-none transition-colors">
-                        Reset Password
+                        Atur Password Baru
                     </h2>
                     <p className="text-[13px] text-slate-500 dark:text-zinc-400 border-none transition-colors">
-                        Buat password baru yang kuat dan aman untuk akun ShadowClips Anda.
+                        Masukkan password baru untuk akun ShadowClips Anda.
                     </p>
                 </div>
 
@@ -110,13 +131,13 @@ export default function UpdatePassword({ supabase }) {
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                                 minLength={6}
-                                disabled={successMsg !== ''}
+                                disabled={successMsg !== '' || !isReady}
                                 className="w-full bg-slate-100 dark:bg-[#161921] py-3 pl-11 pr-11 rounded-[8px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#3b82f6]/50 transition-all text-[13px] border-none disabled:opacity-50"
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                disabled={successMsg !== ''}
+                                disabled={successMsg !== '' || !isReady}
                                 className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 focus:outline-none bg-transparent cursor-pointer transition-colors border-none disabled:opacity-50"
                             >
                                 {showPassword ? <EyeOff className="w-4 h-4 border-none" strokeWidth={1.5} /> : <Eye className="w-4 h-4 border-none" strokeWidth={1.5} />}
@@ -135,13 +156,13 @@ export default function UpdatePassword({ supabase }) {
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 required
                                 minLength={6}
-                                disabled={successMsg !== ''}
+                                disabled={successMsg !== '' || !isReady}
                                 className="w-full bg-slate-100 dark:bg-[#161921] py-3 pl-11 pr-11 rounded-[8px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#3b82f6]/50 transition-all text-[13px] border-none disabled:opacity-50"
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                disabled={successMsg !== ''}
+                                disabled={successMsg !== '' || !isReady}
                                 className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 focus:outline-none bg-transparent cursor-pointer transition-colors border-none disabled:opacity-50"
                             >
                                 {showConfirmPassword ? <EyeOff className="w-4 h-4 border-none" strokeWidth={1.5} /> : <Eye className="w-4 h-4 border-none" strokeWidth={1.5} />}
@@ -151,10 +172,10 @@ export default function UpdatePassword({ supabase }) {
 
                     <button
                         type="submit"
-                        disabled={loading || !password || !confirmPassword || successMsg !== ''}
+                        disabled={loading || !password || !confirmPassword || successMsg !== '' || !isReady}
                         className="w-full bg-[#1D4ED8] hover:bg-[#2563EB] disabled:bg-slate-200 dark:disabled:bg-zinc-800 disabled:text-slate-400 dark:disabled:text-zinc-500 text-white py-3.5 rounded-[8px] font-semibold transition-colors flex items-center justify-center gap-2 outline-none cursor-pointer disabled:cursor-not-allowed border-none mt-4"
                     >
-                        {loading ? <Loader2 className="w-5 h-5 animate-spin border-none" /> : 'Update Password'}
+                        {loading ? <Loader2 className="w-5 h-5 animate-spin border-none" /> : 'Perbarui Password'}
                     </button>
                 </form>
             </div>
