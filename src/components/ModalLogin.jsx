@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { X, Mail, Lock, Loader2, Eye, EyeOff, User, MonitorPlay, Zap, Radio, Play, ArrowLeft } from 'lucide-react';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { Turnstile } from '@marsidev/react-turnstile';
@@ -25,6 +25,63 @@ function ModalLogin({ isOpen, onClose, supabase }) {
 
     const [captchaToken, setCaptchaToken] = useState(null);
     const turnstileRef = useRef(null);
+
+    // ==========================================
+    // LISTENER BALASAN DARI POPUP TELEGRAM
+    // ==========================================
+    useEffect(() => {
+        const handleTelegramMessage = async (event) => {
+            // Pastikan pesan hanya dari server resmi Telegram OAuth
+            if (!event.origin.includes('oauth.telegram.org')) return;
+
+            try {
+                // Parsing data aman
+                let data = event.data;
+                if (typeof data === 'string') {
+                    data = JSON.parse(data);
+                }
+
+                // Jika login sukses di popup
+                if (data.event === 'auth_result' && data.result) {
+                    const user = data.result;
+                    if (!supabase) return;
+
+                    setLoading(true);
+                    setErrorMsg('');
+
+                    // 1. Eksekusi fungsi master di database Supabase
+                    const { data: rpcData, error: rpcError } = await supabase.rpc('handle_telegram_auth', {
+                        p_telegram_id: user.id,
+                        p_first_name: user.first_name,
+                        p_username: user.username || `user_${user.id}`,
+                        p_photo_url: user.photo_url || null
+                    });
+
+                    if (rpcError) throw rpcError;
+                    if (!rpcData || !rpcData.success) throw new Error('Gagal memproses otorisasi Telegram.');
+
+                    // 2. Login menggunakan kredensial sintetis dari database
+                    const { error: signInError } = await supabase.auth.signInWithPassword({
+                        email: rpcData.email,
+                        password: rpcData.password,
+                    });
+
+                    if (signInError) throw signInError;
+
+                    // 3. Sukses, tutup modal dan refresh navbar
+                    onClose();
+                    window.location.reload();
+                }
+            } catch (err) {
+                console.error("Telegram Auth Error:", err);
+                setErrorMsg(err.message || 'Gagal memproses akun di database.');
+                setLoading(false);
+            }
+        };
+
+        window.addEventListener('message', handleTelegramMessage);
+        return () => window.removeEventListener('message', handleTelegramMessage);
+    }, [supabase, onClose]);
 
     if (!isOpen) return null;
 
@@ -113,89 +170,25 @@ function ModalLogin({ isOpen, onClose, supabase }) {
     };
 
     // ==========================================
-    // FUNGSI AUTH TELEGRAM (NEW OIDC FLOW)
+    // FUNGSI AUTH TELEGRAM (MANUAL DIRECT POPUP)
     // ==========================================
-    const executeTelegramAuth = () => {
-        window.Telegram.Login.auth(
-            {
-                client_id: 8470100626, // Bot ID yang sudah didaftarkan di BotFather
-                request_access: 'write'
-            },
-            async (data) => {
-                if (!data) {
-                    setLoading(false);
-                    return;
-                }
-
-                if (data.error) {
-                    console.error("Telegram Auth Error:", data.error);
-                    setErrorMsg("Login Telegram gagal: " + data.error);
-                    setLoading(false);
-                    return;
-                }
-
-                // Struktur kembalian OIDC baru biasanya ada di data.user
-                const user = data.user || data;
-
-                if (user && user.id) {
-                    try {
-                        setLoading(true);
-                        setErrorMsg('');
-
-                        // 1. Kirim ke Fungsi Master Supabase
-                        const { data: rpcData, error: rpcError } = await supabase.rpc('handle_telegram_auth', {
-                            p_telegram_id: user.id,
-                            p_first_name: user.first_name,
-                            p_username: user.username || `user_${user.id}`,
-                            p_photo_url: user.photo_url || null
-                        });
-
-                        if (rpcError) throw rpcError;
-                        if (!rpcData || !rpcData.success) throw new Error('Gagal memproses otorisasi Telegram.');
-
-                        // 2. Login menggunakan kredensial sintetis dari database
-                        const { error: signInError } = await supabase.auth.signInWithPassword({
-                            email: rpcData.email,
-                            password: rpcData.password,
-                        });
-
-                        if (signInError) throw signInError;
-
-                        // 3. Sukses, tutup modal dan refresh navbar
-                        onClose();
-                        window.location.reload();
-                    } catch (err) {
-                        console.error("Supabase Sync Error:", err);
-                        setErrorMsg(err.message || "Gagal sinkronisasi akun dengan database.");
-                        setLoading(false);
-                    }
-                }
-            }
-        );
-    };
-
     const handleTelegramLogin = () => {
-        setLoading(true);
-        setErrorMsg('');
+        // Ambil origin website Bos secara dinamis (https://shadowclips.asia)
+        const currentOrigin = encodeURIComponent(window.location.origin);
 
-        // Memuat script telegram-login.js secara dinamis saat tombol diklik
-        if (!window.Telegram || !window.Telegram.Login) {
-            const script = document.createElement('script');
-            script.src = 'https://telegram.org/js/telegram-login.js';
-            script.async = true;
-            script.onload = () => {
-                setLoading(false);
-                executeTelegramAuth();
-            };
-            script.onerror = () => {
-                setLoading(false);
-                setErrorMsg('Gagal memuat sistem login Telegram. Periksa koneksi Anda.');
-            };
-            document.body.appendChild(script);
-        } else {
-            setLoading(false);
-            executeTelegramAuth();
-        }
+        // Buat URL popup dengan parameter `origin` yang dipaksakan masuk
+        const telegramOAuthUrl = `https://oauth.telegram.org/auth?bot_id=8470100626&origin=${currentOrigin}&embed=1&request_access=write`;
+
+        const width = 550;
+        const height = 470;
+        const left = (window.innerWidth - width) / 2;
+        const top = (window.innerHeight - height) / 2;
+
+        window.open(
+            telegramOAuthUrl,
+            'TelegramAuth',
+            `width=${width},height=${height},top=${top},left=${left}`
+        );
     };
 
     return (
@@ -425,7 +418,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                         </div>
                                     </div>
 
-                                    {/* TOMBOL TELEGRAM (NEW OIDC API) */}
+                                    {/* TOMBOL TELEGRAM (MANUAL DIRECT POPUP FIX) */}
                                     <button
                                         type="button"
                                         onClick={handleTelegramLogin}
