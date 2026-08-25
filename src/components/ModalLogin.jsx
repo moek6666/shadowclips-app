@@ -80,7 +80,6 @@ function ModalLogin({ isOpen, onClose, supabase }) {
         }
     };
 
-    // PERBAIKAN: Menunggu sesi tercipta secara penuh dan langsung redirect ke profile
     const handleGoogleSuccess = async (credentialResponse) => {
         if (!supabase) return;
         setLoading(true);
@@ -94,10 +93,9 @@ function ModalLogin({ isOpen, onClose, supabase }) {
 
             if (error) throw error;
 
-            // Pastikan sesi benar-benar tersimpan sebelum menutup modal dan redirect
             if (data.session) {
                 onClose();
-                window.location.href = '/profile';
+                window.location.reload();
             } else {
                 throw new Error("Sesi gagal dibuat oleh Supabase.");
             }
@@ -141,31 +139,42 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                 className="relative w-full max-w-[1000px] bg-white dark:bg-[#0E1116] rounded-2xl md:rounded-[1.5rem] shadow-2xl shadow-slate-300/50 dark:shadow-[0_20px_60px_rgba(0,0,0,0.9)] animate-in zoom-in-95 duration-300 border-none overflow-hidden flex flex-col md:flex-row min-h-[600px] transition-colors"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* KOLOM KIRI (POSTER) */}
+                {/* KOLOM KIRI (POSTER NETFLIX STYLE) */}
                 <div className="hidden md:flex flex-col w-[55%] p-10 lg:p-12 relative overflow-hidden bg-slate-100 dark:bg-[#07090D] border-none transition-colors">
+
+                    {/* Efek Cahaya Orb (Tetap Dipertahankan) */}
                     <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500/10 dark:bg-blue-600/20 blur-[100px] rounded-full pointer-events-none z-0"></div>
                     <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-500/10 dark:bg-blue-600/15 blur-[100px] rounded-full pointer-events-none z-0"></div>
 
-                    <div
-                        className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-85 dark:opacity-90 transition-opacity"
-                        style={{
-                            WebkitMaskImage: 'linear-gradient(to top right, transparent 10%, black 85%)',
-                            maskImage: 'linear-gradient(to top right, transparent 10%, black 85%)'
-                        }}
-                    >
-                        <div className="absolute top-[5%] -left-[5%] w-48 h-72 rounded-2xl shadow-2xl transform -rotate-6 overflow-hidden bg-zinc-800 border border-white/10">
-                            <img src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/Login%20BG/Cia.webp" alt="Poster Cia" className="w-full h-full object-cover" />
-                        </div>
-                        <div className="absolute top-[12%] left-[28%] w-56 h-80 rounded-2xl shadow-2xl transform rotate-3 overflow-hidden bg-zinc-800 z-10 border border-white/15">
-                            <img src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/Login%20BG/Rizkysuryai.webp" alt="Poster Rizkysuryai" className="w-full h-full object-cover" />
-                        </div>
-                        <div className="absolute top-[5%] -right-[5%] w-48 h-72 rounded-2xl shadow-2xl transform rotate-6 overflow-hidden bg-zinc-800 border border-white/10">
-                            <img src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/Login%20BG/Khofifah.webp" alt="Poster Khofifah" className="w-full h-full object-cover" />
-                        </div>
+                    {/* BACKGROUND POSTER WALL (NETFLIX STYLE) */}
+                    <div className="absolute inset-[-25%] z-0 transform -rotate-[8deg] scale-[1.15] pointer-events-none flex gap-3 opacity-40 dark:opacity-30">
+                        {/* Membuat 4 Kolom Grid Masonry Tiruan */}
+                        {[0, 1, 2, 3].map((colIdx) => (
+                            <div key={colIdx} className={`flex flex-col gap-3 w-1/4 ${colIdx % 2 === 0 ? 'translate-y-[-15%]' : 'translate-y-[5%]'}`}>
+                                {[...Array(6)].map((_, rowIdx) => {
+                                    const imgList = [
+                                        "https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/Login%20BG/Cia.webp",
+                                        "https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/Login%20BG/Rizkysuryai.webp",
+                                        "https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/Login%20BG/Khofifah.webp"
+                                    ];
+                                    return (
+                                        <img
+                                            key={rowIdx}
+                                            src={imgList[(colIdx + rowIdx) % 3]}
+                                            alt="Poster"
+                                            className="w-full aspect-[2/3] object-cover rounded-md shadow-lg"
+                                        />
+                                    );
+                                })}
+                            </div>
+                        ))}
                     </div>
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-100 via-slate-100/60 to-transparent dark:from-[#07090D] dark:via-[#07090D]/70 dark:to-transparent z-0 pointer-events-none"></div>
+                    {/* Gradasi Penutup Gelap agar Konten Teks Terbaca (Netflix Effect) */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-100 via-slate-100/70 to-transparent dark:from-[#07090D] dark:via-[#07090D]/80 dark:to-transparent z-0 pointer-events-none"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-white dark:to-[#0E1116] z-0 pointer-events-none"></div>
 
+                    {/* KONTEN UTAMA KIRI (TEKS & FITUR) */}
                     <div className="relative z-10 flex flex-col h-full justify-end pb-2 lg:pb-4">
                         <div className="flex flex-col gap-2 mb-6">
                             <div className="flex items-center gap-3">
@@ -370,7 +379,6 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                             <span className="text-[13px] font-medium">Google</span>
                                         </div>
 
-                                        {/* PERBAIKAN: class opacity-[0.01] agar tombol tidak diblokir Google karena disembunyikan total */}
                                         <div className="absolute top-0 left-0 w-full h-full opacity-[0.01] z-10 cursor-pointer flex items-center justify-center transform scale-[2.5]">
                                             <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} useOneTap={false} />
                                         </div>
