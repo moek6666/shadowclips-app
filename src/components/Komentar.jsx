@@ -30,6 +30,14 @@ const BAD_WORDS = [
     'goblok', 'tolol', 'bajingan', 'pepek', 'asu', 'jembut', 'peler', 'lonte'
 ];
 
+// 🔥 FUNGSI VALIDASI AVATAR ANTI-BROKEN 🔥
+const getValidAvatar = (url1, url2) => {
+    const isValid = (url) => url && typeof url === 'string' && url !== 'null' && url !== 'undefined' && url.trim() !== '';
+    if (isValid(url1)) return url1;
+    if (isValid(url2)) return url2;
+    return null;
+};
+
 export default function Komentar({ videoId, onCommentSuccess, supabase }) {
     const [comments, setComments] = useState([]);
     const [userProfiles, setUserProfiles] = useState({});
@@ -94,7 +102,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                     if (uniqueEmails.length > 0) {
                         const { data: profilesData } = await supabase
                             .from('profiles')
-                            .select('email, is_admin, is_premium, active_frame')
+                            .select('email, is_admin, is_premium, active_frame, avatar_url')
                             .in('email', uniqueEmails);
 
                         if (profilesData) {
@@ -159,26 +167,62 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
         setContent('');
     };
 
+    // 🔥 PERBAIKAN: Fungsi format yang mendorong kursor otomatis 🔥
     const insertFormat = (format) => {
         if (!textareaRef.current) return;
         const start = textareaRef.current.selectionStart;
         const end = textareaRef.current.selectionEnd;
         const selectedText = content.substring(start, end);
         let newText = content;
-        if (format === 'bold') newText = content.substring(0, start) + '**' + (selectedText || 'bold') + '**' + content.substring(end);
-        if (format === 'italic') newText = content.substring(0, start) + '*' + (selectedText || 'italic') + '*' + content.substring(end);
-        if (format === 'code') newText = content.substring(0, start) + '`' + (selectedText || 'code') + '`' + content.substring(end);
-        if (format === 'link') newText = content.substring(0, start) + '[' + (selectedText || 'text') + '](url)' + content.substring(end);
-        if (format === 'quote') newText = content.substring(0, start) + '\n> ' + (selectedText || 'quote') + '\n' + content.substring(end);
+        let newCursorPos = start;
+
+        if (format === 'bold') {
+            newText = content.substring(0, start) + '**' + (selectedText || 'bold') + '**' + content.substring(end);
+            newCursorPos = start + 2 + (selectedText || 'bold').length + 2;
+        }
+        if (format === 'italic') {
+            newText = content.substring(0, start) + '*' + (selectedText || 'italic') + '*' + content.substring(end);
+            newCursorPos = start + 1 + (selectedText || 'italic').length + 1;
+        }
+        if (format === 'code') {
+            newText = content.substring(0, start) + '`' + (selectedText || 'code') + '`' + content.substring(end);
+            newCursorPos = start + 1 + (selectedText || 'code').length + 1;
+        }
+        if (format === 'link') {
+            newText = content.substring(0, start) + '[' + (selectedText || 'text') + '](url)' + content.substring(end);
+            newCursorPos = start + 1 + (selectedText || 'text').length + 6;
+        }
+        if (format === 'quote') {
+            newText = content.substring(0, start) + '\n> ' + (selectedText || 'quote') + '\n' + content.substring(end);
+            newCursorPos = start + 3 + (selectedText || 'quote').length + 1;
+        }
+
         setContent(newText);
-        setTimeout(() => textareaRef.current.focus(), 0);
+        setTimeout(() => {
+            if (textareaRef.current) {
+                textareaRef.current.focus();
+                textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+            }
+        }, 0);
     };
 
+    // 🔥 PERBAIKAN: Fungsi emoji yang langsung memposisikan kursor di akhir karakter terbaru 🔥
     const insertEmoji = (emojiCode) => {
         if (!textareaRef.current) return;
         const start = textareaRef.current.selectionStart;
-        setContent(content.substring(0, start) + emojiCode + content.substring(start));
-        setTimeout(() => textareaRef.current.focus(), 0);
+        const end = textareaRef.current.selectionEnd;
+
+        const newText = content.substring(0, start) + emojiCode + content.substring(end);
+        setContent(newText);
+
+        const newCursorPos = start + emojiCode.length;
+
+        setTimeout(() => {
+            if (textareaRef.current) {
+                textareaRef.current.focus();
+                textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+            }
+        }, 0);
     };
 
     const parseMarkdown = (text) => {
@@ -210,6 +254,9 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
         const userEmail = session.user.email;
         const userName = profile?.name || userEmail.split('@')[0];
 
+        // Avatar ter-update diprioritaskan dari Profil DB -> Google Metadata 
+        const currentUserAvatar = getValidAvatar(profile?.avatar_url, session?.user?.user_metadata?.avatar_url);
+
         // 🔥 SISTEM AUTO-FILTER & AUTO-APPROVE KELAS DEWA 🔥
         const contentLower = content.toLowerCase();
         const isContentSensitive = BAD_WORDS.some(word => contentLower.includes(word));
@@ -219,16 +266,13 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
         let isErrorNotif = false;
 
         if (isAdmin) {
-            // Admin kebal filter, langsung tayang
             statusKomentar = 'approved';
             notifMessage = 'Komentar Admin berhasil ditayangkan!';
         } else if (isContentSensitive) {
-            // User menggunakan kata kotor/sensitif, masuk antrean pending
             statusKomentar = 'pending';
             notifMessage = '⚠️ Mengandung kata sensitif. Menunggu moderasi Admin.';
-            isErrorNotif = true; // Menggunakan warna merah/peringatan
+            isErrorNotif = true;
         } else {
-            // User baik-baik, langsung AUTO-APPROVE! Bos tidak perlu repot.
             statusKomentar = 'approved';
             notifMessage = 'Komentar berhasil ditayangkan!';
         }
@@ -237,7 +281,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
             video_id: String(videoId),
             name: userName,
             email: userEmail,
-            avatar_url: profile?.avatar_url || null,
+            avatar_url: currentUserAvatar, // Menggunakan avatar valid terjamin
             content: content,
             parent_id: targetParentId,
             status: statusKomentar
@@ -247,7 +291,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
             const { data: insertedData, error } = await supabase.from('comments').insert(newCommentPayload).select().single();
             if (error) throw error;
 
-            // Masukkan ke state UI (Jika statusnya pending, UI akan memberinya efek buram sementara)
             setComments(prev => [insertedData, ...(prev || [])]);
 
             setUserProfiles(prev => ({
@@ -256,16 +299,15 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                     email: userEmail,
                     is_admin: profile?.is_admin || false,
                     is_premium: profile?.is_premium || false,
-                    active_frame: profile?.active_frame || 'none'
+                    active_frame: profile?.active_frame || 'none',
+                    avatar_url: currentUserAvatar
                 }
             }));
 
-            // Tambah Poin jika bukan admin
             if (!isAdmin) {
                 await supabase.rpc('increment_user_points', { p_email: userEmail, p_points: 5 }).catch(() => { });
             }
 
-            // Tampilkan Notifikasi Sesuai Kondisi Filter
             setNotification({ type: isErrorNotif ? 'error' : 'success', message: notifMessage });
             setTimeout(() => setNotification(null), 4000);
 
@@ -291,15 +333,17 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
         const isMePremium = profile?.is_premium || false;
         const userName = profile?.name || session?.user?.email?.split('@')[0] || 'Guest';
 
+        // Memastikan Avatar Form juga bebas dari URL string 'null'
+        const currentUserAvatar = getValidAvatar(profile?.avatar_url, session?.user?.user_metadata?.avatar_url);
+
         return (
             <div className={`bg-white dark:bg-zinc-800/60 rounded-[1.5rem] overflow-hidden shadow-sm dark:shadow-lg transition-all duration-500 border-none ${isInline ? 'mt-3 mb-2' : 'mb-10'}`}>
                 <form onSubmit={handleSubmit} className="animate-in fade-in duration-300 border-none">
                     <div className="flex items-center justify-between px-4 sm:px-5 py-4 bg-zinc-50 dark:bg-zinc-900/40 border-none">
                         {session?.user ? (
                             <div className="flex items-center gap-4 border-none">
-                                {/* AVATAR FORM INPUT */}
                                 <div className="relative shrink-0 flex items-center justify-center border-none">
-                                    <Avatar url={profile?.avatar_url} frameId={profile?.active_frame} containerClass="w-12 h-12 sm:w-14 sm:h-14" scale={0.56} />
+                                    <Avatar url={currentUserAvatar} frameId={profile?.active_frame} containerClass="w-12 h-12 sm:w-14 sm:h-14" scale={0.56} />
                                 </div>
                                 <div className="flex flex-col border-none">
                                     <span className="text-[13px] sm:text-[15px] font-bold text-zinc-900 dark:text-white leading-tight flex items-center gap-1.5 transition-colors border-none">
@@ -407,12 +451,15 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                         const isPremium = userProfile.is_premium;
                         const frameId = userProfile.active_frame || 'none';
 
+                        // 🔥 MENGGUNAKAN FALLBACK AVATAR YANG 100% AMAN 🔥
+                        const avatarUrl = getValidAvatar(userProfile.avatar_url, comment.avatar_url);
+
                         return (
                             <div key={comment.id} className="flex flex-col gap-3 border-none">
                                 <div className={`flex gap-3 sm:gap-4 group border-none transition-all duration-500 ${comment.status === 'pending' ? 'opacity-50' : ''}`}>
 
                                     <div className="relative shrink-0 flex items-start sm:items-center justify-center border-none">
-                                        <Avatar url={comment.avatar_url} frameId={frameId} containerClass="w-12 h-12 sm:w-14 sm:h-14 mt-1 sm:mt-0" scale={0.56} />
+                                        <Avatar url={avatarUrl} frameId={frameId} containerClass="w-12 h-12 sm:w-14 sm:h-14 mt-1 sm:mt-0" scale={0.56} />
                                     </div>
 
                                     <div className={`flex-1 min-w-0 flex flex-col p-4 sm:p-5 rounded-[1.2rem] sm:rounded-[1.5rem] border-none transition-colors ${isAdmin ? 'bg-[#106EBE]/5 dark:bg-[#106EBE]/10 border border-[#106EBE]/20 dark:border-transparent shadow-sm dark:shadow-[0_5px_20px_rgba(16,110,190,0.15)]' : isPremium ? 'bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 dark:border-transparent shadow-sm dark:shadow-[0_5px_15px_rgba(245,158,11,0.1)]' : 'bg-white dark:bg-zinc-800/60 shadow-sm dark:shadow-none border border-transparent'}`}>
@@ -450,12 +497,15 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                                             const isReplyPremium = replyProfile.is_premium;
                                             const replyFrameId = replyProfile.active_frame || 'none';
 
+                                            // 🔥 MENGGUNAKAN FALLBACK AVATAR YANG 100% AMAN 🔥
+                                            const replyAvatarUrl = getValidAvatar(replyProfile.avatar_url, reply.avatar_url);
+
                                             return (
                                                 <div key={reply.id} className="flex flex-col gap-3 border-none">
                                                     <div className={`flex gap-2.5 sm:gap-3 group border-none transition-all duration-500 ${reply.status === 'pending' ? 'opacity-50' : ''}`}>
 
                                                         <div className="relative shrink-0 flex items-start sm:items-center justify-center border-none">
-                                                            <Avatar url={reply.avatar_url} frameId={replyFrameId} containerClass="w-10 h-10 sm:w-12 sm:h-12 mt-0.5 sm:mt-0" scale={0.48} />
+                                                            <Avatar url={replyAvatarUrl} frameId={replyFrameId} containerClass="w-10 h-10 sm:w-12 sm:h-12 mt-0.5 sm:mt-0" scale={0.48} />
                                                         </div>
 
                                                         <div className={`flex-1 min-w-0 flex flex-col p-3 sm:p-4 rounded-xl sm:rounded-[1.2rem] border-none transition-colors ${isReplyAdmin ? 'bg-[#106EBE]/5 dark:bg-[#106EBE]/10 border border-[#106EBE]/20 dark:border-transparent shadow-sm dark:shadow-[0_5px_15px_rgba(16,110,190,0.1)]' : isReplyPremium ? 'bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 dark:border-transparent shadow-sm' : 'bg-zinc-50 dark:bg-zinc-800/40 shadow-sm dark:shadow-none border border-transparent'}`}>
