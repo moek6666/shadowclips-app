@@ -120,7 +120,34 @@ export default function Navbar({ isScrolled, supabase }) {
                 <div className="max-w-[1440px] mx-auto px-4 sm:px-8 flex justify-between items-center border-none">
                     <div className="flex items-center gap-8 lg:gap-12 border-none">
                         <a href="/" className="flex items-center gap-2.5 z-50 outline-none border-none">
-                            <img src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/shadow.webp" alt="ShadowClips Logo" className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 object-contain border-none" />
+
+                            {/* 🔥 LOGO SVG PREMIUM BARU (MENGGANTIKAN IMG LAMA) 🔥 */}
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 border-none drop-shadow-lg">
+                                <defs>
+                                    <clipPath id="play-clip">
+                                        <path d="M22 25.5C22 18.5 29.5 14 35.5 17.5L82.5 44.5C88.5 48 88.5 57 82.5 60.5L35.5 87.5C29.5 91 22 86.5 22 79.5V25.5Z" />
+                                    </clipPath>
+                                    <linearGradient id="grad-top" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="#32ADFF" />
+                                        <stop offset="100%" stopColor="#007AFF" />
+                                    </linearGradient>
+                                    <linearGradient id="grad-left" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="#007AFF" />
+                                        <stop offset="100%" stopColor="#0052CC" />
+                                    </linearGradient>
+                                    <linearGradient id="grad-bottom" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="#003D82" />
+                                        <stop offset="100%" stopColor="#001233" />
+                                    </linearGradient>
+                                </defs>
+                                <g clipPath="url(#play-clip)">
+                                    <polygon points="0,0 100,0 100,52.5 45,52.5" fill="url(#grad-top)" />
+                                    <polygon points="0,100 45,52.5 100,52.5 100,100" fill="url(#grad-bottom)" />
+                                    <polygon points="0,0 45,52.5 0,100" fill="url(#grad-left)" />
+                                </g>
+                            </svg>
+                            {/* 🔥 AKHIR LOGO SVG 🔥 */}
+
                             <div className="flex flex-col justify-center border-none">
                                 <span className="text-xl sm:text-[22px] font-black tracking-tighter text-zinc-900 dark:text-white leading-none mb-1 transition-colors border-none">
                                     Shadow<span className="text-[#106EBE]">Clips</span>

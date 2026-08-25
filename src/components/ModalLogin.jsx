@@ -169,11 +169,33 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                     <div className="relative z-10 flex flex-col h-full justify-end pb-2 lg:pb-4">
                         <div className="flex flex-col gap-2 mb-6">
                             <div className="flex items-center gap-3">
-                                <img
-                                    src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/shadow.webp"
-                                    alt="Logo"
-                                    className="w-10 h-10 lg:w-12 lg:h-12 object-contain drop-shadow-md"
-                                />
+
+                                {/* 🔥 LOGO SVG BARU 🔥 */}
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-10 h-10 lg:w-12 lg:h-12 shrink-0 border-none drop-shadow-md">
+                                    <defs>
+                                        <clipPath id="play-clip-modal">
+                                            <path d="M22 25.5C22 18.5 29.5 14 35.5 17.5L82.5 44.5C88.5 48 88.5 57 82.5 60.5L35.5 87.5C29.5 91 22 86.5 22 79.5V25.5Z" />
+                                        </clipPath>
+                                        <linearGradient id="grad-top-modal" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stopColor="#32ADFF" />
+                                            <stop offset="100%" stopColor="#007AFF" />
+                                        </linearGradient>
+                                        <linearGradient id="grad-left-modal" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stopColor="#007AFF" />
+                                            <stop offset="100%" stopColor="#0052CC" />
+                                        </linearGradient>
+                                        <linearGradient id="grad-bottom-modal" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stopColor="#003D82" />
+                                            <stop offset="100%" stopColor="#001233" />
+                                        </linearGradient>
+                                    </defs>
+                                    <g clipPath="url(#play-clip-modal)">
+                                        <polygon points="0,0 100,0 100,52.5 45,52.5" fill="url(#grad-top-modal)" />
+                                        <polygon points="0,100 45,52.5 100,52.5 100,100" fill="url(#grad-bottom-modal)" />
+                                        <polygon points="0,0 45,52.5 0,100" fill="url(#grad-left-modal)" />
+                                    </g>
+                                </svg>
+
                                 <h3 className="text-[28px] lg:text-[32px] font-black tracking-tighter text-slate-900 dark:text-white leading-none">
                                     Shadow<span className="text-[#3b82f6]">Clips</span>
                                 </h3>
