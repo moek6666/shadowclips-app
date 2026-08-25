@@ -63,7 +63,6 @@ export default function Navbar({ isScrolled, supabase }) {
         setIsProfileDropdownOpen(false);
         setIsMobileMenuOpen(false);
         if (typeof window !== 'undefined') {
-            // 🔥 PERBAIKAN: Refresh halaman saat ini, bukan dilempar ke Beranda 🔥
             window.location.reload();
         }
     };
@@ -121,7 +120,7 @@ export default function Navbar({ isScrolled, supabase }) {
                     <div className="flex items-center gap-8 lg:gap-12 border-none">
                         <a href="/" className="flex items-center gap-2.5 z-50 outline-none border-none">
 
-                            {/* 🔥 LOGO SVG PREMIUM BARU (MENGGANTIKAN IMG LAMA) 🔥 */}
+                            {/* 🔥 LOGO SVG PREMIUM BARU 🔥 */}
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 border-none drop-shadow-lg">
                                 <defs>
                                     <clipPath id="play-clip">
@@ -146,7 +145,6 @@ export default function Navbar({ isScrolled, supabase }) {
                                     <polygon points="0,0 45,52.5 0,100" fill="url(#grad-left)" />
                                 </g>
                             </svg>
-                            {/* 🔥 AKHIR LOGO SVG 🔥 */}
 
                             <div className="flex flex-col justify-center border-none">
                                 <span className="text-xl sm:text-[22px] font-black tracking-tighter text-zinc-900 dark:text-white leading-none mb-1 transition-colors border-none">
@@ -158,26 +156,26 @@ export default function Navbar({ isScrolled, supabase }) {
                             </div>
                         </a>
                         <div className="hidden md:flex items-center gap-6 text-sm font-bold z-50 border-none">
-                            <a href="/" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ${pathname === '/' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE]'}`}>
+                            <a href="/" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ${pathname === '/' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                 <Home className="w-4 h-4 border-none" /> Home
                             </a>
-                            <a href="/jelajahi" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ${pathname === '/jelajahi' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE]'}`}>
+                            <a href="/jelajahi" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ${pathname === '/jelajahi' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                 <Compass className="w-4 h-4 border-none" /> Explore
                             </a>
-                            <a href="/populer" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ${pathname === '/populer' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE]'}`}>
+                            <a href="/populer" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ${pathname === '/populer' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                 <Flame className="w-4 h-4 border-none" /> Trending
                             </a>
-                            <a href="/koleksi" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ${pathname === '/koleksi' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE]'}`}>
+                            <a href="/koleksi" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ${pathname === '/koleksi' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                 <FolderOpen className="w-4 h-4 border-none" /> Library
                             </a>
                             <div className="relative group cursor-pointer py-2 ml-2 border-none">
-                                <div className={`flex items-center gap-1.5 transition-colors outline-none border-none ${pathname.startsWith('/category') ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE]'}`}>
-                                    <Crown className="w-4 h-4 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors border-none" /> Profesional Site <ChevronDown className="w-3 h-3 group-hover:rotate-180 transition-transform duration-300 border-none" />
+                                <div className={`flex items-center gap-1.5 transition-colors outline-none border-none ${pathname.startsWith('/category') ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
+                                    <Crown className="w-4 h-4 transition-colors border-none" /> Profesional Site <ChevronDown className="w-3 h-3 group-hover:rotate-180 transition-transform duration-300 border-none" />
                                 </div>
                                 <div className="absolute top-full left-0 w-full h-4 bg-transparent border-none"></div>
                                 <div className="absolute top-[calc(100%+0.5rem)] left-0 w-56 bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 flex flex-col py-2 z-50 overflow-hidden transform origin-top-left scale-95 group-hover:scale-100">
                                     {premiumCategories.map((cat, idx) => (
-                                        <a key={idx} href={`/category/${generateSeoSlug(cat)}`} className="px-4 py-2.5 text-[13px] font-bold text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors flex items-center gap-2 outline-none border-none">
+                                        <a key={idx} href={`/category/${generateSeoSlug(cat)}`} className="px-4 py-2.5 text-[13px] font-bold text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-[#106EBE] hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors flex items-center gap-2 outline-none border-none">
                                             <div className="w-1.5 h-1.5 rounded-full bg-[#106EBE] border-none"></div> {cat}
                                         </a>
                                     ))}
@@ -188,14 +186,14 @@ export default function Navbar({ isScrolled, supabase }) {
                     <div className="flex items-center gap-4 border-none">
 
                         <div className="hidden md:flex relative group cursor-text z-50" onClick={() => setShowSearchModal(true)}>
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 group-hover:text-[#106EBE] dark:group-hover:text-[#0FFCBE] transition-colors w-4 h-4 border-none" />
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors w-4 h-4 border-none" />
                             <div className="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900/80 dark:hover:bg-zinc-900 rounded-full py-2 pl-11 pr-5 w-56 lg:w-64 transition-colors duration-300 text-sm text-zinc-500 flex items-center select-none border-none outline-none">
                                 Search videos...
                             </div>
                         </div>
 
                         <div className="hidden md:flex items-center gap-4 border-none z-50 ml-2">
-                            <button onClick={toggleTheme} className="flex items-center justify-center p-2 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors outline-none border-none cursor-pointer" title="Toggle Theme">
+                            <button onClick={toggleTheme} className="flex items-center justify-center p-2 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors outline-none border-none cursor-pointer" title="Toggle Theme">
                                 {theme === 'dark' ? <Sun className="w-5 h-5 border-none" /> : <Moon className="w-5 h-5 border-none" />}
                             </button>
 
@@ -208,7 +206,6 @@ export default function Navbar({ isScrolled, supabase }) {
                                             {profile?.name || (session?.user?.email || '').split('@')[0] || 'User'}
                                         </span>
 
-                                        {/* 🔥 AVATAR USER DI NAVBAR DESKTOP 🔥 */}
                                         <Avatar url={profile?.avatar_url} frameId={profile?.active_frame} containerClass="w-8 h-8" scale={0.32} />
                                     </button>
 
@@ -222,7 +219,7 @@ export default function Navbar({ isScrolled, supabase }) {
                                                     {profile?.is_premium && <span className="inline-block mt-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] px-2 py-0.5 rounded-[4px] uppercase tracking-wider font-bold border-none">Premium VIP</span>}
                                                 </div>
                                                 <div className="flex flex-col p-2 border-none">
-                                                    <a href="/profile" className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-bold text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] hover:bg-zinc-50 dark:hover:bg-zinc-800/50 rounded-xl transition-colors outline-none border-none cursor-pointer">
+                                                    <a href="/profile" className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-bold text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-[#106EBE] hover:bg-zinc-50 dark:hover:bg-zinc-800/50 rounded-xl transition-colors outline-none border-none cursor-pointer">
                                                         <Settings className="w-4 h-4 border-none" /> Pengaturan Profil
                                                     </a>
                                                     <div className="h-px bg-zinc-100 dark:bg-zinc-800 my-1 border-none"></div>
@@ -235,20 +232,20 @@ export default function Navbar({ isScrolled, supabase }) {
                                     )}
                                 </div>
                             ) : (
-                                <button onClick={() => setIsLoginModalOpen(true)} className="flex items-center gap-2 text-sm font-bold text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors outline-none border-none cursor-pointer">
-                                    <LogIn className="w-5 h-5 border-none" /> Sign In
+                                <button onClick={() => setIsLoginModalOpen(true)} className="flex items-center gap-2 text-sm font-bold text-white bg-[#106EBE] hover:bg-[#0e5c9f] px-4 py-2 rounded-full transition-all shadow-md hover:shadow-lg outline-none border-none cursor-pointer">
+                                    <User className="w-4 h-4 border-none" /> Sign In
                                 </button>
                             )}
                         </div>
 
                         <div className="flex items-center gap-2 md:hidden z-50 border-none">
-                            <button onClick={() => setShowSearchModal(true)} className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors border-none outline-none cursor-pointer">
+                            <button onClick={() => setShowSearchModal(true)} className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none cursor-pointer">
                                 <Search className="w-5 h-5 border-none" />
                             </button>
-                            <button onClick={toggleTheme} className="p-2 text-zinc-500 dark:text-zinc-400 border-none outline-none cursor-pointer">
+                            <button onClick={toggleTheme} className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] border-none outline-none cursor-pointer">
                                 {theme === 'dark' ? <Sun className="w-5 h-5 border-none" /> : <Moon className="w-5 h-5 border-none" />}
                             </button>
-                            <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 ml-1 text-zinc-900 dark:text-white bg-zinc-100 dark:bg-zinc-800/80 rounded-full border-none outline-none cursor-pointer shadow-sm">
+                            <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 ml-1 text-zinc-900 dark:text-white bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-full border-none outline-none cursor-pointer shadow-sm">
                                 <Menu className="w-5 h-5 border-none" />
                             </button>
                         </div>
@@ -264,20 +261,19 @@ export default function Navbar({ isScrolled, supabase }) {
                     <div className="p-5 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/60">
                         {session ? (
                             <div className="flex items-center gap-3" onClick={() => { window.location.href = '/profile'; }}>
-                                {/* 🔥 AVATAR USER DI NAVBAR MOBILE 🔥 */}
                                 <Avatar url={profile?.avatar_url} frameId={profile?.active_frame} containerClass="w-10 h-10" scale={0.4} />
 
                                 <div className="flex flex-col">
                                     <span className="text-sm font-black text-zinc-900 dark:text-white truncate max-w-[120px]">{profile?.name || (session?.user?.email || '').split('@')[0]}</span>
-                                    <span className="text-[10px] text-zinc-500 font-bold hover:text-[#106EBE] transition-colors">Edit Profil</span>
+                                    <span className="text-[10px] text-zinc-500 font-bold hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors">Edit Profil</span>
                                 </div>
                             </div>
                         ) : (
-                            <button onClick={() => { setIsMobileMenuOpen(false); setIsLoginModalOpen(true); }} className="flex items-center gap-2 text-zinc-900 dark:text-white font-bold outline-none border-none">
-                                <LogIn className="w-5 h-5" /> Sign In
+                            <button onClick={() => { setIsMobileMenuOpen(false); setIsLoginModalOpen(true); }} className="flex items-center gap-2 bg-[#106EBE] hover:bg-[#0e5c9f] text-white font-bold px-4 py-2 rounded-xl transition-colors shadow-md outline-none border-none">
+                                <User className="w-4 h-4 border-none" /> Sign In
                             </button>
                         )}
-                        <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-zinc-100 dark:bg-zinc-900 rounded-full text-zinc-500 dark:text-zinc-400 outline-none border-none">
+                        <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-zinc-100 dark:bg-zinc-900 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] outline-none border-none">
                             <X className="w-5 h-5" />
                         </button>
                     </div>
@@ -299,13 +295,13 @@ export default function Navbar({ isScrolled, supabase }) {
                         <div className="h-px w-full bg-zinc-100 dark:bg-zinc-800/60 my-2"></div>
 
                         <div className="flex flex-col gap-1">
-                            <button onClick={() => setIsMobilePremiumOpen(!isMobilePremiumOpen)} className="flex items-center justify-between px-4 py-3.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold w-full text-left">
-                                <div className="flex items-center gap-3"><Crown className="w-5 h-5 text-[#106EBE]" /> Profesional Site</div>
+                            <button onClick={() => setIsMobilePremiumOpen(!isMobilePremiumOpen)} className="flex items-center justify-between px-4 py-3.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold w-full text-left group">
+                                <div className="flex items-center gap-3"><Crown className="w-5 h-5 text-zinc-500 dark:text-zinc-400 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors" /> Profesional Site</div>
                                 <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isMobilePremiumOpen ? 'rotate-180 text-[#106EBE]' : ''}`} />
                             </button>
                             <div className={`flex flex-col ml-8 overflow-hidden transition-all duration-300 ${isMobilePremiumOpen ? 'max-h-[500px] opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
                                 {premiumCategories.map((cat, idx) => (
-                                    <a key={idx} href={`/category/${generateSeoSlug(cat)}`} className="py-2.5 px-4 text-[13px] font-bold text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors">{cat}</a>
+                                    <a key={idx} href={`/category/${generateSeoSlug(cat)}`} className="py-2.5 px-4 text-[13px] font-bold text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors">{cat}</a>
                                 ))}
                             </div>
                         </div>
@@ -324,12 +320,12 @@ export default function Navbar({ isScrolled, supabase }) {
             {showSearchModal && (
                 <div className="fixed inset-0 z-[100] bg-white/95 dark:bg-zinc-950/95 backdrop-blur-3xl overflow-y-auto custom-scrollbar animate-in fade-in duration-300 border-none">
                     <div className="min-h-screen px-4 sm:px-8 py-10 md:py-16 flex flex-col items-center border-none">
-                        <button onClick={closeAndClearSearch} className="fixed top-6 right-6 md:top-10 md:right-10 p-2.5 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors bg-zinc-100 dark:bg-zinc-900 rounded-full z-50 shadow-md outline-none border-none cursor-pointer">
+                        <button onClick={closeAndClearSearch} className="fixed top-6 right-6 md:top-10 md:right-10 p-2.5 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors bg-zinc-100 dark:bg-zinc-900 rounded-full z-50 shadow-md outline-none border-none cursor-pointer">
                             <X className="w-6 h-6 md:w-8 md:h-8 border-none" />
                         </button>
                         <div className="w-full max-w-4xl relative animate-in slide-in-from-top-8 duration-500 mb-10 sticky top-0 z-40 pt-4 border-none">
-                            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 md:w-8 md:h-8 text-zinc-400 dark:text-zinc-500 mt-2 border-none" />
-                            <input autoFocus type="text" value={localSearch} onChange={(e) => setLocalSearch(e.target.value)} placeholder="Type keywords to search..." className="w-full bg-white dark:bg-zinc-900 rounded-full py-5 md:py-6 pl-16 md:pl-20 pr-8 text-lg md:text-2xl text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-0 shadow-lg dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all border-none outline-none" />
+                            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 md:w-8 md:h-8 text-zinc-400 dark:text-zinc-500 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] mt-2 border-none" />
+                            <input autoFocus type="text" value={localSearch} onChange={(e) => setLocalSearch(e.target.value)} placeholder="Type keywords to search..." className="w-full bg-white dark:bg-zinc-900 rounded-full py-5 md:py-6 pl-16 md:pl-20 pr-8 text-lg md:text-2xl text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-0 shadow-lg dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all border-none outline-none group" />
                         </div>
                         <div className="w-full max-w-[1440px] animate-in fade-in duration-700 border-none">
                             {isSearching ? (
@@ -344,7 +340,7 @@ export default function Navbar({ isScrolled, supabase }) {
                                                 <img src={getImageUrl(video.img)} alt={video.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 border-none" loading="lazy" />
                                             </div>
                                             <div className="px-1 text-center border-none">
-                                                <h3 className="font-bold text-[13px] md:text-[14px] text-zinc-800 dark:text-zinc-300 group-hover:text-[#106EBE] dark:group-hover:text-white transition-colors line-clamp-2 leading-snug border-none" title={video.title}>
+                                                <h3 className="font-bold text-[13px] md:text-[14px] text-zinc-800 dark:text-zinc-300 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors line-clamp-2 leading-snug border-none" title={video.title}>
                                                     {video.title}
                                                 </h3>
                                             </div>
