@@ -3,7 +3,7 @@ import useSWR from 'swr';
 import { Play, Eye, Clock, FolderOpen } from 'lucide-react';
 
 import { SiOnlyfans, SiTelegram } from 'react-icons/si';
-import { FaCrown, FaVideo, FaFire, FaBan, FaRandom, FaFilm, FaMask } from 'react-icons/fa';
+import { FaCrown, FaVideo, FaFire, FaBan, FaRandom, FaFilm, FaMask, FaMobileAlt, FaGlobeAmericas, FaGem, FaUserSecret, FaHeart } from 'react-icons/fa';
 import { FaClapperboard } from 'react-icons/fa6';
 import { BiSolidCategory } from 'react-icons/bi';
 import { MdLiveTv } from 'react-icons/md';
@@ -19,19 +19,28 @@ const formatViews = (views) => {
 
 const getCategoryIcon = (categoryName) => {
     const name = categoryName.toLowerCase();
-    const iconClasses = "w-7 h-7 md:w-8 md:h-8 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors drop-shadow-md shrink-0";
+    const iconClasses = "w-7 h-7 md:w-8 md:h-8 text-[#106EBE] group-hover:text-[#106EBE] transition-colors drop-shadow-md shrink-0";
 
     if (name.includes('onlyfans')) return <SiOnlyfans className={iconClasses} />;
     if (name.includes('telegram')) return <SiTelegram className={iconClasses} />;
     if (name.includes('movie') || name.includes('scene')) return <FaClapperboard className={iconClasses} />;
     if (name.includes('live')) return <MdLiveTv className={iconClasses} />;
     if (name.includes('deepfake')) return <FaMask className={iconClasses} />;
+    if (name.includes('amateur') || name.includes('amatir')) return <FaMobileAlt className={iconClasses} />;
+    if (name.includes('barat') || name.includes('western')) return <FaGlobeAmericas className={iconClasses} />;
+    if (name.includes('premium') || name.includes('vip')) return <FaGem className={iconClasses} />;
+    if (name.includes('skandal') || name.includes('scandal')) return <FaUserSecret className={iconClasses} />;
+    if (name.includes('romance') || name.includes('asmara')) return <FaHeart className={iconClasses} />;
+    if (name.includes('exclusive') || name.includes('eksklusif')) return <FaCrown className={iconClasses} />;
+    if (name.includes('viral')) return <FaFire className={iconClasses} />;
+    if (name.includes('random') || name.includes('acak')) return <FaRandom className={iconClasses} />;
+    if (name.includes('banned')) return <FaBan className={iconClasses} />;
 
     if (name.includes('kbj') || name.includes('korean')) {
         return (
             <div className="relative shrink-0 flex items-center justify-center">
                 <FaVideo className={iconClasses} />
-                <span className="absolute -bottom-1 -right-2 bg-zinc-200 dark:bg-zinc-800 border-none text-zinc-900 dark:text-white text-[8px] md:text-[9px] font-black px-1 rounded-sm shadow-md group-hover:text-[#106EBE] dark:group-hover:text-[#0FFCBE] transition-colors">
+                <span className="absolute -bottom-1 -right-2 bg-zinc-200 dark:bg-zinc-800 border-none text-zinc-900 dark:text-white text-[8px] md:text-[9px] font-black px-1 rounded-sm shadow-md group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors">
                     KR
                 </span>
             </div>
@@ -42,17 +51,34 @@ const getCategoryIcon = (categoryName) => {
         return (
             <div className="relative shrink-0 flex items-center justify-center">
                 <FaFilm className={iconClasses} />
-                <span className="absolute -bottom-1 -right-2 bg-zinc-200 dark:bg-zinc-800 border-none text-zinc-900 dark:text-white text-[8px] md:text-[9px] font-black px-1 rounded-sm shadow-md group-hover:text-[#106EBE] dark:group-hover:text-[#0FFCBE] transition-colors">
+                <span className="absolute -bottom-1 -right-2 bg-zinc-200 dark:bg-zinc-800 border-none text-zinc-900 dark:text-white text-[8px] md:text-[9px] font-black px-1 rounded-sm shadow-md group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors">
                     JP
                 </span>
             </div>
         );
     }
 
-    if (name.includes('exclusive') || name.includes('eksklusif')) return <FaCrown className={iconClasses} />;
-    if (name.includes('viral')) return <FaFire className={iconClasses} />;
-    if (name.includes('random') || name.includes('acak')) return <FaRandom className={iconClasses} />;
-    if (name.includes('banned')) return <FaBan className={iconClasses} />;
+    if (name.includes('indo') || name.includes('indonesia')) {
+        return (
+            <div className="relative shrink-0 flex items-center justify-center">
+                <FaVideo className={iconClasses} />
+                <span className="absolute -bottom-1 -right-2 bg-zinc-200 dark:bg-zinc-800 border-none text-zinc-900 dark:text-white text-[8px] md:text-[9px] font-black px-1 rounded-sm shadow-md group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors">
+                    ID
+                </span>
+            </div>
+        );
+    }
+
+    if (name.includes('asia') || name.includes('asian')) {
+        return (
+            <div className="relative shrink-0 flex items-center justify-center">
+                <FaFilm className={iconClasses} />
+                <span className="absolute -bottom-1 -right-2 bg-zinc-200 dark:bg-zinc-800 border-none text-zinc-900 dark:text-white text-[8px] md:text-[9px] font-black px-1 rounded-sm shadow-md group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors">
+                    AS
+                </span>
+            </div>
+        );
+    }
 
     return <BiSolidCategory className={iconClasses} />;
 };
@@ -119,11 +145,12 @@ export default function Jelajahi({ supabase }) {
                                     >
                                         <div className="flex items-center gap-2 md:gap-3">
                                             {getCategoryIcon(kategori)}
-                                            <h2 className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white group-hover:text-[#106EBE] dark:group-hover:text-[#0FFCBE] transition-colors">{kategori}</h2>
+                                            <h2 className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors">{kategori}</h2>
                                         </div>
 
-                                        <div className="flex items-center gap-1 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors">
-                                            <span className="text-sm font-bold uppercase tracking-wider hidden sm:block">View All ({videos.length})</span>
+                                        {/* 🔥 PERBAIKAN: "View All" dengan warna abu, tanpa angka, huruf sesuai, dan hover biru 🔥 */}
+                                        <div className="flex items-center gap-1 text-zinc-500 dark:text-zinc-400 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors">
+                                            <span className="text-sm font-bold tracking-wider hidden sm:block">View All</span>
                                         </div>
                                     </div>
 
@@ -152,7 +179,7 @@ export default function Jelajahi({ supabase }) {
                                                             LATEST CONTENT
                                                         </span>
                                                     </div>
-                                                    <h3 className="text-xl md:text-3xl lg:text-4xl font-bold text-white group-hover:text-[#0FFCBE] transition-colors line-clamp-2 drop-shadow-lg leading-tight md:leading-tight">
+                                                    <h3 className="text-xl md:text-3xl lg:text-4xl font-bold text-white group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors line-clamp-2 drop-shadow-lg leading-tight md:leading-tight">
                                                         {heroVideo.title}
                                                     </h3>
                                                 </div>
@@ -186,7 +213,7 @@ export default function Jelajahi({ supabase }) {
                                                         </div>
 
                                                         <div className="px-1 text-center">
-                                                            <h4 className="font-bold text-[13px] md:text-[14px] text-zinc-800 dark:text-zinc-300 group-hover:text-black dark:group-hover:text-white transition-colors line-clamp-2 leading-snug" title={video.title}>
+                                                            <h4 className="font-bold text-[13px] md:text-[14px] text-zinc-800 dark:text-zinc-300 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors line-clamp-2 leading-snug" title={video.title}>
                                                                 {video.title}
                                                             </h4>
                                                         </div>

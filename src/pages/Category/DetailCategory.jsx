@@ -91,7 +91,8 @@ export default function DetailCategory({ supabase }) {
                                         </div>
 
                                         <div className="px-1 text-center border-none">
-                                            <h3 className="font-bold text-[13px] md:text-[14px] text-zinc-800 dark:text-zinc-300 group-hover:text-[#106EBE] dark:group-hover:text-[#0FFCBE] transition-colors line-clamp-2 leading-snug border-none" title={item.title}>
+                                            {/* 🔥 PERBAIKAN: Hover warna teks dihapus agar tetap rapi karena sudah ada efek zoom pada gambar 🔥 */}
+                                            <h3 className="font-bold text-[13px] md:text-[14px] text-zinc-800 dark:text-zinc-300 transition-colors line-clamp-2 leading-snug border-none" title={item.title}>
                                                 {item.title}
                                             </h3>
                                         </div>

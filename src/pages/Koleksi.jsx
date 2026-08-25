@@ -101,7 +101,8 @@ export default function Koleksi({ supabase }) {
                                             </span>
                                         </div>
 
-                                        <h3 className="text-2xl font-bold text-white group-hover:text-[#0FFCBE] transition-colors drop-shadow-md">
+                                        {/* 🔥 PERBAIKAN: Hover title sekarang jadi warna Biru ShadowClips di Light maupun Dark mode 🔥 */}
+                                        <h3 className="text-2xl font-bold text-white group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors drop-shadow-md">
                                             {col.name}
                                         </h3>
                                     </div>

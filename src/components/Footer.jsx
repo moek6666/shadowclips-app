@@ -11,17 +11,17 @@ export default function Footer() {
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center lg:justify-end gap-5 sm:gap-6 font-medium border-none">
-                    <a href="/page/dmca" className="flex items-center gap-1.5 group text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors border-none outline-none">
-                        <AlertTriangle className="w-4 h-4 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors border-none" /> DMCA
+                    <a href="/page/dmca" className="flex items-center gap-1.5 group text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none">
+                        <AlertTriangle className="w-4 h-4 text-zinc-500 dark:text-zinc-400 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors border-none" /> DMCA
                     </a>
-                    <a href="/page/privacy" className="flex items-center gap-1.5 group text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors border-none outline-none">
-                        <Shield className="w-4 h-4 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors border-none" /> Privacy Policy
+                    <a href="/page/privacy" className="flex items-center gap-1.5 group text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none">
+                        <Shield className="w-4 h-4 text-zinc-500 dark:text-zinc-400 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors border-none" /> Privacy Policy
                     </a>
-                    <a href="/page/terms" className="flex items-center gap-1.5 group text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors border-none outline-none">
-                        <FileText className="w-4 h-4 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors border-none" /> Terms of Service
+                    <a href="/page/terms" className="flex items-center gap-1.5 group text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none">
+                        <FileText className="w-4 h-4 text-zinc-500 dark:text-zinc-400 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors border-none" /> Terms of Service
                     </a>
-                    <a href="/page/2257" className="flex items-center gap-1.5 group text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors border-none outline-none">
-                        <Scale className="w-4 h-4 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors border-none" /> 18 U.S.C. 2257
+                    <a href="/page/2257" className="flex items-center gap-1.5 group text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none">
+                        <Scale className="w-4 h-4 text-zinc-500 dark:text-zinc-400 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors border-none" /> 18 U.S.C. 2257
                     </a>
 
                     <span className="hidden sm:block w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700 border-none"></span>
@@ -30,9 +30,9 @@ export default function Footer() {
                         href="https://t.me/+fNTO4RPxpfNiMjg1"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 group text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors border-none outline-none"
+                        className="flex items-center gap-1.5 group text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none"
                     >
-                        <Send className="w-4 h-4 text-[#106EBE] group-hover:text-[#0FFCBE] transition-colors border-none" /> Telegram
+                        <Send className="w-4 h-4 text-zinc-500 dark:text-zinc-400 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors border-none" /> Telegram
                     </a>
                 </div>
             </div>
