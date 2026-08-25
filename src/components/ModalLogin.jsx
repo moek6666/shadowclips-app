@@ -340,7 +340,8 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                             </svg>
                                             <span className="text-[13px] font-medium">Google</span>
                                         </div>
-                                        <div className="absolute top-0 left-0 w-full h-full opacity-0 z-10 cursor-pointer flex items-center justify-center transform scale-[2.5]">
+                                        {/* INI BAGIAN YANG DIPERBAIKI (opacity-0 diubah jadi opacity-[0.01]) */}
+                                        <div className="absolute top-0 left-0 w-full h-full opacity-[0.01] z-10 cursor-pointer flex items-center justify-center transform scale-[2.5]">
                                             <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} useOneTap={false} />
                                         </div>
                                     </div>
