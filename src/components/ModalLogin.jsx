@@ -179,7 +179,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                 </h3>
                             </div>
                             <p className="text-slate-700 dark:text-zinc-200 text-[13px] lg:text-[14px] leading-relaxed font-semibold">
-                                Nikmati konten-konten exclusive setiap hari dan selamat menikmati.
+                                Nikmati konten-konten exclusive setiap hari dan selamat bergabung di shadowclips.asia.
                             </p>
                         </div>
 
