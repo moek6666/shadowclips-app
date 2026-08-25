@@ -80,23 +80,30 @@ function ModalLogin({ isOpen, onClose, supabase }) {
         }
     };
 
+    // PERBAIKAN: Menunggu sesi tercipta secara penuh dan langsung redirect ke profile
     const handleGoogleSuccess = async (credentialResponse) => {
         if (!supabase) return;
         setLoading(true);
         setErrorMsg('');
 
         try {
-            const { error } = await supabase.auth.signInWithIdToken({
+            const { data, error } = await supabase.auth.signInWithIdToken({
                 provider: 'google',
                 token: credentialResponse.credential,
             });
 
             if (error) throw error;
-            onClose();
-            window.location.reload();
+
+            // Pastikan sesi benar-benar tersimpan sebelum menutup modal dan redirect
+            if (data.session) {
+                onClose();
+                window.location.href = '/profile';
+            } else {
+                throw new Error("Sesi gagal dibuat oleh Supabase.");
+            }
         } catch (err) {
             console.error("ID Token Error:", err);
-            setErrorMsg('Autentikasi Google ditolak oleh sistem.');
+            setErrorMsg('Gagal memproses sesi Google: ' + err.message);
             setLoading(false);
         }
     };
@@ -340,7 +347,8 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                             </svg>
                                             <span className="text-[13px] font-medium">Google</span>
                                         </div>
-                                        {/* INI BAGIAN YANG DIPERBAIKI (opacity-0 diubah jadi opacity-[0.01]) */}
+
+                                        {/* PERBAIKAN: class opacity-[0.01] agar tombol tidak diblokir Google karena disembunyikan total */}
                                         <div className="absolute top-0 left-0 w-full h-full opacity-[0.01] z-10 cursor-pointer flex items-center justify-center transform scale-[2.5]">
                                             <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} useOneTap={false} />
                                         </div>
