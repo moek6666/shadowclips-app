@@ -3,7 +3,7 @@ import useSWR from 'swr';
 import { Search, Menu, X, Home, Compass, Flame, FolderOpen, Crown, ChevronDown, Sun, Moon, LogIn, LogOut, User, Settings } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
 import ModalLogin from './ModalLogin';
-import Avatar from './Avatar'; 
+import Avatar from './Avatar';
 
 const generateSeoSlug = (categoryName) => categoryName ? categoryName.toLowerCase().trim().replace(/\s+/g, '-') : '';
 
@@ -95,15 +95,31 @@ export default function Navbar({ isScrolled, supabase }) {
         () => fetchSearchResults(debouncedSearch), { revalidateOnFocus: false }
     );
 
-    const fetchPremiumCategories = async () => {
+    // 🔥 AMBIL KATEGORI YANG MEMILIKI LABEL 'Profesional Site' 🔥
+    const fetchCategoriesWithLabel = async () => {
         if (!supabase) return [];
-        const { data, error } = await supabase.from('videos').select('category').contains('labels', ['Profesional Site']);
+        const { data, error } = await supabase
+            .from('videos')
+            .select('category, labels')
+            .not('category', 'is', null);
+
         if (error || !data) return [];
-        return [...new Set(data.map(item => item.category))].filter(Boolean);
+
+        const categories = [];
+        data.forEach(item => {
+            if (item.category && item.labels) {
+                const labelStr = typeof item.labels === 'string' ? item.labels : JSON.stringify(item.labels);
+                if (labelStr.toLowerCase().includes('profesional site')) {
+                    categories.push(item.category);
+                }
+            }
+        });
+
+        return [...new Set(categories)].filter(Boolean);
     };
 
-    const { data: premiumCategories = [] } = useSWR(
-        supabase ? 'premium_categories' : null, fetchPremiumCategories, { revalidateOnFocus: false, dedupingInterval: 600000 }
+    const { data: categoryList = [] } = useSWR(
+        supabase ? 'categories_with_prof_site' : null, fetchCategoriesWithLabel, { revalidateOnFocus: false, dedupingInterval: 600000 }
     );
 
     const closeAndClearSearch = () => {
@@ -168,17 +184,23 @@ export default function Navbar({ isScrolled, supabase }) {
                             <a href="/koleksi" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ${pathname === '/koleksi' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                 <FolderOpen className="w-4 h-4 border-none" /> Library
                             </a>
+
+                            {/* 🔥 DROPDOWN MENAMPILKAN KATEGORI (Fit18, Onlyfans, PublicAgent, dll) 🔥 */}
                             <div className="relative group cursor-pointer py-2 ml-2 border-none">
                                 <div className={`flex items-center gap-1.5 transition-colors outline-none border-none ${pathname.startsWith('/category') ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                     <Crown className="w-4 h-4 transition-colors border-none" /> Profesional Site <ChevronDown className="w-3 h-3 group-hover:rotate-180 transition-transform duration-300 border-none" />
                                 </div>
                                 <div className="absolute top-full left-0 w-full h-4 bg-transparent border-none"></div>
                                 <div className="absolute top-[calc(100%+0.5rem)] left-0 w-56 bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 flex flex-col py-2 z-50 overflow-hidden transform origin-top-left scale-95 group-hover:scale-100">
-                                    {premiumCategories.map((cat, idx) => (
-                                        <a key={idx} href={`/category/${generateSeoSlug(cat)}`} className="px-4 py-2.5 text-[13px] font-bold text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-[#106EBE] hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors flex items-center gap-2 outline-none border-none">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-[#106EBE] border-none"></div> {cat}
-                                        </a>
-                                    ))}
+                                    {categoryList.length > 0 ? (
+                                        categoryList.map((cat, idx) => (
+                                            <a key={idx} href={`/category/${generateSeoSlug(cat)}`} className="px-4 py-2.5 text-[13px] font-bold text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-[#106EBE] hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors flex items-center gap-2 outline-none border-none">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-[#106EBE] border-none"></div> {cat}
+                                            </a>
+                                        ))
+                                    ) : (
+                                        <span className="px-4 py-2.5 text-[12px] text-zinc-400 italic">Memuat kategori...</span>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -300,7 +322,7 @@ export default function Navbar({ isScrolled, supabase }) {
                                 <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isMobilePremiumOpen ? 'rotate-180 text-[#106EBE]' : ''}`} />
                             </button>
                             <div className={`flex flex-col ml-8 overflow-hidden transition-all duration-300 ${isMobilePremiumOpen ? 'max-h-[500px] opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
-                                {premiumCategories.map((cat, idx) => (
+                                {categoryList.map((cat, idx) => (
                                     <a key={idx} href={`/category/${generateSeoSlug(cat)}`} className="py-2.5 px-4 text-[13px] font-bold text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors">{cat}</a>
                                 ))}
                             </div>
