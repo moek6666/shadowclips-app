@@ -121,7 +121,7 @@ export default function LegalPages() {
         { id: 'dmca', label: text.menu.dmca, icon: <AlertTriangle className="w-5 h-5" /> },
         { id: 'privacy', label: text.menu.privacy, icon: <Shield className="w-5 h-5" /> },
         { id: 'terms', label: text.menu.terms, icon: <FileText className="w-5 h-5" /> },
-        { id: '2257', label: text.menu['2257'], icon: <Scale className="w-5 h-5" /> }, // 🔥 DIPERBAIKI: Menggunakan kurung siku 🔥
+        { id: '2257', label: text.menu['2257'], icon: <Scale className="w-5 h-5" /> },
     ];
 
     return (
@@ -140,9 +140,9 @@ export default function LegalPages() {
                     {/* Tombol Dwibahasa */}
                     <button
                         onClick={toggleLanguage}
-                        className="flex items-center gap-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-[#106EBE] dark:hover:border-[#0FFCBE] text-zinc-700 dark:text-zinc-300 px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm shrink-0"
+                        className="flex items-center gap-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-[#106EBE] dark:hover:border-[#106EBE] text-zinc-700 dark:text-zinc-300 px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm shrink-0"
                     >
-                        <Globe className="w-4 h-4 text-[#106EBE] dark:text-[#0FFCBE]" />
+                        <Globe className="w-4 h-4 text-[#106EBE] dark:text-[#106EBE]" />
                         {text.langBtn}
                     </button>
                 </div>
@@ -160,10 +160,10 @@ export default function LegalPages() {
                                     onClick={() => handleTabChange(item.id)}
                                     className={`flex items-center gap-3 w-full text-left px-4 py-3.5 rounded-xl font-bold transition-all whitespace-nowrap md:whitespace-normal group border-transparent ${activeTab === item.id
                                         ? 'bg-[#106EBE] text-white shadow-md dark:shadow-[0_0_15px_rgba(16,110,190,0.4)]'
-                                        : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 hover:text-[#106EBE] dark:hover:text-[#0FFCBE]'
+                                        : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 hover:text-[#106EBE] dark:hover:text-[#106EBE]'
                                         }`}
                                 >
-                                    <span className={`${activeTab === item.id ? 'text-white' : 'text-zinc-500 group-hover:text-[#106EBE] dark:group-hover:text-[#0FFCBE]'} transition-colors`}>
+                                    <span className={`${activeTab === item.id ? 'text-white' : 'text-zinc-500 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE]'} transition-colors`}>
                                         {item.icon}
                                     </span>
                                     {item.label}
@@ -190,7 +190,7 @@ export default function LegalPages() {
                                     <div className="inline-block mt-2">
                                         <a
                                             href="mailto:shadowclips666@outlook.com"
-                                            className="inline-flex items-center gap-2.5 bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 hover:border-[#106EBE] dark:hover:border-[#0FFCBE] hover:bg-zinc-50 dark:hover:bg-zinc-800 text-[#106EBE] dark:text-[#106EBE] dark:hover:text-[#0FFCBE] font-bold px-5 py-3 rounded-xl transition-all shadow-sm dark:shadow-md group"
+                                            className="inline-flex items-center gap-2.5 bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 hover:border-[#106EBE] dark:hover:border-[#106EBE] hover:bg-zinc-50 dark:hover:bg-zinc-800 text-[#106EBE] dark:text-[#106EBE] dark:hover:text-[#106EBE] font-bold px-5 py-3 rounded-xl transition-all shadow-sm dark:shadow-md group"
                                         >
                                             <Mail className="w-5 h-5 group-hover:scale-110 transition-transform" />
                                             shadowclips666@outlook.com
@@ -243,7 +243,7 @@ export default function LegalPages() {
                                             : <>Sesuai dengan <strong className="text-zinc-900 dark:text-white transition-colors">18 U.S.C. § 2257</strong> dan peraturan terkait (Persyaratan Penyimpanan Catatan), ShadowClips menyatakan bahwa kami <strong className="text-zinc-900 dark:text-white transition-colors">bukanlah produsen utama</strong> konten di platform ini. Konten yang disajikan bersumber sepenuhnya dari tautan pihak ketiga (embed) atau kreator independen yang diunggah di luar server kami.</>}
                                     </p>
 
-                                    <p>{text.c2257.p3} <a href="mailto:shadowclips666@outlook.com" className="text-[#106EBE] dark:hover:text-[#0FFCBE] font-bold hover:underline transition-all">shadowclips666@outlook.com</a> {text.c2257.contactText}</p>
+                                    <p>{text.c2257.p3} <a href="mailto:shadowclips666@outlook.com" className="text-[#106EBE] dark:hover:text-[#106EBE] font-bold hover:underline transition-all">shadowclips666@outlook.com</a> {text.c2257.contactText}</p>
                                 </div>
                             </div>
                         )}

@@ -3,7 +3,7 @@ import useSWR from 'swr';
 import { Search, Menu, X, Home, Compass, Flame, FolderOpen, Crown, ChevronDown, Sun, Moon, LogIn, LogOut, User, Settings } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
 import ModalLogin from './ModalLogin';
-import Avatar from './Avatar'; // 🔥 IMPORT KOMPONEN AVATAR KITA 🔥
+import Avatar from './Avatar'; 
 
 const generateSeoSlug = (categoryName) => categoryName ? categoryName.toLowerCase().trim().replace(/\s+/g, '-') : '';
 
