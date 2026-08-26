@@ -6,6 +6,7 @@ import Footer from '../components/Footer';
 
 const getImageUrl = (imgString) => imgString ? imgString.split(',')[0].trim() : '';
 
+// 🔥 Fungsi ini sangat aman, otomatis membaca format JSONB array dari database 🔥
 const extractSingleLabel = (rawLabels) => {
     if (!rawLabels) return '';
     let str = typeof rawLabels === 'string' ? rawLabels : JSON.stringify(rawLabels);
@@ -101,7 +102,6 @@ export default function Koleksi({ supabase }) {
                                             </span>
                                         </div>
 
-                                        {/* 🔥 PERBAIKAN: Hover title sekarang jadi warna Biru ShadowClips di Light maupun Dark mode 🔥 */}
                                         <h3 className="text-2xl font-bold text-white group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors drop-shadow-md">
                                             {col.name}
                                         </h3>

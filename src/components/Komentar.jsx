@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Loader2, Send, MessageSquare, ChevronDown, Bold, Italic, Code, Link as LinkIcon, Quote, X, BadgeCheck, Crown, LogIn } from 'lucide-react';
+import DOMPurify from 'dompurify'; // 🔥 IMPORT DOMPURIFY DI SINI 🔥
 import ModalLogin from './ModalLogin';
 import Avatar from './Avatar';
 
@@ -24,7 +25,7 @@ const topEmojis = [
     { code: ':mahkota:', url: animatedEmojis[':mahkota:'] },
 ];
 
-// 🔥 DATABASE SENSOR KATA KASAR / SENSITIF (Bisa Bos tambah sendiri nanti) 🔥
+// 🔥 DATABASE SENSOR KATA KASAR / SENSITIF 🔥
 const BAD_WORDS = [
     'anjing', 'babi', 'bangsat', 'kontol', 'memek', 'ngentot',
     'goblok', 'tolol', 'bajingan', 'pepek', 'asu', 'jembut', 'peler', 'lonte'
@@ -167,7 +168,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
         setContent('');
     };
 
-    // 🔥 PERBAIKAN: Fungsi format yang mendorong kursor otomatis 🔥
     const insertFormat = (format) => {
         if (!textareaRef.current) return;
         const start = textareaRef.current.selectionStart;
@@ -206,7 +206,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
         }, 0);
     };
 
-    // 🔥 PERBAIKAN: Fungsi emoji yang langsung memposisikan kursor di akhir karakter terbaru 🔥
     const insertEmoji = (emojiCode) => {
         if (!textareaRef.current) return;
         const start = textareaRef.current.selectionStart;
@@ -254,10 +253,8 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
         const userEmail = session.user.email;
         const userName = profile?.name || userEmail.split('@')[0];
 
-        // Avatar ter-update diprioritaskan dari Profil DB -> Google Metadata 
         const currentUserAvatar = getValidAvatar(profile?.avatar_url, session?.user?.user_metadata?.avatar_url);
 
-        // 🔥 SISTEM AUTO-FILTER & AUTO-APPROVE KELAS DEWA 🔥
         const contentLower = content.toLowerCase();
         const isContentSensitive = BAD_WORDS.some(word => contentLower.includes(word));
 
@@ -281,7 +278,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
             video_id: String(videoId),
             name: userName,
             email: userEmail,
-            avatar_url: currentUserAvatar, // Menggunakan avatar valid terjamin
+            avatar_url: currentUserAvatar,
             content: content,
             parent_id: targetParentId,
             status: statusKomentar
@@ -333,7 +330,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
         const isMePremium = profile?.is_premium || false;
         const userName = profile?.name || session?.user?.email?.split('@')[0] || 'Guest';
 
-        // Memastikan Avatar Form juga bebas dari URL string 'null'
         const currentUserAvatar = getValidAvatar(profile?.avatar_url, session?.user?.user_metadata?.avatar_url);
 
         return (
@@ -451,7 +447,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                         const isPremium = userProfile.is_premium;
                         const frameId = userProfile.active_frame || 'none';
 
-                        // 🔥 MENGGUNAKAN FALLBACK AVATAR YANG 100% AMAN 🔥
                         const avatarUrl = getValidAvatar(userProfile.avatar_url, comment.avatar_url);
 
                         return (
@@ -481,7 +476,10 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                                             <span className="text-[10px] sm:text-[11px] font-medium text-zinc-400 dark:text-zinc-400 border-none transition-colors">{timeAgo(comment.created_at)}</span>
                                             {comment.status === 'pending' && <span className="px-2 py-0.5 rounded-[6px] text-[9px] sm:text-[10px] uppercase tracking-widest font-black bg-amber-500 text-white shadow-sm border-none transition-colors animate-pulse">Menunggu Persetujuan</span>}
                                         </div>
-                                        <div className="text-[12px] sm:text-[14px] text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none transition-colors" dangerouslySetInnerHTML={{ __html: parseMarkdown(comment.content) }} />
+
+                                        {/* 🔥 DOMPURIFY SANITIZATION PADA RENDER KOMENTAR UTAMA 🔥 */}
+                                        <div className="text-[12px] sm:text-[14px] text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none transition-colors" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(parseMarkdown(comment.content)) }} />
+
                                         <div className="flex items-center gap-4 mt-3 pt-3 border-none">
                                             <button onClick={() => handleReplyClick(comment)} className="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400 font-bold hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors outline-none border-none cursor-pointer">Reply</button>
                                         </div>
@@ -496,8 +494,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                                             const isReplyAdmin = replyProfile.is_admin;
                                             const isReplyPremium = replyProfile.is_premium;
                                             const replyFrameId = replyProfile.active_frame || 'none';
-
-                                            // 🔥 MENGGUNAKAN FALLBACK AVATAR YANG 100% AMAN 🔥
                                             const replyAvatarUrl = getValidAvatar(replyProfile.avatar_url, reply.avatar_url);
 
                                             return (
@@ -527,9 +523,12 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                                                                 <span className="text-[9px] sm:text-[10px] font-medium text-zinc-400 dark:text-zinc-400 border-none transition-colors">{timeAgo(reply.created_at)}</span>
                                                                 {reply.status === 'pending' && <span className="px-2 py-0.5 rounded-[6px] text-[9px] sm:text-[10px] uppercase tracking-widest font-black bg-amber-500 text-white shadow-sm border-none transition-colors animate-pulse">Menunggu Persetujuan</span>}
                                                             </div>
+
+                                                            {/* 🔥 DOMPURIFY SANITIZATION PADA RENDER BALASAN 🔥 */}
                                                             <div className="text-[11px] sm:text-[13px] text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none transition-colors">
-                                                                <span className="text-[#106EBE] font-bold mr-1 border-none">@{comment.name}</span> <span dangerouslySetInnerHTML={{ __html: parseMarkdown(reply.content) }} />
+                                                                <span className="text-[#106EBE] font-bold mr-1 border-none">@{comment.name}</span> <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(parseMarkdown(reply.content)) }} />
                                                             </div>
+
                                                             <div className="flex items-center gap-4 mt-3 pt-2 border-none"><button onClick={() => handleReplyClick(reply)} className="text-[9px] sm:text-[10px] text-zinc-500 dark:text-zinc-400 font-bold hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors outline-none border-none cursor-pointer">Reply</button></div>
                                                         </div>
                                                     </div>

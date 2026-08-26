@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import useSWR from 'swr';
-import { Play, Eye, Clock, Search, ChevronDown } from 'lucide-react';
+import { Play, Clock, Search, ChevronDown, Loader2 } from 'lucide-react'; // 🔥 TAMBAH Loader2 untuk animasi loading 🔥
 
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
@@ -17,7 +16,13 @@ export default function DetailCategory({ supabase }) {
     const [isScrolled, setIsScrolled] = useState(false);
     const [categoryName, setCategoryName] = useState('');
 
-    const [visibleCount, setVisibleCount] = useState(24);
+    // 🔥 STATE BARU UNTUK SERVER-SIDE PAGINATION 🔥
+    const [videos, setVideos] = useState([]);
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const ITEMS_PER_PAGE = 24;
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -41,20 +46,70 @@ export default function DetailCategory({ supabase }) {
         document.title = `${displayTitle} | ShadowClips`;
     }, []);
 
-    const fetchCategoryVideos = async (catName) => {
-        if (!supabase) throw new Error("Supabase not initialized");
-        const { data, error } = await supabase.from('videos').select('*').ilike('category', `%${catName}%`).order('created_at', { ascending: false });
-        if (error) throw new Error(error.message);
-        return data || [];
+    // 🔥 FUNGSI FETCH DATA AWAL (HALAMAN PERTAMA) 🔥
+    useEffect(() => {
+        if (!categoryName || !supabase) return;
+
+        const fetchInitialData = async () => {
+            setIsLoadingInitial(true);
+            setPage(0);
+
+            try {
+                // Ambil 24 video pertama
+                const { data, error, count } = await supabase
+                    .from('videos')
+                    .select('*', { count: 'exact' }) // Meminta server menghitung total video
+                    .ilike('category', `%${categoryName}%`)
+                    .order('created_at', { ascending: false })
+                    .range(0, ITEMS_PER_PAGE - 1); // Batasi hanya ambil index 0 sampai 23
+
+                if (error) throw error;
+
+                setVideos(data || []);
+
+                // Cek apakah masih ada sisa video di server
+                setHasMore((data || []).length === ITEMS_PER_PAGE && count > ITEMS_PER_PAGE);
+            } catch (error) {
+                console.error("Error fetching initial data:", error);
+            } finally {
+                setIsLoadingInitial(false);
+            }
+        };
+
+        fetchInitialData();
+    }, [categoryName, supabase]);
+
+    // 🔥 FUNGSI FETCH DATA TAMBAHAN (LOAD MORE) 🔥
+    const handleLoadMore = async () => {
+        if (isLoadingMore || !hasMore || !supabase) return;
+
+        setIsLoadingMore(true);
+        const nextPage = page + 1;
+        const from = nextPage * ITEMS_PER_PAGE;
+        const to = from + ITEMS_PER_PAGE - 1;
+
+        try {
+            const { data, error, count } = await supabase
+                .from('videos')
+                .select('*', { count: 'exact' })
+                .ilike('category', `%${categoryName}%`)
+                .order('created_at', { ascending: false })
+                .range(from, to); // Ambil index lanjutan, contoh: 24 sampai 47
+
+            if (error) throw error;
+
+            // Gabungkan video lama dengan video yang baru ditarik
+            setVideos(prev => [...prev, ...(data || [])]);
+            setPage(nextPage);
+
+            // Cek apakah kita sudah mencapai akhir total video
+            setHasMore(from + (data || []).length < count);
+        } catch (error) {
+            console.error("Error fetching more data:", error);
+        } finally {
+            setIsLoadingMore(false);
+        }
     };
-
-    const { data: videos = [], isLoading: loading } = useSWR(
-        categoryName && supabase ? ['category_videos', categoryName] : null,
-        () => fetchCategoryVideos(categoryName),
-        { revalidateOnFocus: false, dedupingInterval: 300000, keepPreviousData: true }
-    );
-
-    const displayedVideos = videos.slice(0, visibleCount);
 
     return (
         <>
@@ -62,7 +117,8 @@ export default function DetailCategory({ supabase }) {
 
             <div className="pt-28 pb-20 max-w-[1440px] mx-auto px-4 sm:px-8 min-h-screen flex flex-col transition-colors border-none">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-y-8 md:gap-x-6 flex-grow border-none">
-                    {loading ? (
+
+                    {isLoadingInitial ? (
                         Array.from({ length: 8 }).map((_, i) => (
                             <div key={i} className="animate-pulse flex flex-col gap-2 border-none">
                                 <div className="aspect-video bg-zinc-200 dark:bg-zinc-800/50 rounded-[4px] transition-colors border-none"></div>
@@ -72,7 +128,7 @@ export default function DetailCategory({ supabase }) {
                         ))
                     ) : videos.length > 0 ? (
                         <>
-                            {displayedVideos.map((item, index) => (
+                            {videos.map((item, index) => (
                                 <React.Fragment key={item.id}>
                                     <div onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer flex flex-col gap-2 border-none">
 
@@ -91,7 +147,7 @@ export default function DetailCategory({ supabase }) {
                                         </div>
 
                                         <div className="px-1 text-center border-none">
-                                            {/* 🔥 PERBAIKAN: Hover warna teks dihapus agar tetap rapi karena sudah ada efek zoom pada gambar 🔥 */}
+                                            {/* Hover warna teks tetap dihapus sesuai permintaan sebelumnya */}
                                             <h3 className="font-bold text-[13px] md:text-[14px] text-zinc-800 dark:text-zinc-300 transition-colors line-clamp-2 leading-snug border-none" title={item.title}>
                                                 {item.title}
                                             </h3>
@@ -111,13 +167,19 @@ export default function DetailCategory({ supabase }) {
                                 </React.Fragment>
                             ))}
 
-                            {visibleCount < videos.length && (
+                            {/* 🔥 TOMBOL LOAD MORE DENGAN LOGIKA SERVER-SIDE 🔥 */}
+                            {hasMore && (
                                 <div className="col-span-full flex justify-center mt-6 mb-4 border-none">
                                     <button
-                                        onClick={() => setVisibleCount(prev => prev + 8)}
-                                        className="bg-white dark:bg-zinc-800/80 hover:bg-[#106EBE] dark:hover:bg-[#106EBE] text-zinc-600 dark:text-zinc-300 hover:text-white text-sm font-bold py-3 px-8 rounded-full transition-all duration-300 flex items-center gap-2 border-none outline-none shadow-md dark:shadow-lg hover:shadow-[0_0_15px_rgba(16,110,190,0.5)] cursor-pointer"
+                                        onClick={handleLoadMore}
+                                        disabled={isLoadingMore}
+                                        className="bg-white dark:bg-zinc-800/80 hover:bg-[#106EBE] dark:hover:bg-[#106EBE] text-zinc-600 dark:text-zinc-300 hover:text-white disabled:opacity-70 text-sm font-bold py-3 px-8 rounded-full transition-all duration-300 flex items-center gap-2 border-none outline-none shadow-md dark:shadow-lg hover:shadow-[0_0_15px_rgba(16,110,190,0.5)] cursor-pointer"
                                     >
-                                        Load More <ChevronDown className="w-4 h-4 border-none" />
+                                        {isLoadingMore ? (
+                                            <> <Loader2 className="w-4 h-4 animate-spin border-none" /> Loading... </>
+                                        ) : (
+                                            <> Load More <ChevronDown className="w-4 h-4 border-none" /> </>
+                                        )}
                                     </button>
                                 </div>
                             )}

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import useSWR from 'swr';
-import { Play, Eye, Clock, Search, ChevronDown } from 'lucide-react';
+import { Play, Clock, Search, ChevronDown, Loader2 } from 'lucide-react';
 
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+import IklanCustom from '../../components/IklanCustom';
 
 const getImageUrl = (imgString) => imgString ? imgString.split(',')[0].trim() : '';
 
@@ -12,20 +12,19 @@ const formatViews = (views) => {
     return Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(views);
 };
 
-const extractSingleLabel = (rawLabels) => {
-    if (!rawLabels) return '';
-    let str = typeof rawLabels === 'string' ? rawLabels : JSON.stringify(rawLabels);
-    str = str.replace(/[\[\]{}"']/g, '').trim();
-    return str && str.toUpperCase() !== 'EMPTY' ? str : '';
-};
-
 export default function DetailKoleksi({ supabase }) {
     const [isScrolled, setIsScrolled] = useState(false);
     const [searchInput, setSearchInput] = useState('');
     const [labelName, setLabelName] = useState('');
-    const [targetLabelSearch, setTargetLabelSearch] = useState('');
+    const [rawSlug, setRawSlug] = useState('');
 
-    const [visibleCount, setVisibleCount] = useState(24);
+    // State untuk Server-Side Pagination
+    const [videos, setVideos] = useState([]);
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const ITEMS_PER_PAGE = 24;
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -35,47 +34,82 @@ export default function DetailKoleksi({ supabase }) {
 
     useEffect(() => {
         const pathParts = window.location.pathname.split('/');
-        let rawUrlLabel = decodeURIComponent(pathParts[2] || '');
+        let slug = decodeURIComponent(pathParts[2] || '');
 
-        if (!rawUrlLabel) { window.location.href = '/koleksi'; return; }
+        if (!slug) { window.location.href = '/koleksi'; return; }
 
-        rawUrlLabel = rawUrlLabel.replace(/-/g, ' ');
+        setRawSlug(slug);
 
-        const cleanUrlLabel = extractSingleLabel(rawUrlLabel);
-        const displayTitle = cleanUrlLabel.replace(/\b\w/g, c => c.toUpperCase());
-
-        setLabelName(displayTitle);
-        setTargetLabelSearch(cleanUrlLabel.toLowerCase());
-
-        document.title = `${displayTitle} | ShadowClips`;
+        // Ubah slug (contoh: "tiktok-live") menjadi format judul rapi ("Tiktok Live")
+        const formattedTitle = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        setLabelName(formattedTitle);
+        document.title = `${formattedTitle} | ShadowClips`;
     }, []);
 
-    const fetchLabelVideos = async (targetLabel) => {
-        if (!supabase) throw new Error("Supabase not initialized");
+    // 🔥 PENCARIAN PRESISI MENGGUNAKAN JSONB ARRAY `.contains()` 🔥
+    useEffect(() => {
+        if (!rawSlug || !supabase) return;
 
-        const { data, error } = await supabase.from('videos').select('*').order('created_at', { ascending: false });
-        if (error) throw new Error(error.message);
+        const fetchInitialData = async () => {
+            setIsLoadingInitial(true);
+            setPage(0);
 
-        if (data) {
-            return data.filter(video => {
-                const cleanDbLabel = extractSingleLabel(video.labels);
-                return cleanDbLabel.toLowerCase() === targetLabel;
-            });
+            // Kita buat variasi pencarian: format asli slug ("tiktok-live") dan format spasi ("tiktok live")
+            const searchVal1 = rawSlug.replace(/-/g, ' ');
+            const searchVal2 = rawSlug;
+
+            try {
+                // Menggunakan operator .contains untuk mencocokkan isi array JSONB secara akurat
+                const { data, error, count } = await supabase
+                    .from('videos')
+                    .select('*', { count: 'exact' })
+                    .or(`labels->>0.ilike.%${searchVal1}%,labels->>0.ilike.%${searchVal2}%`)
+                    .order('created_at', { ascending: false })
+                    .range(0, ITEMS_PER_PAGE - 1);
+
+                if (error) throw error;
+
+                setVideos(data || []);
+                setHasMore((data || []).length === ITEMS_PER_PAGE && count > ITEMS_PER_PAGE);
+            } catch (error) {
+                console.error("Error fetching initial data:", error);
+            } finally {
+                setIsLoadingInitial(false);
+            }
+        };
+
+        fetchInitialData();
+    }, [rawSlug, supabase]);
+
+    const handleLoadMore = async () => {
+        if (isLoadingMore || !hasMore || !supabase) return;
+
+        setIsLoadingMore(true);
+        const nextPage = page + 1;
+        const from = nextPage * ITEMS_PER_PAGE;
+        const to = from + ITEMS_PER_PAGE - 1;
+        const searchVal1 = rawSlug.replace(/-/g, ' ');
+        const searchVal2 = rawSlug;
+
+        try {
+            const { data, error, count } = await supabase
+                .from('videos')
+                .select('*', { count: 'exact' })
+                .or(`labels->>0.ilike.%${searchVal1}%,labels->>0.ilike.%${searchVal2}%`)
+                .order('created_at', { ascending: false })
+                .range(from, to);
+
+            if (error) throw error;
+
+            setVideos(prev => [...prev, ...(data || [])]);
+            setPage(nextPage);
+            setHasMore(from + (data || []).length < count);
+        } catch (error) {
+            console.error("Error fetching more data:", error);
+        } finally {
+            setIsLoadingMore(false);
         }
-        return [];
     };
-
-    const { data: videos = [], isLoading: loading } = useSWR(
-        targetLabelSearch && supabase ? ['koleksi_videos', targetLabelSearch] : null,
-        () => fetchLabelVideos(targetLabelSearch),
-        {
-            revalidateOnFocus: false,
-            dedupingInterval: 300000,
-            keepPreviousData: true,
-        }
-    );
-
-    const displayedVideos = videos.slice(0, visibleCount);
 
     return (
         <>
@@ -83,7 +117,7 @@ export default function DetailKoleksi({ supabase }) {
 
             <div className="pt-28 pb-20 max-w-[1440px] mx-auto px-4 sm:px-8 min-h-screen flex flex-col transition-colors">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-y-8 md:gap-x-6 flex-grow">
-                    {loading ? (
+                    {isLoadingInitial ? (
                         Array.from({ length: 8 }).map((_, i) => (
                             <div key={i} className="animate-pulse flex flex-col gap-2">
                                 <div className="aspect-video bg-zinc-200 dark:bg-zinc-800/50 rounded-[4px] transition-colors"></div>
@@ -93,39 +127,55 @@ export default function DetailKoleksi({ supabase }) {
                         ))
                     ) : videos.length > 0 ? (
                         <>
-                            {displayedVideos.map((item) => (
-                                <div key={item.id} onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer flex flex-col gap-2">
+                            {videos.map((item, index) => (
+                                <React.Fragment key={item.id}>
+                                    <div onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer flex flex-col gap-2">
 
-                                    <div className="relative aspect-video rounded-[4px] overflow-hidden bg-zinc-100 dark:bg-zinc-900 border-none transition-colors">
-                                        <img src={getImageUrl(item.img)} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                                        <div className="relative aspect-video rounded-[4px] overflow-hidden bg-zinc-100 dark:bg-zinc-900 border-none transition-colors">
+                                            <img src={getImageUrl(item.img)} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
 
-                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
-                                            <Play className="w-12 h-12 text-white/90 fill-current drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300" />
+                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
+                                                <Play className="w-12 h-12 text-white/90 fill-current drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300" />
+                                            </div>
+
+                                            {item.duration && item.duration !== 'EMPTY' && (
+                                                <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[10px] md:text-[11px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
+                                                    <Clock className="w-3 h-3 md:w-3.5 md:h-3.5" /> {item.duration}
+                                                </div>
+                                            )}
                                         </div>
 
-                                        {item.duration && item.duration !== 'EMPTY' && (
-                                            <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[10px] md:text-[11px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
-                                                <Clock className="w-3 h-3 md:w-3.5 md:h-3.5" /> {item.duration}
-                                            </div>
-                                        )}
+                                        <div className="px-1 text-center">
+                                            <h3 className="font-bold text-[13px] md:text-[14px] text-zinc-800 dark:text-zinc-300 transition-colors line-clamp-2 leading-snug" title={item.title}>
+                                                {item.title}
+                                            </h3>
+                                        </div>
+
                                     </div>
 
-                                    <div className="px-1 text-center">
-                                        <h3 className="font-bold text-[13px] md:text-[14px] text-zinc-800 dark:text-zinc-300 group-hover:text-black dark:group-hover:text-white transition-colors line-clamp-2 leading-snug" title={item.title}>
-                                            {item.title}
-                                        </h3>
-                                    </div>
-
-                                </div>
+                                    {index === 7 && (
+                                        <div className="col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4 flex items-center justify-center py-4 sm:py-6 border-none w-full">
+                                            <IklanCustom
+                                                imgUrl="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/Tiger.webp"
+                                                className="!max-w-[500px] w-full"
+                                            />
+                                        </div>
+                                    )}
+                                </React.Fragment>
                             ))}
 
-                            {visibleCount < videos.length && (
+                            {hasMore && (
                                 <div className="col-span-full flex justify-center mt-6 mb-4">
                                     <button
-                                        onClick={() => setVisibleCount(prev => prev + 8)}
-                                        className="bg-white dark:bg-zinc-800/80 hover:bg-[#106EBE] dark:hover:bg-[#106EBE] text-zinc-600 dark:text-zinc-300 hover:text-white text-sm font-bold py-3 px-8 rounded-full transition-all duration-300 flex items-center gap-2 border-none outline-none shadow-md dark:shadow-lg hover:shadow-[0_0_15px_rgba(16,110,190,0.5)]"
+                                        onClick={handleLoadMore}
+                                        disabled={isLoadingMore}
+                                        className="bg-white dark:bg-zinc-800/80 hover:bg-[#106EBE] dark:hover:bg-[#106EBE] text-zinc-600 dark:text-zinc-300 hover:text-white disabled:opacity-70 text-sm font-bold py-3 px-8 rounded-full transition-all duration-300 flex items-center gap-2 border-none outline-none shadow-md dark:shadow-lg hover:shadow-[0_0_15px_rgba(16,110,190,0.5)] cursor-pointer"
                                     >
-                                        Load More <ChevronDown className="w-4 h-4" />
+                                        {isLoadingMore ? (
+                                            <> <Loader2 className="w-4 h-4 animate-spin" /> Loading... </>
+                                        ) : (
+                                            <> Load More <ChevronDown className="w-4 h-4" /> </>
+                                        )}
                                     </button>
                                 </div>
                             )}
