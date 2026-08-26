@@ -36,7 +36,7 @@ export default function Tutorial({ supabase }) {
             titleConcept: 'Filosofi Komunitas Kami',
             descConcept: 'Memahami alasan kami menggunakan sistem berbasis interaksi alih-alih biaya langganan bulanan yang mahal.',
 
-            // Tabs (Sekarang kapital di awal kata saja)
+            // Tabs
             tabGuide: 'Panduan Akses',
             tabVip: 'Keuntungan VIP',
             tabConcept: 'Mengapa Login?',
@@ -111,7 +111,7 @@ export default function Tutorial({ supabase }) {
         }
     };
 
-    const text = dict[lang]; // Pilih kamus berdasarkan bahasa aktif
+    const text = dict[lang];
 
     const tabs = [
         { id: 'guide', label: text.tabGuide, icon: <Unlock className="w-5 h-5" /> },
@@ -144,7 +144,7 @@ export default function Tutorial({ supabase }) {
                         {/* Tombol Toggle Dua Bahasa */}
                         <button
                             onClick={toggleLanguage}
-                            className="flex items-center gap-2.5 bg-zinc-100 dark:bg-zinc-900/60 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-5 py-3 rounded-2xl font-bold text-sm transition-all duration-300 shadow-sm border-none shrink-0"
+                            className="flex items-center gap-2.5 bg-zinc-100 dark:bg-zinc-900/60 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-[#106EBE] px-5 py-3 rounded-2xl font-bold text-sm transition-all duration-300 shadow-sm border-none shrink-0"
                         >
                             <Globe className="w-5 h-5 text-[#106EBE] border-none" />
                             {text.langBtn}
@@ -161,11 +161,11 @@ export default function Tutorial({ supabase }) {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    // 🔥 PERBAIKAN UPPERCASE DIHILANGKAN, TAMPILAN LEBIH KALEM 🔥
-                                    className={`flex items-center gap-3.5 px-4 py-3 md:py-4 rounded-xl text-left transition-all group whitespace-nowrap border-none outline-none ${activeTab === tab.id ? 'bg-[#106EBE]/10 text-[#106EBE] dark:text-[#0FFCBE] font-black' : 'text-zinc-500 dark:text-zinc-500 font-bold hover:text-zinc-800 dark:hover:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900/50'
+                                    // 🔥 PERBAIKAN: Selalu biru ShadowClips saat hover/active, baik di Light maupun Dark Mode 🔥
+                                    className={`flex items-center gap-3.5 px-4 py-3 md:py-4 rounded-xl text-left transition-all group whitespace-nowrap border-none outline-none ${activeTab === tab.id ? 'bg-[#106EBE]/10 text-[#106EBE] dark:text-[#106EBE] font-black' : 'text-zinc-500 dark:text-zinc-500 font-bold hover:text-[#106EBE] dark:hover:text-[#106EBE] hover:bg-zinc-50 dark:hover:bg-zinc-900/50'
                                         }`}
                                 >
-                                    <span className={`transition-colors border-none ${activeTab === tab.id ? 'text-[#106EBE] dark:text-[#0FFCBE]' : 'text-zinc-400 dark:text-zinc-600 group-hover:text-zinc-600 dark:group-hover:text-zinc-400'}`}>
+                                    <span className={`transition-colors border-none ${activeTab === tab.id ? 'text-[#106EBE] dark:text-[#106EBE]' : 'text-zinc-400 dark:text-zinc-600 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE]'}`}>
                                         {tab.icon}
                                     </span>
                                     <span className="tracking-wide text-[14px] sm:text-[15px] border-none">{tab.label}</span>
@@ -228,7 +228,7 @@ export default function Tutorial({ supabase }) {
                             </div>
                         )}
 
-                        {/* 🚀 TAB 2: KEUNTUNGAN VIP KHUSUS (DESAIN SERAGAM DENGAN PANDUAN) 🚀 */}
+                        {/* 🚀 TAB 2: KEUNTUNGAN VIP KHUSUS 🚀 */}
                         {activeTab === 'vip' && (
                             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-10 max-w-3xl border-none">
                                 <div className="flex flex-col gap-10 sm:gap-14 border-none">
