@@ -313,7 +313,7 @@ export default function Profile({ supabase }) {
                 </div>
 
                 {/* ========================================== */}
-                {/* 2. PROFILE SETTINGS */}
+                {/* 2. PROFILE SETTINGS (MENGGABUNGKAN ACTIVITY GRID DI DALAMNYA) */}
                 {/* ========================================== */}
                 <form onSubmit={handleUpdateProfile} className="bg-white dark:bg-zinc-800/40 rounded-[2rem] p-8 sm:p-10 mb-8 shadow-xl dark:shadow-2xl relative z-10 backdrop-blur-xl border-none transition-colors">
 
@@ -442,73 +442,74 @@ export default function Profile({ supabase }) {
                                 />
                             </div>
                         </div>
+
+                        {/* ========================================== */}
+                        {/* 3. ACTIVITY GRID (DIGABUNG DI DALAM FORM CONTAINER) */}
+                        {/* ========================================== */}
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 border-none pt-6 mt-2 border-t border-zinc-200/40 dark:border-zinc-700/40">
+
+                            {/* Panel Liked */}
+                            <div className="bg-zinc-50 dark:bg-zinc-900/40 rounded-2xl p-6 border-none">
+                                <div className="flex items-center gap-3 mb-6 border-none">
+                                    <Heart className="w-5 h-5 text-rose-500 border-none shrink-0" />
+                                    <h2 className="text-sm font-bold text-zinc-900 dark:text-white border-none">Liked Videos</h2>
+                                </div>
+
+                                {likedVideos.length > 0 ? (
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 border-none">
+                                        {likedVideos.map(vid => (
+                                            <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group flex flex-col gap-2 border-none outline-none" title={vid.title}>
+                                                <div className="relative aspect-video rounded-xl overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none">
+                                                    <img src={getImageUrl(vid.img)} loading="lazy" alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" />
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10 border-none">
+                                                        <Play className="w-6 h-6 text-white fill-current drop-shadow-md border-none" />
+                                                    </div>
+                                                </div>
+                                                <h3 className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 group-hover:text-[#106EBE] dark:group-hover:text-white truncate border-none px-0.5">{vid.title}</h3>
+                                            </a>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center h-28 gap-2 text-zinc-400 dark:text-zinc-600 border-none">
+                                        <Heart className="w-6 h-6 opacity-50 border-none" />
+                                        <span className="text-[11px] font-medium border-none">Belum ada video yang disukai</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Panel Watch History */}
+                            <div className="bg-zinc-50 dark:bg-zinc-900/40 rounded-2xl p-6 border-none">
+                                <div className="flex items-center gap-3 mb-6 border-none">
+                                    <Clock className="w-5 h-5 text-[#106EBE] dark:text-[#32ADFF] border-none shrink-0" />
+                                    <h2 className="text-sm font-bold text-zinc-900 dark:text-white border-none">Watch History</h2>
+                                </div>
+
+                                {historyVideos.length > 0 ? (
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 border-none">
+                                        {historyVideos.map(vid => (
+                                            <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group flex flex-col gap-2 border-none outline-none" title={vid.title}>
+                                                <div className="relative aspect-video rounded-xl overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none">
+                                                    <img src={getImageUrl(vid.img)} loading="lazy" alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" />
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10 border-none">
+                                                        <Play className="w-6 h-6 text-white fill-current drop-shadow-md border-none" />
+                                                    </div>
+                                                </div>
+                                                <h3 className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 group-hover:text-[#106EBE] dark:group-hover:text-white truncate border-none px-0.5">{vid.title}</h3>
+                                            </a>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center h-28 gap-2 text-zinc-400 dark:text-zinc-600 border-none">
+                                        <Clock className="w-6 h-6 opacity-50 border-none" />
+                                        <span className="text-[11px] font-medium border-none">Belum ada riwayat tontonan</span>
+                                    </div>
+                                )}
+                            </div>
+
+                        </div>
+
                     </div>
                 </form>
-
-                {/* ========================================== */}
-                {/* 3. ACTIVITY GRID */}
-                {/* ========================================== */}
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 border-none">
-
-                    {/* Panel Liked */}
-                    <div className="bg-white dark:bg-zinc-800/40 rounded-[2rem] p-6 sm:p-8 shadow-xl dark:shadow-2xl backdrop-blur-xl border-none transition-colors">
-                        <div className="flex items-center gap-3 mb-6 sm:mb-8 border-none">
-                            <Heart className="w-5 h-5 text-rose-500 border-none shrink-0" />
-                            <h2 className="text-sm font-bold text-zinc-900 dark:text-white border-none">Liked Videos</h2>
-                        </div>
-
-                        {likedVideos.length > 0 ? (
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 border-none">
-                                {likedVideos.map(vid => (
-                                    <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group flex flex-col gap-2 border-none outline-none" title={vid.title}>
-                                        <div className="relative aspect-video rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border-none">
-                                            <img src={getImageUrl(vid.img)} loading="lazy" alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" />
-                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10 border-none">
-                                                <Play className="w-6 h-6 sm:w-8 sm:h-8 text-white fill-current drop-shadow-md border-none" />
-                                            </div>
-                                        </div>
-                                        <h3 className="text-[11px] sm:text-xs font-bold text-zinc-600 dark:text-zinc-400 group-hover:text-[#106EBE] dark:group-hover:text-white truncate border-none px-0.5">{vid.title}</h3>
-                                    </a>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="flex flex-col items-center justify-center h-32 gap-2 text-zinc-400 dark:text-zinc-600 border-none">
-                                <Heart className="w-6 h-6 opacity-50 border-none" />
-                                <span className="text-[11px] font-medium border-none">Belum ada video yang disukai</span>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Panel Watch History */}
-                    <div className="bg-white dark:bg-zinc-800/40 rounded-[2rem] p-6 sm:p-8 shadow-xl dark:shadow-2xl backdrop-blur-xl border-none transition-colors">
-                        <div className="flex items-center gap-3 mb-6 sm:mb-8 border-none">
-                            <Clock className="w-5 h-5 text-[#106EBE] dark:text-[#32ADFF] border-none shrink-0" />
-                            <h2 className="text-sm font-bold text-zinc-900 dark:text-white border-none">Watch History</h2>
-                        </div>
-
-                        {historyVideos.length > 0 ? (
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 border-none">
-                                {historyVideos.map(vid => (
-                                    <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group flex flex-col gap-2 border-none outline-none" title={vid.title}>
-                                        <div className="relative aspect-video rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border-none">
-                                            <img src={getImageUrl(vid.img)} loading="lazy" alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" />
-                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10 border-none">
-                                                <Play className="w-6 h-6 sm:w-8 sm:h-8 text-white fill-current drop-shadow-md border-none" />
-                                            </div>
-                                        </div>
-                                        <h3 className="text-[11px] sm:text-xs font-bold text-zinc-600 dark:text-zinc-400 group-hover:text-[#106EBE] dark:group-hover:text-white truncate border-none px-0.5">{vid.title}</h3>
-                                    </a>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="flex flex-col items-center justify-center h-32 gap-2 text-zinc-400 dark:text-zinc-600 border-none">
-                                <Clock className="w-6 h-6 opacity-50 border-none" />
-                                <span className="text-[11px] font-medium border-none">Belum ada riwayat tontonan</span>
-                            </div>
-                        )}
-                    </div>
-
-                </div>
 
             </main>
             <Footer />
