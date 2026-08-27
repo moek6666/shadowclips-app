@@ -273,14 +273,13 @@ export default function Profile({ supabase }) {
                             {nextFrame ? (
                                 <div className="w-full border-none">
                                     <div className="w-full bg-zinc-200 dark:bg-black/40 rounded-full h-2.5 overflow-hidden border-none shadow-inner">
-                                        {/* Progress Bar Warna Solid Blue */}
                                         <div className="bg-[#106EBE] h-full rounded-full transition-all duration-1000 ease-out border-none relative" style={{ width: `${progressPercentage}%` }}>
                                             <div className="absolute top-0 right-0 bottom-0 w-4 bg-white/20 blur-[2px] border-none"></div>
                                         </div>
                                     </div>
 
                                     {/* Preview Avatar Target */}
-                                    <div className="mt-4 flex items-center justify-between bg-zinc-100 dark:bg-black/20 rounded-xl p-3 border-none">
+                                    <div className="mt-4 flex items-center justify-between bg-zinc-100 dark:bg-zinc-900/60 rounded-xl p-3 border-none">
                                         <div className="flex flex-col border-none">
                                             <span className="text-[9px] text-zinc-500 uppercase tracking-widest font-bold border-none">Next Reward Avatar Border</span>
                                             <span className="text-[12px] font-black text-zinc-900 dark:text-white mt-0.5 border-none">{nextFrame.name}</span>
@@ -303,11 +302,11 @@ export default function Profile({ supabase }) {
                 </section>
 
                 {/* ========================================== */}
-                {/* 1.5. TEXT LINK NEED HELP (Tanpa Container) */}
+                {/* 1.5. TEXT LINK NEED HELP */}
                 {/* ========================================== */}
                 <div className="flex justify-center mb-8 w-full border-none">
                     <a href="/tutorial" className="group inline-flex items-center outline-none cursor-pointer border-none transition-all">
-                        <span className="text-[13px] sm:text-sm font-bold text-zinc-500 dark:text-zinc-400 group-hover:text-[#106EBE] dark:group-hover:text-white transition-colors border-none underline decoration-transparent group-hover:decoration-[#106EBE] dark:group-hover:decoration-white underline-offset-4">
+                        <span className="text-[13px] sm:text-sm font-bold text-zinc-500 dark:text-zinc-400 group-hover:text-[#106EBE] dark:group-hover:text-[#32ADFF] transition-colors border-none underline decoration-transparent group-hover:decoration-[#106EBE] dark:group-hover:decoration-[#32ADFF] underline-offset-4">
                             How to upgrade or unlock your avatar border?
                         </span>
                     </a>
@@ -320,9 +319,8 @@ export default function Profile({ supabase }) {
 
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mb-10 border-none">
                         <div className="flex items-center gap-3 border-none">
-                            <div className="w-10 h-10 rounded-full bg-[#106EBE]/10 flex items-center justify-center border-none">
-                                <Settings className="w-5 h-5 text-[#106EBE] dark:text-[#32ADFF] border-none" />
-                            </div>
+                            {/* 🔥 ICON MURNI TANPA BACKGROUND WARNA 🔥 */}
+                            <Settings className="w-6 h-6 text-[#106EBE] dark:text-[#32ADFF] border-none shrink-0" />
                             <h2 className="text-xl font-bold text-zinc-900 dark:text-white border-none">Profile Settings</h2>
                         </div>
 
@@ -341,9 +339,8 @@ export default function Profile({ supabase }) {
                         {/* Baris 1: Avatar Link */}
                         <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-10 border-none">
                             <div className="w-full md:w-[40%] flex items-start gap-4 border-none">
-                                <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-black/20 flex items-center justify-center shrink-0 border-none">
-                                    <ImageIcon className="w-5 h-5 text-zinc-500 border-none" />
-                                </div>
+                                {/* 🔥 ICON MURNI TANPA BACKGROUND WARNA 🔥 */}
+                                <ImageIcon className="w-6 h-6 text-zinc-500 dark:text-zinc-400 border-none shrink-0" />
                                 <div className="border-none">
                                     <h3 className="text-sm font-bold text-zinc-900 dark:text-white border-none">Change Profile Picture</h3>
                                     <p className="text-[11px] text-zinc-500 mt-1 leading-relaxed border-none">Update your profile picture from third-party links like ImgBB or Goonbox.</p>
@@ -354,7 +351,7 @@ export default function Profile({ supabase }) {
                                     type="url"
                                     value={editAvatarUrl}
                                     onChange={(e) => setEditAvatarUrl(e.target.value)}
-                                    className="w-full bg-zinc-50 dark:bg-black/40 rounded-xl py-3.5 px-5 text-sm text-zinc-900 dark:text-white focus:bg-zinc-100 dark:focus:bg-black/60 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-700 border-none"
+                                    className="w-full bg-zinc-50 dark:bg-zinc-800/60 rounded-xl py-3.5 px-5 text-sm text-zinc-900 dark:text-white focus:bg-zinc-100 dark:focus:bg-zinc-700/60 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-500 border-none"
                                     placeholder="https://example.com/image.jpg"
                                 />
                             </div>
@@ -363,9 +360,8 @@ export default function Profile({ supabase }) {
                         {/* Baris 2: Avatar Border (DROPDOWN GRID MENU) */}
                         <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-10 relative border-none">
                             <div className="w-full md:w-[40%] flex items-start gap-4 border-none">
-                                <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-black/20 flex items-center justify-center shrink-0 border-none">
-                                    <Star className="w-5 h-5 text-zinc-500 border-none" />
-                                </div>
+                                {/* 🔥 ICON MURNI TANPA BACKGROUND WARNA 🔥 */}
+                                <Star className="w-6 h-6 text-zinc-500 dark:text-zinc-400 border-none shrink-0" />
                                 <div className="border-none">
                                     <h3 className="text-sm font-bold text-zinc-900 dark:text-white border-none">Avatar Border</h3>
                                     <p className="text-[11px] text-zinc-500 mt-1 leading-relaxed border-none">Choose an animated frame for your avatar based on your points.</p>
@@ -376,7 +372,7 @@ export default function Profile({ supabase }) {
                                 <button
                                     type="button"
                                     onClick={() => setIsFrameDropdownOpen(!isFrameDropdownOpen)}
-                                    className="w-full bg-zinc-50 dark:bg-black/40 hover:bg-zinc-100 dark:hover:bg-black/60 rounded-xl py-3 px-5 text-sm text-zinc-900 dark:text-white flex items-center justify-between transition-all outline-none border-none cursor-pointer"
+                                    className="w-full bg-zinc-50 dark:bg-zinc-800/60 hover:bg-zinc-100 dark:hover:bg-zinc-700/60 rounded-xl py-3 px-5 text-sm text-zinc-900 dark:text-white flex items-center justify-between transition-all outline-none border-none cursor-pointer"
                                 >
                                     <div className="flex items-center gap-3 border-none">
                                         <div className="w-8 h-8 relative flex items-center justify-center bg-transparent rounded-full border-none">
@@ -392,8 +388,9 @@ export default function Profile({ supabase }) {
                                 {isFrameDropdownOpen && (
                                     <>
                                         <div className="fixed inset-0 z-40 border-none" onClick={() => setIsFrameDropdownOpen(false)}></div>
-                                        <div className="absolute top-[calc(100%+0.5rem)] left-0 w-full bg-white dark:bg-zinc-900 rounded-2xl shadow-xl dark:shadow-[0_15px_40px_rgba(0,0,0,0.7)] z-50 p-4 border-none animate-in fade-in slide-in-from-top-2 duration-200">
-                                            <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 max-h-[300px] overflow-y-auto pr-2 border-none" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
+                                        {/* 🔥 DROPDOWN CONTAINER: Warnanya Dibuat Lebih Terang (abu-abu zinc-800/90) & Border-none 🔥 */}
+                                        <div className="absolute top-[calc(100%+0.5rem)] left-0 w-full bg-white dark:bg-zinc-800/95 backdrop-blur-xl rounded-2xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] z-50 p-4 border-none animate-in fade-in slide-in-from-top-2 duration-200">
+                                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-[350px] overflow-y-auto pr-2 border-none" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
                                                 {FRAME_OPTIONS.map(frame => {
                                                     const isLocked = currentPoints < frame.unlockPoints;
                                                     const isActive = editFrame === frame.id;
@@ -404,20 +401,27 @@ export default function Profile({ supabase }) {
                                                             type="button"
                                                             disabled={isLocked}
                                                             onClick={() => { setEditFrame(frame.id); setIsFrameDropdownOpen(false); }}
-                                                            className={`relative aspect-square flex flex-col items-center justify-center p-2 rounded-xl transition-colors outline-none border-none cursor-pointer
-                                                                ${isActive ? 'bg-[#106EBE]/10 dark:bg-[#106EBE]/20' : isLocked ? 'opacity-40 cursor-not-allowed grayscale' : 'bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800'}
+                                                            // 🔥 ITEM KOTAK AVATAR: Warnanya Dibuat Lebih Gelap (Hitam zinc-900/60) & Auto-Height 🔥
+                                                            className={`relative flex flex-col items-center justify-start p-3 h-auto w-full rounded-xl transition-all duration-200 outline-none border-none cursor-pointer
+                                                                ${isActive ? 'bg-[#106EBE]/10 dark:bg-[#106EBE]/20' : isLocked ? 'opacity-40 cursor-not-allowed grayscale bg-zinc-50 dark:bg-zinc-900/40' : 'bg-zinc-50 dark:bg-zinc-900/60 hover:bg-zinc-100 dark:hover:bg-zinc-900'}
                                                             `}
                                                             title={`${frame.name} (${frame.unlockPoints} Pts)`}
                                                         >
-                                                            <div className="w-10 h-10 relative flex items-center justify-center mb-2 border-none">
-                                                                {/* Preview URL Asli User di tiap Pilihan */}
-                                                                <Avatar url={editAvatarUrl} frameId={frame.id} containerClass="w-full h-full pointer-events-none border-none" scale={0.4} />
+                                                            <div className="w-12 h-12 relative flex items-center justify-center mb-3 shrink-0 border-none">
+                                                                <Avatar url={editAvatarUrl} frameId={frame.id} containerClass="w-full h-full pointer-events-none border-none" scale={0.45} />
                                                             </div>
-                                                            <span className="text-[9px] font-bold text-zinc-900 dark:text-white text-center leading-tight line-clamp-1 border-none">{frame.name}</span>
+                                                            <div className="flex flex-col items-center w-full border-none">
+                                                                <span className="text-[10px] sm:text-[11px] font-bold text-zinc-900 dark:text-white text-center leading-tight truncate w-full border-none pb-1">{frame.name}</span>
+
+                                                                {/* 🔥 TEKS POIN DIJAMIN TAMPIL (display: block) DENGAN WARNA KONTRAST 🔥 */}
+                                                                <span className="text-[10px] font-black text-[#106EBE] dark:text-[#32ADFF] text-center uppercase tracking-widest w-full border-none block mt-1.5">
+                                                                    {frame.unlockPoints === 0 ? 'Free' : `${frame.unlockPoints.toLocaleString()} Pts`}
+                                                                </span>
+                                                            </div>
 
                                                             {/* Indikator Status */}
-                                                            {isActive && <Check className="absolute top-1.5 right-1.5 w-3.5 h-3.5 text-[#106EBE] dark:text-[#32ADFF] border-none" />}
-                                                            {isLocked && <Lock className="absolute top-1.5 right-1.5 w-3 h-3 text-zinc-400 dark:text-zinc-500 border-none" />}
+                                                            {isActive && <Check className="absolute top-2 right-2 w-3.5 h-3.5 text-[#106EBE] dark:text-[#32ADFF] border-none" />}
+                                                            {isLocked && <Lock className="absolute top-2 right-2 w-3 h-3 text-zinc-400 dark:text-zinc-500 border-none" />}
                                                         </button>
                                                     );
                                                 })}
@@ -431,9 +435,8 @@ export default function Profile({ supabase }) {
                         {/* Baris 3: Change Username */}
                         <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-10 border-none">
                             <div className="w-full md:w-[40%] flex items-start gap-4 border-none">
-                                <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-black/20 flex items-center justify-center shrink-0 border-none">
-                                    <UserCircle className="w-5 h-5 text-zinc-500 border-none" />
-                                </div>
+                                {/* 🔥 ICON MURNI TANPA BACKGROUND WARNA 🔥 */}
+                                <UserCircle className="w-6 h-6 text-zinc-500 dark:text-zinc-400 border-none shrink-0" />
                                 <div className="border-none">
                                     <h3 className="text-sm font-bold text-zinc-900 dark:text-white border-none">Change Username</h3>
                                     <p className="text-[11px] text-zinc-500 mt-1 leading-relaxed border-none">Update your unique display name.</p>
@@ -445,7 +448,7 @@ export default function Profile({ supabase }) {
                                     value={editName}
                                     onChange={(e) => setEditName(e.target.value)}
                                     required
-                                    className="w-full bg-zinc-50 dark:bg-black/40 rounded-xl py-3.5 px-5 text-sm text-zinc-900 dark:text-white focus:bg-zinc-100 dark:focus:bg-black/60 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-700 border-none"
+                                    className="w-full bg-zinc-50 dark:bg-zinc-800/60 rounded-xl py-3.5 px-5 text-sm text-zinc-900 dark:text-white focus:bg-zinc-100 dark:focus:bg-zinc-700/60 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-500 border-none"
                                     placeholder="Enter username"
                                 />
                             </div>
@@ -461,9 +464,8 @@ export default function Profile({ supabase }) {
                     {/* Panel Liked */}
                     <div className="bg-white dark:bg-zinc-800/40 rounded-[2rem] p-8 shadow-xl dark:shadow-2xl backdrop-blur-xl border-none transition-colors">
                         <div className="flex items-center gap-3 mb-8 border-none">
-                            <div className="w-8 h-8 rounded-full bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center border-none">
-                                <Heart className="w-4 h-4 text-rose-500 border-none" />
-                            </div>
+                            {/* 🔥 ICON MURNI TANPA BACKGROUND WARNA 🔥 */}
+                            <Heart className="w-5 h-5 text-rose-500 border-none shrink-0" />
                             <h2 className="text-sm font-bold text-zinc-900 dark:text-white border-none">Liked Videos</h2>
                         </div>
 
@@ -471,7 +473,7 @@ export default function Profile({ supabase }) {
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 border-none">
                                 {likedVideos.map(vid => (
                                     <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group flex flex-col gap-2.5 border-none outline-none" title={vid.title}>
-                                        <div className="relative aspect-[3/4] sm:aspect-video rounded-xl overflow-hidden bg-zinc-100 dark:bg-black/40 border-none">
+                                        <div className="relative aspect-[3/4] sm:aspect-video rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border-none">
                                             <img src={getImageUrl(vid.img)} loading="lazy" alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" />
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10 border-none">
                                                 <Play className="w-8 h-8 text-white fill-current drop-shadow-md border-none" />
@@ -492,9 +494,8 @@ export default function Profile({ supabase }) {
                     {/* Panel Watch History */}
                     <div className="bg-white dark:bg-zinc-800/40 rounded-[2rem] p-8 shadow-xl dark:shadow-2xl backdrop-blur-xl border-none transition-colors">
                         <div className="flex items-center gap-3 mb-8 border-none">
-                            <div className="w-8 h-8 rounded-full bg-[#106EBE]/10 flex items-center justify-center border-none">
-                                <Clock className="w-4 h-4 text-[#106EBE] dark:text-[#32ADFF] border-none" />
-                            </div>
+                            {/* 🔥 ICON MURNI TANPA BACKGROUND WARNA 🔥 */}
+                            <Clock className="w-5 h-5 text-[#106EBE] dark:text-[#32ADFF] border-none shrink-0" />
                             <h2 className="text-sm font-bold text-zinc-900 dark:text-white border-none">Watch History</h2>
                         </div>
 
@@ -502,7 +503,7 @@ export default function Profile({ supabase }) {
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 border-none">
                                 {historyVideos.map(vid => (
                                     <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group flex flex-col gap-2.5 border-none outline-none" title={vid.title}>
-                                        <div className="relative aspect-[3/4] sm:aspect-video rounded-xl overflow-hidden bg-zinc-100 dark:bg-black/40 border-none">
+                                        <div className="relative aspect-[3/4] sm:aspect-video rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border-none">
                                             <img src={getImageUrl(vid.img)} loading="lazy" alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" />
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10 border-none">
                                                 <Play className="w-8 h-8 text-white fill-current drop-shadow-md border-none" />
