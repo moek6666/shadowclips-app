@@ -40,22 +40,12 @@ const loadSupabase = () => {
 
 export default function App() {
     const [supabase, setSupabase] = useState(null);
-    const [showFloatingAd, setShowFloatingAd] = useState(false);
 
     useEffect(() => {
         loadSupabase().then((supa) => {
             const client = supa.createClient(SUPABASE_URL, SUPABASE_KEY);
             setSupabase(client);
         });
-    }, []);
-
-    useEffect(() => {
-        const handleScroll = () => {
-            setShowFloatingAd(window.scrollY > 200);
-        };
-
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
     const pathname = window.location.pathname;
@@ -72,22 +62,7 @@ export default function App() {
             <AntiAdBlock />
             <ExoclickPopunder />
 
-            {/* Floating Help Button */}
-            <a
-                href="/tutorial"
-                className={`fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-50 bg-white dark:bg-zinc-950 backdrop-blur-xl p-2.5 pr-5 rounded-full flex items-center gap-3 transition-all duration-500 hover:scale-105 group outline-none border-none focus:outline-none shadow-xl dark:shadow-[0_15px_40px_rgba(0,0,0,0.9)] ${showFloatingAd ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}
-            >
-                <div className="bg-[#106EBE] p-2.5 rounded-full group-hover:bg-[#0e5c9f] dark:group-hover:bg-[#0FFCBE] transition-colors flex items-center justify-center border-none outline-none shadow-sm">
-                    <svg className="w-5 h-5 text-white dark:group-hover:text-zinc-900 transition-colors relative z-10 border-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </div>
-                <div className="flex flex-col border-none">
-                    <span className="text-[11px] sm:text-[12px] font-black uppercase tracking-wider text-[#106EBE] dark:text-[#0FFCBE] leading-none mb-0.5 transition-colors border-none">Need Help?</span>
-                    <span className="text-[9px] sm:text-[10px] font-bold text-zinc-500 dark:text-zinc-400 leading-none transition-colors border-none">How to play exclusive videos</span>
-                </div>
-            </a>
+       
 
             <Suspense fallback={
                 <div className="min-h-screen bg-zinc-50 dark:bg-[#121212] flex items-center justify-center transition-colors duration-300">

@@ -49,9 +49,9 @@ export default function Tutorial({ supabase }) {
             step1Title: 'Login dengan Aman',
             step1Desc: 'Untuk berinteraksi dengan konten premium kami, Anda harus login menggunakan akun Google. Proses ini cepat, aman, dan tanpa perlu mendaftar ribet.',
             step2Title: 'Like & Komentar',
-            step2Desc: 'Dukung para kreator! Klik tombol Like dan tinggalkan Komentar yang bermakna di kolom diskusi di bawah video yang terkunci.',
+            step2Desc: 'Klik tombol Like dan tinggalkan Komentar yang bermakna di kolom diskusi di bawah video yang terkunci.',
             step3Title: 'Nikmati Streaming & Download',
-            step3Desc: 'Setelah Anda berhasil menyukai dan memposting komentar, pemutar video eksklusif dan tautan unduhan berkecepatan tinggi akan langsung terbuka untuk Anda nikmati.',
+            step3Desc: 'Setelah Anda berhasil menyukai dan memposting komentar, pemutar video eksklusif dan tautan unduhan langsung terbuka untuk Anda nikmati.',
 
             // Tab 2: VIP Benefits
             vip1Title: 'Bingkai Avatar Animasi',

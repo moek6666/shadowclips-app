@@ -69,15 +69,14 @@ export default function Streaming({ supabase }) {
 
         let isUserPremium = false;
         let userEmail = null;
-        let activeDeviceId = deviceId; // Default pakai local storage
+        let activeDeviceId = deviceId;
 
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
                 userEmail = session.user.email;
-                // 🔥 KUNCI UTAMA: Jika login, gunakan User ID sebagai pengganti Device ID! 🔥
                 activeDeviceId = session.user.id;
-                setDeviceId(activeDeviceId); // Update state agar tombol Like juga pakai ID ini
+                setDeviceId(activeDeviceId);
 
                 const { data: profileData } = await supabase.from('profiles').select('is_premium').eq('id', session.user.id).single();
                 if (profileData?.is_premium) isUserPremium = true;
@@ -89,7 +88,6 @@ export default function Streaming({ supabase }) {
             isLiked = forceLiked;
         } else {
             try {
-                // 🔥 Cek database menggunakan activeDeviceId (User ID jika login) 🔥
                 const { data: likeData } = await supabase.from('user_likes').select('id').eq('video_id', videoId).eq('device_id', activeDeviceId).maybeSingle();
                 if (likeData) isLiked = true;
             } catch (error) { }
@@ -216,7 +214,6 @@ export default function Streaming({ supabase }) {
         setLikes(prev => newHasLiked ? prev + 1 : Math.max(prev - 1, 0));
 
         try {
-            // 🔥 Ambil Exact ID (User ID jika login, atau Local ID) untuk akurasi 100% 🔥
             const { data: { session } } = await supabase.auth.getSession();
             const exactDeviceId = session?.user ? session.user.id : deviceId;
 
@@ -332,7 +329,23 @@ export default function Streaming({ supabase }) {
                                             <Lock className="w-6 h-6 sm:w-10 h-10 text-white border-none" />
                                         </div>
                                         <h2 className="text-lg sm:text-3xl font-black text-zinc-900 dark:text-white mb-1.5 sm:mb-3 tracking-tight transition-colors border-none">VIP Content Locked</h2>
-                                        <p className="text-zinc-600 dark:text-zinc-400 text-[11px] sm:text-base max-w-lg leading-tight sm:leading-relaxed transition-colors px-2 border-none">This premium content is locked. Please <strong className="text-zinc-900 dark:text-white border-none">Like</strong> and leave a <strong className="text-zinc-900 dark:text-white border-none">Comment</strong> below to unlock full access immediately.</p>
+                                        <p className="text-zinc-600 dark:text-zinc-400 text-[11px] sm:text-base max-w-lg leading-tight sm:leading-relaxed transition-colors px-2 border-none">
+                                            This premium content is locked. Please <strong className="text-zinc-900 dark:text-white border-none">Like</strong> and leave a <strong className="text-zinc-900 dark:text-white border-none">Comment</strong> below to unlock full access immediately.
+                                        </p>
+
+                                        {/* 🔥 CTA TUTORIAL DITAMBAHKAN DI SINI 🔥 */}
+                                        <div className="flex flex-col items-center justify-center gap-1.5 mt-4 sm:mt-5 border-none z-20">
+                                            <span className="text-[11px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 drop-shadow-md border-none text-center">
+                                                Bingung cara membuka videonya?
+                                            </span>
+                                            <a
+                                                href="/tutorial"
+                                                className="text-xs sm:text-sm font-bold text-[#106EBE] dark:text-[#32ADFF] hover:text-[#0e5c9f] dark:hover:text-white transition-colors underline decoration-[#106EBE] dark:decoration-[#32ADFF] hover:decoration-[#0e5c9f] dark:hover:decoration-white underline-offset-4 outline-none border-none cursor-pointer drop-shadow-md text-center"
+                                            >
+                                                Cek panduan (Tutorial) di sini
+                                            </a>
+                                        </div>
+
                                     </div>
                                 )
                             ) : currentVideoUrl ? (
