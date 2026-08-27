@@ -263,7 +263,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
 
         if (isAdmin) {
             statusKomentar = 'approved';
-            notifMessage = 'Komentar Admin berhasil dikrim!';
+            notifMessage = 'Komentar Admin berhasil dikirim!';
         } else if (isContentSensitive) {
             statusKomentar = 'pending';
             notifMessage = '⚠️ Mengandung kata sensitif. Menunggu moderasi Admin.';
@@ -318,7 +318,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
 
         } catch (error) {
             console.error("ERROR INSERT:", error);
-            setNotification({ type: 'error', message: 'Koneksi terputus. Silakan coba lagi.' });
+            // setNotification({ type: 'error', message: 'Koneksi terputus. Silakan coba lagi.' });
         } finally {
             setIsSubmitting(false);
         }
@@ -374,16 +374,20 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                         )}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-4 px-4 sm:px-5 py-3 bg-zinc-100 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-300 border-none overflow-visible transition-colors">
-                        <button type="button" onClick={() => insertFormat('bold')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Bold"><Bold className="w-4 h-4" /></button>
-                        <button type="button" onClick={() => insertFormat('italic')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Italic"><Italic className="w-4 h-4" /></button>
-                        <button type="button" onClick={() => insertFormat('code')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Code"><Code className="w-4 h-4" /></button>
-                        <button type="button" onClick={() => insertFormat('link')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Link"><LinkIcon className="w-4 h-4" /></button>
-                        <button type="button" onClick={() => insertFormat('quote')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Quote"><Quote className="w-4 h-4" /></button>
+                    {/* 🔥 PERBAIKAN MOBILE TRUNCATED (EMOTICON TERPOTONG) 🔥 */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-y-3 gap-x-4 px-4 sm:px-5 py-3 bg-zinc-100 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-300 border-none overflow-visible transition-colors">
+                        <div className="flex items-center gap-4 shrink-0 border-none">
+                            <button type="button" onClick={() => insertFormat('bold')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Bold"><Bold className="w-4 h-4" /></button>
+                            <button type="button" onClick={() => insertFormat('italic')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Italic"><Italic className="w-4 h-4" /></button>
+                            <button type="button" onClick={() => insertFormat('code')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Code"><Code className="w-4 h-4" /></button>
+                            <button type="button" onClick={() => insertFormat('link')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Link"><LinkIcon className="w-4 h-4" /></button>
+                            <button type="button" onClick={() => insertFormat('quote')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Quote"><Quote className="w-4 h-4" /></button>
+                        </div>
 
-                        <div className="h-4 w-[1px] bg-zinc-300 dark:bg-zinc-600 mx-1 shrink-0 transition-colors border-none"></div>
+                        <div className="h-4 w-[1px] hidden sm:block bg-zinc-300 dark:bg-zinc-600 mx-1 shrink-0 transition-colors border-none"></div>
 
-                        <div className="flex items-center gap-3 ml-1 flex-1 border-none">
+                        {/* 🔥 Ditambahkan flex-wrap agar emoticon turun ke baris berikutnya di HP 🔥 */}
+                        <div className="flex items-center gap-2 sm:gap-3 flex-wrap flex-1 border-none">
                             {topEmojis.map((emoji) => (
                                 <button key={emoji.code} type="button" onClick={() => insertEmoji(emoji.code)} className="hover:scale-125 transition-transform duration-300 outline-none border-none shrink-0" title={emoji.code.replace(/:/g, '')}>
                                     <img src={emoji.url} className="w-[20px] h-[20px] sm:w-[24px] sm:h-[24px] object-contain shrink-0 drop-shadow-sm border-none select-none" alt={emoji.code} draggable="false" />
@@ -392,7 +396,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                         </div>
 
                         {replyTo && (
-                            <div className="ml-auto flex items-center gap-2 bg-[#106EBE]/10 dark:bg-[#106EBE]/20 text-[#106EBE] px-3 py-1 rounded-lg border-none shrink-0">
+                            <div className="ml-auto flex items-center gap-2 bg-[#106EBE]/10 dark:bg-[#106EBE]/20 text-[#106EBE] px-3 py-1 rounded-lg border-none shrink-0 mt-2 sm:mt-0">
                                 <span className="text-[10px] sm:text-[11px] font-bold truncate max-w-[100px] sm:max-w-[150px] border-none">Replying to @{replyTo.name}</span>
                                 <button type="button" onClick={cancelReply} className="hover:bg-[#106EBE]/20 dark:hover:bg-[#106EBE]/30 rounded-full p-0.5 outline-none border-none"><X className="w-3.5 h-3.5 border-none" /></button>
                             </div>

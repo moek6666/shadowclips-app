@@ -319,7 +319,6 @@ export default function Profile({ supabase }) {
 
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mb-10 border-none">
                         <div className="flex items-center gap-3 border-none">
-                            {/* 🔥 ICON MURNI TANPA BACKGROUND WARNA 🔥 */}
                             <Settings className="w-6 h-6 text-[#106EBE] dark:text-[#32ADFF] border-none shrink-0" />
                             <h2 className="text-xl font-bold text-zinc-900 dark:text-white border-none">Profile Settings</h2>
                         </div>
@@ -339,7 +338,6 @@ export default function Profile({ supabase }) {
                         {/* Baris 1: Avatar Link */}
                         <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-10 border-none">
                             <div className="w-full md:w-[40%] flex items-start gap-4 border-none">
-                                {/* 🔥 ICON MURNI TANPA BACKGROUND WARNA 🔥 */}
                                 <ImageIcon className="w-6 h-6 text-zinc-500 dark:text-zinc-400 border-none shrink-0" />
                                 <div className="border-none">
                                     <h3 className="text-sm font-bold text-zinc-900 dark:text-white border-none">Change Profile Picture</h3>
@@ -357,10 +355,9 @@ export default function Profile({ supabase }) {
                             </div>
                         </div>
 
-                        {/* Baris 2: Avatar Border (DROPDOWN GRID MENU) */}
+                        {/* Baris 2: Avatar Border */}
                         <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-10 relative border-none">
                             <div className="w-full md:w-[40%] flex items-start gap-4 border-none">
-                                {/* 🔥 ICON MURNI TANPA BACKGROUND WARNA 🔥 */}
                                 <Star className="w-6 h-6 text-zinc-500 dark:text-zinc-400 border-none shrink-0" />
                                 <div className="border-none">
                                     <h3 className="text-sm font-bold text-zinc-900 dark:text-white border-none">Avatar Border</h3>
@@ -376,7 +373,6 @@ export default function Profile({ supabase }) {
                                 >
                                     <div className="flex items-center gap-3 border-none">
                                         <div className="w-8 h-8 relative flex items-center justify-center bg-transparent rounded-full border-none">
-                                            {/* Preview URL Asli User di Selector */}
                                             <Avatar url={editAvatarUrl} frameId={selectedFrameData.id} containerClass="w-full h-full pointer-events-none border-none" scale={0.3} />
                                         </div>
                                         <span className="font-bold border-none">{selectedFrameData.name}</span>
@@ -384,11 +380,9 @@ export default function Profile({ supabase }) {
                                     <ChevronDown className={`w-5 h-5 text-zinc-500 transition-transform duration-300 border-none ${isFrameDropdownOpen ? 'rotate-180' : ''}`} />
                                 </button>
 
-                                {/* Dropdown Menu Grid Pilihan Avatar */}
                                 {isFrameDropdownOpen && (
                                     <>
                                         <div className="fixed inset-0 z-40 border-none" onClick={() => setIsFrameDropdownOpen(false)}></div>
-                                        {/* 🔥 DROPDOWN CONTAINER: Warnanya Dibuat Lebih Terang (abu-abu zinc-800/90) & Border-none 🔥 */}
                                         <div className="absolute top-[calc(100%+0.5rem)] left-0 w-full bg-white dark:bg-zinc-800/95 backdrop-blur-xl rounded-2xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] z-50 p-4 border-none animate-in fade-in slide-in-from-top-2 duration-200">
                                             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-[350px] overflow-y-auto pr-2 border-none" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
                                                 {FRAME_OPTIONS.map(frame => {
@@ -401,7 +395,6 @@ export default function Profile({ supabase }) {
                                                             type="button"
                                                             disabled={isLocked}
                                                             onClick={() => { setEditFrame(frame.id); setIsFrameDropdownOpen(false); }}
-                                                            // 🔥 ITEM KOTAK AVATAR: Warnanya Dibuat Lebih Gelap (Hitam zinc-900/60) & Auto-Height 🔥
                                                             className={`relative flex flex-col items-center justify-start p-3 h-auto w-full rounded-xl transition-all duration-200 outline-none border-none cursor-pointer
                                                                 ${isActive ? 'bg-[#106EBE]/10 dark:bg-[#106EBE]/20' : isLocked ? 'opacity-40 cursor-not-allowed grayscale bg-zinc-50 dark:bg-zinc-900/40' : 'bg-zinc-50 dark:bg-zinc-900/60 hover:bg-zinc-100 dark:hover:bg-zinc-900'}
                                                             `}
@@ -412,14 +405,11 @@ export default function Profile({ supabase }) {
                                                             </div>
                                                             <div className="flex flex-col items-center w-full border-none">
                                                                 <span className="text-[10px] sm:text-[11px] font-bold text-zinc-900 dark:text-white text-center leading-tight truncate w-full border-none pb-1">{frame.name}</span>
-
-                                                                {/* 🔥 TEKS POIN DIJAMIN TAMPIL (display: block) DENGAN WARNA KONTRAST 🔥 */}
                                                                 <span className="text-[10px] font-black text-[#106EBE] dark:text-[#32ADFF] text-center uppercase tracking-widest w-full border-none block mt-1.5">
                                                                     {frame.unlockPoints === 0 ? 'Free' : `${frame.unlockPoints.toLocaleString()} Pts`}
                                                                 </span>
                                                             </div>
 
-                                                            {/* Indikator Status */}
                                                             {isActive && <Check className="absolute top-2 right-2 w-3.5 h-3.5 text-[#106EBE] dark:text-[#32ADFF] border-none" />}
                                                             {isLocked && <Lock className="absolute top-2 right-2 w-3 h-3 text-zinc-400 dark:text-zinc-500 border-none" />}
                                                         </button>
@@ -435,7 +425,6 @@ export default function Profile({ supabase }) {
                         {/* Baris 3: Change Username */}
                         <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-10 border-none">
                             <div className="w-full md:w-[40%] flex items-start gap-4 border-none">
-                                {/* 🔥 ICON MURNI TANPA BACKGROUND WARNA 🔥 */}
                                 <UserCircle className="w-6 h-6 text-zinc-500 dark:text-zinc-400 border-none shrink-0" />
                                 <div className="border-none">
                                     <h3 className="text-sm font-bold text-zinc-900 dark:text-white border-none">Change Username</h3>
@@ -462,24 +451,23 @@ export default function Profile({ supabase }) {
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 border-none">
 
                     {/* Panel Liked */}
-                    <div className="bg-white dark:bg-zinc-800/40 rounded-[2rem] p-8 shadow-xl dark:shadow-2xl backdrop-blur-xl border-none transition-colors">
-                        <div className="flex items-center gap-3 mb-8 border-none">
-                            {/* 🔥 ICON MURNI TANPA BACKGROUND WARNA 🔥 */}
+                    <div className="bg-white dark:bg-zinc-800/40 rounded-[2rem] p-6 sm:p-8 shadow-xl dark:shadow-2xl backdrop-blur-xl border-none transition-colors">
+                        <div className="flex items-center gap-3 mb-6 sm:mb-8 border-none">
                             <Heart className="w-5 h-5 text-rose-500 border-none shrink-0" />
                             <h2 className="text-sm font-bold text-zinc-900 dark:text-white border-none">Liked Videos</h2>
                         </div>
 
                         {likedVideos.length > 0 ? (
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 border-none">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 border-none">
                                 {likedVideos.map(vid => (
-                                    <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group flex flex-col gap-2.5 border-none outline-none" title={vid.title}>
-                                        <div className="relative aspect-[3/4] sm:aspect-video rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border-none">
+                                    <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group flex flex-col gap-2 border-none outline-none" title={vid.title}>
+                                        <div className="relative aspect-video rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border-none">
                                             <img src={getImageUrl(vid.img)} loading="lazy" alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" />
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10 border-none">
-                                                <Play className="w-8 h-8 text-white fill-current drop-shadow-md border-none" />
+                                                <Play className="w-6 h-6 sm:w-8 sm:h-8 text-white fill-current drop-shadow-md border-none" />
                                             </div>
                                         </div>
-                                        <h3 className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 group-hover:text-[#106EBE] dark:group-hover:text-white truncate border-none">{vid.title}</h3>
+                                        <h3 className="text-[11px] sm:text-xs font-bold text-zinc-600 dark:text-zinc-400 group-hover:text-[#106EBE] dark:group-hover:text-white truncate border-none px-0.5">{vid.title}</h3>
                                     </a>
                                 ))}
                             </div>
@@ -492,24 +480,23 @@ export default function Profile({ supabase }) {
                     </div>
 
                     {/* Panel Watch History */}
-                    <div className="bg-white dark:bg-zinc-800/40 rounded-[2rem] p-8 shadow-xl dark:shadow-2xl backdrop-blur-xl border-none transition-colors">
-                        <div className="flex items-center gap-3 mb-8 border-none">
-                            {/* 🔥 ICON MURNI TANPA BACKGROUND WARNA 🔥 */}
+                    <div className="bg-white dark:bg-zinc-800/40 rounded-[2rem] p-6 sm:p-8 shadow-xl dark:shadow-2xl backdrop-blur-xl border-none transition-colors">
+                        <div className="flex items-center gap-3 mb-6 sm:mb-8 border-none">
                             <Clock className="w-5 h-5 text-[#106EBE] dark:text-[#32ADFF] border-none shrink-0" />
                             <h2 className="text-sm font-bold text-zinc-900 dark:text-white border-none">Watch History</h2>
                         </div>
 
                         {historyVideos.length > 0 ? (
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 border-none">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 border-none">
                                 {historyVideos.map(vid => (
-                                    <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group flex flex-col gap-2.5 border-none outline-none" title={vid.title}>
-                                        <div className="relative aspect-[3/4] sm:aspect-video rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border-none">
+                                    <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group flex flex-col gap-2 border-none outline-none" title={vid.title}>
+                                        <div className="relative aspect-video rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border-none">
                                             <img src={getImageUrl(vid.img)} loading="lazy" alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" />
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10 border-none">
-                                                <Play className="w-8 h-8 text-white fill-current drop-shadow-md border-none" />
+                                                <Play className="w-6 h-6 sm:w-8 sm:h-8 text-white fill-current drop-shadow-md border-none" />
                                             </div>
                                         </div>
-                                        <h3 className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 group-hover:text-[#106EBE] dark:group-hover:text-white truncate border-none">{vid.title}</h3>
+                                        <h3 className="text-[11px] sm:text-xs font-bold text-zinc-600 dark:text-zinc-400 group-hover:text-[#106EBE] dark:group-hover:text-white truncate border-none px-0.5">{vid.title}</h3>
                                     </a>
                                 ))}
                             </div>

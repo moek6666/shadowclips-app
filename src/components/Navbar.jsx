@@ -21,7 +21,9 @@ export default function Navbar({ isScrolled, supabase }) {
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const [session, setSession] = useState(null);
     const [profile, setProfile] = useState(null);
+
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+    const [isMobileProfileDropdownOpen, setIsMobileProfileDropdownOpen] = useState(false);
 
     const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
 
@@ -53,7 +55,6 @@ export default function Navbar({ isScrolled, supabase }) {
         });
 
         return () => subscription?.unsubscribe();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [supabase]);
 
     const handleLogout = async () => {
@@ -61,6 +62,7 @@ export default function Navbar({ isScrolled, supabase }) {
             await supabase.auth.signOut();
         }
         setIsProfileDropdownOpen(false);
+        setIsMobileProfileDropdownOpen(false);
         setIsMobileMenuOpen(false);
         if (typeof window !== 'undefined') {
             window.location.reload();
@@ -95,7 +97,6 @@ export default function Navbar({ isScrolled, supabase }) {
         () => fetchSearchResults(debouncedSearch), { revalidateOnFocus: false }
     );
 
-    // 🔥 AMBIL KATEGORI YANG MEMILIKI LABEL 'Profesional Site' 🔥
     const fetchCategoriesWithLabel = async () => {
         if (!supabase) return [];
         const { data, error } = await supabase
@@ -135,8 +136,6 @@ export default function Navbar({ isScrolled, supabase }) {
                 <div className="max-w-[1440px] mx-auto px-4 sm:px-8 flex justify-between items-center border-none">
                     <div className="flex items-center gap-8 lg:gap-12 border-none">
                         <a href="/" className="flex items-center gap-2.5 z-50 outline-none border-none">
-
-                            {/* 🔥 LOGO SVG PREMIUM BARU 🔥 */}
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 border-none drop-shadow-lg">
                                 <defs>
                                     <clipPath id="play-clip">
@@ -185,7 +184,6 @@ export default function Navbar({ isScrolled, supabase }) {
                                 <FolderOpen className="w-4 h-4 border-none" /> Library
                             </a>
 
-                            {/* 🔥 DROPDOWN MENAMPILKAN KATEGORI (Fit18, Onlyfans, PublicAgent, dll) 🔥 */}
                             <div className="relative group cursor-pointer py-2 ml-2 border-none">
                                 <div className={`flex items-center gap-1.5 transition-colors outline-none border-none ${pathname.startsWith('/category') ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                     <Crown className="w-4 h-4 transition-colors border-none" /> Profesional Site <ChevronDown className="w-3 h-3 group-hover:rotate-180 transition-transform duration-300 border-none" />
@@ -227,7 +225,6 @@ export default function Navbar({ isScrolled, supabase }) {
                                         <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 max-w-[100px] truncate border-none">
                                             {profile?.name || (session?.user?.email || '').split('@')[0] || 'User'}
                                         </span>
-
                                         <Avatar url={profile?.avatar_url} frameId={profile?.active_frame} containerClass="w-8 h-8" scale={0.32} />
                                     </button>
 
@@ -260,6 +257,7 @@ export default function Navbar({ isScrolled, supabase }) {
                             )}
                         </div>
 
+                        {/* 🔥 TOP NAVBAR MOBILE: AVATAR DROPDOWN 🔥 */}
                         <div className="flex items-center gap-2 md:hidden z-50 border-none">
                             <button onClick={() => setShowSearchModal(true)} className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none cursor-pointer">
                                 <Search className="w-5 h-5 border-none" />
@@ -267,7 +265,37 @@ export default function Navbar({ isScrolled, supabase }) {
                             <button onClick={toggleTheme} className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] border-none outline-none cursor-pointer">
                                 {theme === 'dark' ? <Sun className="w-5 h-5 border-none" /> : <Moon className="w-5 h-5 border-none" />}
                             </button>
-                            <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 ml-1 text-zinc-900 dark:text-white bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-full border-none outline-none cursor-pointer shadow-sm">
+
+                            {session && (
+                                <div className="relative border-none">
+                                    <button onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)} className="p-1.5 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-full transition-colors border-none outline-none cursor-pointer">
+                                        <Avatar url={profile?.avatar_url} frameId={profile?.active_frame} containerClass="w-6 h-6" scale={0.25} />
+                                    </button>
+
+                                    {isProfileDropdownOpen && (
+                                        <>
+                                            <div className="fixed inset-0 z-40 border-none" onClick={() => setIsProfileDropdownOpen(false)}></div>
+                                            <div className="absolute top-[calc(100%+0.5rem)] right-0 w-48 bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-none overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
+                                                <div className="px-4 py-3 bg-zinc-50 dark:bg-zinc-800/50 border-none border-b border-zinc-100 dark:border-zinc-800">
+                                                    <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider mb-1 border-none">Masuk Sebagai</p>
+                                                    <p className="text-[11px] font-bold text-zinc-900 dark:text-white truncate border-none">{session?.user?.email}</p>
+                                                </div>
+                                                <div className="flex flex-col p-2 border-none">
+                                                    <a href="/profile" className="w-full flex items-center gap-3 px-3 py-2 text-[12px] font-bold text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-[#106EBE] hover:bg-zinc-50 dark:hover:bg-zinc-800/50 rounded-xl transition-colors outline-none border-none cursor-pointer">
+                                                        <Settings className="w-3.5 h-3.5 border-none" /> Edit Profil
+                                                    </a>
+                                                    <div className="h-px bg-zinc-100 dark:bg-zinc-800 my-1 border-none"></div>
+                                                    <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2 text-[12px] font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors outline-none border-none cursor-pointer">
+                                                        <LogOut className="w-3.5 h-3.5 border-none" /> Keluar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+
+                            <button onClick={() => setIsMobileMenuOpen(true)} className="p-1.5 ml-1 text-zinc-900 dark:text-white bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-full border-none outline-none cursor-pointer shadow-sm">
                                 <Menu className="w-5 h-5 border-none" />
                             </button>
                         </div>
@@ -282,12 +310,23 @@ export default function Navbar({ isScrolled, supabase }) {
 
                     <div className="p-5 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/60">
                         {session ? (
-                            <div className="flex items-center gap-3" onClick={() => { window.location.href = '/profile'; }}>
-                                <Avatar url={profile?.avatar_url} frameId={profile?.active_frame} containerClass="w-10 h-10" scale={0.4} />
-
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-black text-zinc-900 dark:text-white truncate max-w-[120px]">{profile?.name || (session?.user?.email || '').split('@')[0]}</span>
-                                    <span className="text-[10px] text-zinc-500 font-bold hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors">Edit Profil</span>
+                            /* 🔥 SIDEBAR MOBILE: MENU AKUN DROPDOWN 🔥 */
+                            <div className="flex flex-col w-full border-none">
+                                <div className="flex items-center justify-between cursor-pointer group border-none" onClick={() => setIsMobileProfileDropdownOpen(!isMobileProfileDropdownOpen)}>
+                                    <div className="flex items-center gap-3 border-none">
+                                        <Avatar url={profile?.avatar_url} frameId={profile?.active_frame} containerClass="w-10 h-10" scale={0.4} />
+                                        <div className="flex flex-col border-none">
+                                            <span className="text-sm font-black text-zinc-900 dark:text-white truncate max-w-[120px] border-none">{profile?.name || (session?.user?.email || '').split('@')[0]}</span>
+                                            <span className="text-[10px] text-zinc-500 font-bold group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors flex items-center gap-1 border-none">
+                                                Opsi Akun <ChevronDown className={`w-3 h-3 transition-transform ${isMobileProfileDropdownOpen ? 'rotate-180' : ''} border-none`} />
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className={`flex flex-col overflow-hidden transition-all duration-300 border-none ${isMobileProfileDropdownOpen ? 'max-h-[150px] mt-4 opacity-100' : 'max-h-0 opacity-0'}`}>
+                                    <a href="/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-300 font-bold transition-colors text-[13px] border-none outline-none">
+                                        <Settings className="w-4 h-4 border-none" /> Pengaturan Profil
+                                    </a>
                                 </div>
                             </div>
                         ) : (
@@ -295,7 +334,7 @@ export default function Navbar({ isScrolled, supabase }) {
                                 <User className="w-4 h-4 border-none" /> Sign In
                             </button>
                         )}
-                        <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-zinc-100 dark:bg-zinc-900 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] outline-none border-none">
+                        <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 self-start bg-zinc-100 dark:bg-zinc-900 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] outline-none border-none">
                             <X className="w-5 h-5" />
                         </button>
                     </div>
