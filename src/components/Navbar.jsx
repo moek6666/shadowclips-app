@@ -22,11 +22,9 @@ export default function Navbar({ isScrolled, supabase }) {
     const [session, setSession] = useState(null);
     const [profile, setProfile] = useState(null);
 
-    // State Dropdown
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const [isMobileProfileDropdownOpen, setIsMobileProfileDropdownOpen] = useState(false);
 
-    // 🔥 Ref untuk mendeteksi klik di luar Dropdown Desktop 🔥
     const profileDropdownRef = useRef(null);
 
     const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
@@ -60,7 +58,6 @@ export default function Navbar({ isScrolled, supabase }) {
         return () => subscription?.unsubscribe();
     }, [supabase]);
 
-    // 🔥 Logika Click Outside untuk Dropdown Dekstop 🔥
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
@@ -189,7 +186,6 @@ export default function Navbar({ isScrolled, supabase }) {
                             </div>
                         </a>
 
-                        {/* MENU DEKSTOP */}
                         <div className="hidden md:flex items-center gap-6 text-sm font-bold z-50 border-none">
                             <a href="/" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ${pathname === '/' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                 <Home className="w-4 h-4 border-none" /> Home
@@ -225,7 +221,6 @@ export default function Navbar({ isScrolled, supabase }) {
                     </div>
 
                     <div className="flex items-center gap-4 border-none">
-                        {/* PENCARIAN DEKSTOP */}
                         <div className="hidden md:flex relative group cursor-text z-50" onClick={() => setShowSearchModal(true)}>
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors w-4 h-4 border-none" />
                             <div className="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900/80 dark:hover:bg-zinc-900 rounded-full py-2 pl-11 pr-5 w-56 lg:w-64 transition-colors duration-300 text-sm text-zinc-500 flex items-center select-none border-none outline-none">
@@ -233,12 +228,10 @@ export default function Navbar({ isScrolled, supabase }) {
                             </div>
                         </div>
 
-                        {/* AKSES USER DEKSTOP */}
                         <div className="hidden md:flex items-center gap-4 border-none z-50 ml-2">
                             <div className="w-[1px] h-5 bg-zinc-200 dark:bg-zinc-800 border-none"></div>
 
                             {session ? (
-                                /* 🔥 DITAMBAHKAN REF DI SINI UNTUK KLIK LUAR 🔥 */
                                 <div className="relative border-none" ref={profileDropdownRef}>
                                     <button onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)} className="flex items-center gap-2.5 p-1 pl-3 bg-zinc-100 dark:bg-zinc-900/80 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors outline-none border-none cursor-pointer">
                                         <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 max-w-[100px] truncate border-none">
@@ -268,20 +261,19 @@ export default function Navbar({ isScrolled, supabase }) {
                                                 <div className="h-px bg-zinc-100 dark:bg-zinc-800 my-1 border-none"></div>
 
                                                 <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-bold text-red-500 dark:text-white hover:bg-red-50 dark:hover:bg-white/10 rounded-xl transition-colors outline-none border-none cursor-pointer text-left">
-                                                    <LogOut className="w-4 h-4 border-none" /> Keluar
+                                                    <LogOut className="w-4 h-4 border-none" /> Log Out
                                                 </button>
                                             </div>
                                         </div>
                                     )}
                                 </div>
                             ) : (
-                                <button onClick={() => setIsLoginModalOpen(true)} className="flex items-center gap-2 text-sm font-bold text-white bg-[#106EBE] hover:bg-[#0e5c9f] px-4 py-2 rounded-full transition-all shadow-md hover:shadow-lg outline-none border-none cursor-pointer">
-                                    <User className="w-4 h-4 border-none" /> Sign In
+                                <button onClick={() => setIsLoginModalOpen(true)} className="flex items-center gap-2 text-sm font-bold text-white bg-[#106EBE] hover:bg-[#0e5c9f] px-4 py-2 rounded-xl transition-all shadow-md hover:shadow-lg outline-none border-none cursor-pointer">
+                                    <User className="w-4 h-4 border-none" /> Log In
                                 </button>
                             )}
                         </div>
 
-                        {/* 🔥 TOP NAVBAR MOBILE: BERSIH (HANYA SEARCH & BURGER MENU) 🔥 */}
                         <div className="flex items-center gap-1 md:hidden z-50 border-none">
                             <button onClick={() => setShowSearchModal(true)} className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none cursor-pointer">
                                 <Search className="w-5 h-5 border-none" />
@@ -302,7 +294,6 @@ export default function Navbar({ isScrolled, supabase }) {
 
                     <div className="p-5 flex items-start justify-between border-b border-zinc-100 dark:border-zinc-800/60">
                         {session ? (
-                            /* 🔥 SIDEBAR MOBILE: AVATAR + DROPDOWN 🔥 */
                             <div className="flex flex-col w-full border-none pr-3">
                                 <div className="flex items-center gap-3 cursor-pointer group border-none" onClick={() => setIsMobileProfileDropdownOpen(!isMobileProfileDropdownOpen)}>
                                     <Avatar url={profile?.avatar_url} frameId={profile?.active_frame} containerClass="w-10 h-10 shrink-0" scale={0.4} />
@@ -338,7 +329,6 @@ export default function Navbar({ isScrolled, supabase }) {
                         </button>
                     </div>
 
-                    {/* DAFTAR MENU NAVIGASI UTAMA DI SIDEBAR */}
                     <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-2">
                         <a href="/" className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors">
                             <Home className="w-5 h-5 text-[#106EBE]" /> Home
@@ -370,7 +360,6 @@ export default function Navbar({ isScrolled, supabase }) {
                 </div>
             </div>
 
-            {/* Modal Pencarian */}
             {showSearchModal && (
                 <div className="fixed inset-0 z-[100] bg-white/95 dark:bg-zinc-950/95 backdrop-blur-3xl overflow-y-auto custom-scrollbar animate-in fade-in duration-300 border-none">
                     <div className="min-h-screen px-4 sm:px-8 py-10 md:py-16 flex flex-col items-center border-none">
