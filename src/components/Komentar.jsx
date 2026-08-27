@@ -257,11 +257,10 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
         const contentLower = content.toLowerCase();
         const isContentSensitive = BAD_WORDS.some(word => contentLower.includes(word));
 
-        let statusKomentar = 'approved'; // 🔥 DEFAULT: LANGSUNG TAYANG 🔥
+        let statusKomentar = 'approved';
         let notifMessage = '';
         let isErrorNotif = false;
 
-        // 🔥 LOGIKA KEMBALI KE ASAL (AUTO-APPROVE JIKA AMAN) 🔥
         if (isAdmin) {
             statusKomentar = 'approved';
             notifMessage = 'Komentar Admin berhasil ditayangkan!';
@@ -285,12 +284,10 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
         };
 
         try {
-            // 🔥 .single() DIHAPUS agar tidak pernah memicu error palsu! 🔥
             const { data: insertedData, error } = await supabase.from('comments').insert(newCommentPayload).select();
 
             if (error) throw error;
 
-            // Optimistic Update: Tambahkan komentar yang sukses ke layar langsung
             const newComment = insertedData && insertedData.length > 0 ? insertedData[0] : {
                 id: 'temp_' + Date.now(),
                 created_at: new Date().toISOString(),
@@ -310,10 +307,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                 }
             }));
 
-            if (!isAdmin) {
-                await supabase.rpc('increment_user_points', { p_email: userEmail, p_points: 5 }).catch(() => { });
-            }
-
             setNotification({ type: isErrorNotif ? 'error' : 'success', message: notifMessage });
             setTimeout(() => setNotification(null), 4000);
 
@@ -325,7 +318,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
 
         } catch (error) {
             console.error("ERROR INSERT:", error);
-            setNotification({ type: 'error', message: 'Sistem sibuk. Silakan coba lagi.' });
+            setNotification({ type: 'error', message: 'Koneksi terputus. Silakan coba lagi.' });
         } finally {
             setIsSubmitting(false);
         }
