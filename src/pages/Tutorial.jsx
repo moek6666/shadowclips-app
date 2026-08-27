@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, ShieldCheck, ThumbsUp, MessageSquare, Unlock, Download, Users, Lightbulb, Crown, Globe, Star, Sparkles, Zap } from 'lucide-react';
+import { Play, ShieldCheck, ThumbsUp, MessageSquare, Unlock, Download, Users, Lightbulb, Crown, Globe, Star, Sparkles, Zap, UserCircle, Check } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -33,12 +33,15 @@ export default function Tutorial({ supabase }) {
             descGuide: 'Panduan singkat langkah demi langkah untuk membuka video premium dan mendapatkan tautan unduhan kecepatan tinggi.',
             titleVip: 'Hak Istimewa Premium VIP',
             descVip: 'Tingkatkan pengalaman Anda dengan fitur eksklusif, tampilan mewah, dan kebebasan penuh di komunitas ShadowClips.',
+            titleAvatar: 'Membuka Bingkai Avatar',
+            descAvatar: 'Panduan detail cara mengumpulkan poin interaksi dan mengaktifkan bingkai animasi eksklusif untuk profil Anda.',
             titleConcept: 'Filosofi Komunitas Kami',
             descConcept: 'Memahami alasan kami menggunakan sistem berbasis interaksi alih-alih biaya langganan bulanan yang mahal.',
 
             // Tabs
             tabGuide: 'Panduan Akses',
             tabVip: 'Keuntungan VIP',
+            tabAvatar: 'Buka Avatar',
             tabConcept: 'Mengapa Login?',
             langBtn: 'Switch to English',
 
@@ -58,7 +61,15 @@ export default function Tutorial({ supabase }) {
             vip3Title: 'Bebas Antrean (Auto-Approve)',
             vip3Desc: 'Berbeda dengan member standar yang komentarnya harus disortir, komentar Anda kebal moderasi manual dan akan langsung tayang detik itu juga!',
 
-            // Tab 3: Konsep
+            // Tab 3: Avatar (NEW)
+            stepA1Title: 'Kumpulkan Poin Interaksi',
+            stepA1Desc: 'Sistem bingkai avatar kami menggunakan poin sebagai syarat utama. Anda bisa mendapatkan poin dengan cara aktif memberikan Like dan memposting Komentar yang relevan pada video-video yang ada di platform ShadowClips.',
+            stepA2Title: 'Cek Progres di Profil',
+            stepA2Desc: 'Buka halaman Profil Anda. Di sana terdapat "Progress Bar" elegan yang menunjukkan jumlah "Total Points" Anda saat ini, serta pratinjau bingkai avatar dari target "Next Reward" selanjutnya.',
+            stepA3Title: 'Pilih & Simpan Bingkai',
+            stepA3Desc: 'Setelah poin Anda mencapai target, bingkai yang terkunci (berlogo gembok) akan terbuka otomatis. Buka menu dropdown "Avatar Border" di pengaturan profil, pilih bingkai animasi tersebut, lalu klik tombol "Save Changes" untuk menerapkannya.',
+
+            // Tab 4: Konsep
             c1Title: 'Tanpa Paywall, Hanya Interaksi',
             c1Desc: 'Kami percaya konten premium harus bisa diakses semua orang. Daripada membebankan biaya langganan bulanan atau memaksa Anda menonton iklan yang mengganggu, kami menggunakan sistem berbasis interaksi. Dukungan Anda adalah mata uang di sini.',
             c2Title: 'Membangun Komunitas Asli',
@@ -74,12 +85,15 @@ export default function Tutorial({ supabase }) {
             descGuide: 'A quick step-by-step guide to unlocking premium videos and getting high-speed download links.',
             titleVip: 'Premium VIP Privileges',
             descVip: 'Elevate your experience with exclusive features, luxurious displays, and ultimate freedom in the ShadowClips community.',
+            titleAvatar: 'Unlocking Avatar Borders',
+            descAvatar: 'A detailed guide on how to earn engagement points and activate exclusive animated frames for your profile.',
             titleConcept: 'Our Community Philosophy',
             descConcept: 'Understanding why we use an engagement-based unlock system instead of expensive paid monthly subscriptions.',
 
             // Tabs
             tabGuide: 'Access Guide',
             tabVip: 'VIP Benefits',
+            tabAvatar: 'Unlock Avatar',
             tabConcept: 'Why Login?',
             langBtn: 'Ganti ke Indonesia',
 
@@ -99,7 +113,15 @@ export default function Tutorial({ supabase }) {
             vip3Title: 'Bypass Moderation',
             vip3Desc: 'Unlike standard members whose comments must be sorted, your comments are immune to manual moderation and will go live instantly!',
 
-            // Tab 3: Concept
+            // Tab 3: Avatar (NEW)
+            stepA1Title: 'Earn Engagement Points',
+            stepA1Desc: 'Our avatar border system uses points as the main requirement. You can earn points by actively liking videos and posting relevant comments across the ShadowClips platform.',
+            stepA2Title: 'Check Profile Progress',
+            stepA2Desc: 'Navigate to your Profile page. There, you will find an elegant "Progress Bar" showing your current "Total Points", as well as a visual preview of your upcoming "Next Reward".',
+            stepA3Title: 'Select & Save Border',
+            stepA3Desc: 'Once you hit the points target, the locked borders (padlock icon) will automatically unlock. Open the "Avatar Border" dropdown in your profile settings, select the animated frame, and click "Save Changes" to apply it.',
+
+            // Tab 4: Concept
             c1Title: 'No Paywalls, Just Engagement',
             c1Desc: 'We believe premium content should be accessible to everyone. Instead of charging monthly fees or forcing you through annoying ads, we use an engagement-based system. Your interaction is your currency.',
             c2Title: 'Building an Authentic Community',
@@ -116,6 +138,7 @@ export default function Tutorial({ supabase }) {
     const tabs = [
         { id: 'guide', label: text.tabGuide, icon: <Unlock className="w-5 h-5" /> },
         { id: 'vip', label: text.tabVip, icon: <Crown className="w-5 h-5" /> },
+        { id: 'avatar', label: text.tabAvatar, icon: <UserCircle className="w-5 h-5" /> },
         { id: 'concept', label: text.tabConcept, icon: <Lightbulb className="w-5 h-5" /> }
     ];
 
@@ -132,11 +155,13 @@ export default function Tutorial({ supabase }) {
                             <h1 className="text-3xl sm:text-5xl font-black text-zinc-900 dark:text-white mb-4 tracking-tight transition-colors border-none leading-tight">
                                 {activeTab === 'guide' && text.titleGuide}
                                 {activeTab === 'vip' && text.titleVip}
+                                {activeTab === 'avatar' && text.titleAvatar}
                                 {activeTab === 'concept' && text.titleConcept}
                             </h1>
                             <p className="text-zinc-600 dark:text-zinc-400 text-base sm:text-lg transition-colors border-none leading-relaxed">
                                 {activeTab === 'guide' && text.descGuide}
                                 {activeTab === 'vip' && text.descVip}
+                                {activeTab === 'avatar' && text.descAvatar}
                                 {activeTab === 'concept' && text.descConcept}
                             </p>
                         </div>
@@ -144,7 +169,7 @@ export default function Tutorial({ supabase }) {
                         {/* Tombol Toggle Dua Bahasa */}
                         <button
                             onClick={toggleLanguage}
-                            className="flex items-center gap-2.5 bg-zinc-100 dark:bg-zinc-900/60 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-[#106EBE] px-5 py-3 rounded-2xl font-bold text-sm transition-all duration-300 shadow-sm border-none shrink-0"
+                            className="flex items-center gap-2.5 bg-zinc-100 dark:bg-zinc-900/60 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-[#106EBE] px-5 py-3 rounded-2xl font-bold text-sm transition-all duration-300 shadow-sm border-none shrink-0 cursor-pointer outline-none"
                         >
                             <Globe className="w-5 h-5 text-[#106EBE] border-none" />
                             {text.langBtn}
@@ -161,8 +186,7 @@ export default function Tutorial({ supabase }) {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    // 🔥 PERBAIKAN: Selalu biru ShadowClips saat hover/active, baik di Light maupun Dark Mode 🔥
-                                    className={`flex items-center gap-3.5 px-4 py-3 md:py-4 rounded-xl text-left transition-all group whitespace-nowrap border-none outline-none ${activeTab === tab.id ? 'bg-[#106EBE]/10 text-[#106EBE] dark:text-[#106EBE] font-black' : 'text-zinc-500 dark:text-zinc-500 font-bold hover:text-[#106EBE] dark:hover:text-[#106EBE] hover:bg-zinc-50 dark:hover:bg-zinc-900/50'
+                                    className={`flex items-center gap-3.5 px-4 py-3 md:py-4 rounded-xl text-left transition-all group whitespace-nowrap border-none outline-none cursor-pointer ${activeTab === tab.id ? 'bg-[#106EBE]/10 text-[#106EBE] dark:text-[#106EBE] font-black' : 'text-zinc-500 dark:text-zinc-500 font-bold hover:text-[#106EBE] dark:hover:text-[#106EBE] hover:bg-zinc-50 dark:hover:bg-zinc-900/50'
                                         }`}
                                 >
                                     <span className={`transition-colors border-none ${activeTab === tab.id ? 'text-[#106EBE] dark:text-[#106EBE]' : 'text-zinc-400 dark:text-zinc-600 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE]'}`}>
@@ -282,7 +306,61 @@ export default function Tutorial({ supabase }) {
                             </div>
                         )}
 
-                        {/* 🚀 TAB 3: FILOSOFI KOMUNITAS (MENGAPA LOGIN?) 🚀 */}
+                        {/* 🚀 TAB 3: BUKA AVATAR (NEW) 🚀 */}
+                        {activeTab === 'avatar' && (
+                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-10 max-w-3xl border-none">
+                                <div className="flex flex-col gap-10 sm:gap-14 border-none">
+
+                                    <div className="flex gap-5 sm:gap-8 group border-none">
+                                        <div className="text-4xl sm:text-5xl font-black text-zinc-200 dark:text-zinc-800/80 transition-colors duration-500 group-hover:text-teal-500 dark:group-hover:text-teal-500 tracking-tighter leading-none mt-1 select-none border-none">
+                                            01
+                                        </div>
+                                        <div className="pt-1 border-none">
+                                            <h3 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white mb-2 tracking-tight flex items-center flex-wrap gap-2 transition-colors border-none">
+                                                {text.stepA1Title}
+                                                <span className="flex items-center gap-1.5 ml-1 text-zinc-400 dark:text-zinc-500 border-none"><Star className="w-4 h-4 border-none" /></span>
+                                            </h3>
+                                            <p className="text-zinc-600 dark:text-zinc-400 text-[13px] sm:text-sm leading-relaxed transition-colors border-none">
+                                                {text.stepA1Desc}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-5 sm:gap-8 group border-none">
+                                        <div className="text-4xl sm:text-5xl font-black text-zinc-200 dark:text-zinc-800/80 transition-colors duration-500 group-hover:text-teal-500 dark:group-hover:text-teal-500 tracking-tighter leading-none mt-1 select-none border-none">
+                                            02
+                                        </div>
+                                        <div className="pt-1 border-none">
+                                            <h3 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white mb-2 tracking-tight flex items-center flex-wrap gap-2 transition-colors border-none">
+                                                {text.stepA2Title}
+                                                <span className="flex items-center gap-1.5 ml-1 text-zinc-400 dark:text-zinc-500 border-none"><UserCircle className="w-4 h-4 border-none" /></span>
+                                            </h3>
+                                            <p className="text-zinc-600 dark:text-zinc-400 text-[13px] sm:text-sm leading-relaxed transition-colors border-none">
+                                                {text.stepA2Desc}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-5 sm:gap-8 group border-none">
+                                        <div className="text-4xl sm:text-5xl font-black text-zinc-200 dark:text-zinc-800/80 transition-colors duration-500 group-hover:text-teal-500 dark:group-hover:text-teal-500 tracking-tighter leading-none mt-1 select-none border-none">
+                                            03
+                                        </div>
+                                        <div className="pt-1 border-none">
+                                            <h3 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white mb-2 tracking-tight flex items-center flex-wrap gap-2 transition-colors border-none">
+                                                {text.stepA3Title}
+                                                <span className="flex items-center gap-1.5 ml-1 text-zinc-400 dark:text-zinc-500 border-none"><Check className="w-4 h-4 border-none" /></span>
+                                            </h3>
+                                            <p className="text-zinc-600 dark:text-zinc-400 text-[13px] sm:text-sm leading-relaxed transition-colors border-none">
+                                                {text.stepA3Desc}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 🚀 TAB 4: FILOSOFI KOMUNITAS (MENGAPA LOGIN?) 🚀 */}
                         {activeTab === 'concept' && (
                             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-10 max-w-3xl border-none">
                                 <div className="flex flex-col gap-10 sm:gap-12 pt-2 border-none">
