@@ -263,14 +263,14 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
 
         if (isAdmin) {
             statusKomentar = 'approved';
-            notifMessage = 'Komentar Admin berhasil ditayangkan!';
+            notifMessage = 'Komentar Admin berhasil dikrim!';
         } else if (isContentSensitive) {
             statusKomentar = 'pending';
             notifMessage = '⚠️ Mengandung kata sensitif. Menunggu moderasi Admin.';
             isErrorNotif = true;
         } else {
             statusKomentar = 'approved';
-            notifMessage = 'Komentar berhasil ditayangkan!';
+            notifMessage = 'Komentar Anda berhasil dikirim!';
         }
 
         const newCommentPayload = {
