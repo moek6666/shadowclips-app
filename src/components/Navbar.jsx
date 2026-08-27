@@ -22,6 +22,7 @@ export default function Navbar({ isScrolled, supabase }) {
     const [session, setSession] = useState(null);
     const [profile, setProfile] = useState(null);
 
+    // State Dropdown
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const [isMobileProfileDropdownOpen, setIsMobileProfileDropdownOpen] = useState(false);
 
@@ -134,6 +135,7 @@ export default function Navbar({ isScrolled, supabase }) {
             <ModalLogin isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} supabase={supabase} />
             <nav className={`fixed top-0 w-full z-[60] transition-all duration-300 ${isScrolled ? 'bg-white/90 dark:bg-zinc-950 dark:bg-gradient-to-r dark:from-zinc-950 dark:via-zinc-950 dark:to-[#106EBE]/10 backdrop-blur-md py-3 shadow-sm dark:shadow-none border-none' : 'bg-gradient-to-b from-white/90 dark:from-zinc-950/90 to-transparent dark:to-transparent py-5 border-none'}`}>
                 <div className="max-w-[1440px] mx-auto px-4 sm:px-8 flex justify-between items-center border-none">
+
                     <div className="flex items-center gap-8 lg:gap-12 border-none">
                         <a href="/" className="flex items-center gap-2.5 z-50 outline-none border-none">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 border-none drop-shadow-lg">
@@ -170,6 +172,8 @@ export default function Navbar({ isScrolled, supabase }) {
                                 </span>
                             </div>
                         </a>
+
+                        {/* MENU DEKSTOP */}
                         <div className="hidden md:flex items-center gap-6 text-sm font-bold z-50 border-none">
                             <a href="/" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ${pathname === '/' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                 <Home className="w-4 h-4 border-none" /> Home
@@ -203,8 +207,9 @@ export default function Navbar({ isScrolled, supabase }) {
                             </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-4 border-none">
 
+                    <div className="flex items-center gap-4 border-none">
+                        {/* PENCARIAN DEKSTOP */}
                         <div className="hidden md:flex relative group cursor-text z-50" onClick={() => setShowSearchModal(true)}>
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors w-4 h-4 border-none" />
                             <div className="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900/80 dark:hover:bg-zinc-900 rounded-full py-2 pl-11 pr-5 w-56 lg:w-64 transition-colors duration-300 text-sm text-zinc-500 flex items-center select-none border-none outline-none">
@@ -212,6 +217,7 @@ export default function Navbar({ isScrolled, supabase }) {
                             </div>
                         </div>
 
+                        {/* AKSES USER DEKSTOP */}
                         <div className="hidden md:flex items-center gap-4 border-none z-50 ml-2">
                             <button onClick={toggleTheme} className="flex items-center justify-center p-2 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors outline-none border-none cursor-pointer" title="Toggle Theme">
                                 {theme === 'dark' ? <Sun className="w-5 h-5 border-none" /> : <Moon className="w-5 h-5 border-none" />}
@@ -257,48 +263,19 @@ export default function Navbar({ isScrolled, supabase }) {
                             )}
                         </div>
 
-                        {/* 🔥 TOP NAVBAR MOBILE: AVATAR DROPDOWN 🔥 */}
-                        <div className="flex items-center gap-2 md:hidden z-50 border-none">
+                        {/* 🔥 TOP NAVBAR MOBILE: BERSIH (HANYA SEARCH, THEME, & BURGER MENU) 🔥 */}
+                        <div className="flex items-center gap-1 md:hidden z-50 border-none">
                             <button onClick={() => setShowSearchModal(true)} className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none cursor-pointer">
                                 <Search className="w-5 h-5 border-none" />
                             </button>
-                            <button onClick={toggleTheme} className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] border-none outline-none cursor-pointer">
+                            <button onClick={toggleTheme} className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none cursor-pointer">
                                 {theme === 'dark' ? <Sun className="w-5 h-5 border-none" /> : <Moon className="w-5 h-5 border-none" />}
                             </button>
-
-                            {session && (
-                                <div className="relative border-none">
-                                    <button onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)} className="p-1.5 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-full transition-colors border-none outline-none cursor-pointer">
-                                        <Avatar url={profile?.avatar_url} frameId={profile?.active_frame} containerClass="w-6 h-6" scale={0.25} />
-                                    </button>
-
-                                    {isProfileDropdownOpen && (
-                                        <>
-                                            <div className="fixed inset-0 z-40 border-none" onClick={() => setIsProfileDropdownOpen(false)}></div>
-                                            <div className="absolute top-[calc(100%+0.5rem)] right-0 w-48 bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-none overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
-                                                <div className="px-4 py-3 bg-zinc-50 dark:bg-zinc-800/50 border-none border-b border-zinc-100 dark:border-zinc-800">
-                                                    <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider mb-1 border-none">Masuk Sebagai</p>
-                                                    <p className="text-[11px] font-bold text-zinc-900 dark:text-white truncate border-none">{session?.user?.email}</p>
-                                                </div>
-                                                <div className="flex flex-col p-2 border-none">
-                                                    <a href="/profile" className="w-full flex items-center gap-3 px-3 py-2 text-[12px] font-bold text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-[#106EBE] hover:bg-zinc-50 dark:hover:bg-zinc-800/50 rounded-xl transition-colors outline-none border-none cursor-pointer">
-                                                        <Settings className="w-3.5 h-3.5 border-none" /> Edit Profil
-                                                    </a>
-                                                    <div className="h-px bg-zinc-100 dark:bg-zinc-800 my-1 border-none"></div>
-                                                    <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2 text-[12px] font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors outline-none border-none cursor-pointer">
-                                                        <LogOut className="w-3.5 h-3.5 border-none" /> Keluar
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            )}
-
-                            <button onClick={() => setIsMobileMenuOpen(true)} className="p-1.5 ml-1 text-zinc-900 dark:text-white bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-full border-none outline-none cursor-pointer shadow-sm">
+                            <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 ml-1 text-zinc-900 dark:text-white bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-full border-none outline-none cursor-pointer shadow-sm transition-colors">
                                 <Menu className="w-5 h-5 border-none" />
                             </button>
                         </div>
+
                     </div>
                 </div>
             </nav>
@@ -308,25 +285,26 @@ export default function Navbar({ isScrolled, supabase }) {
 
                 <div className={`absolute top-0 right-0 w-[80%] max-w-[320px] h-full bg-white dark:bg-zinc-950 shadow-2xl transition-transform duration-300 ease-out flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
 
-                    <div className="p-5 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/60">
+                    <div className="p-5 flex items-start justify-between border-b border-zinc-100 dark:border-zinc-800/60">
                         {session ? (
-                            /* 🔥 SIDEBAR MOBILE: MENU AKUN DROPDOWN 🔥 */
-                            <div className="flex flex-col w-full border-none">
-                                <div className="flex items-center justify-between cursor-pointer group border-none" onClick={() => setIsMobileProfileDropdownOpen(!isMobileProfileDropdownOpen)}>
-                                    <div className="flex items-center gap-3 border-none">
-                                        <Avatar url={profile?.avatar_url} frameId={profile?.active_frame} containerClass="w-10 h-10" scale={0.4} />
-                                        <div className="flex flex-col border-none">
-                                            <span className="text-sm font-black text-zinc-900 dark:text-white truncate max-w-[120px] border-none">{profile?.name || (session?.user?.email || '').split('@')[0]}</span>
-                                            <span className="text-[10px] text-zinc-500 font-bold group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors flex items-center gap-1 border-none">
-                                                Opsi Akun <ChevronDown className={`w-3 h-3 transition-transform ${isMobileProfileDropdownOpen ? 'rotate-180' : ''} border-none`} />
-                                            </span>
-                                        </div>
+                            /* 🔥 SIDEBAR MOBILE: AVATAR + DROPDOWN 🔥 */
+                            <div className="flex flex-col w-full border-none pr-3">
+                                <div className="flex items-center gap-3 cursor-pointer group border-none" onClick={() => setIsMobileProfileDropdownOpen(!isMobileProfileDropdownOpen)}>
+                                    <Avatar url={profile?.avatar_url} frameId={profile?.active_frame} containerClass="w-10 h-10 shrink-0" scale={0.4} />
+                                    <div className="flex flex-col border-none min-w-0">
+                                        <span className="text-sm font-black text-zinc-900 dark:text-white truncate max-w-[140px] border-none">{profile?.name || (session?.user?.email || '').split('@')[0]}</span>
+                                        <span className="text-[10px] text-zinc-500 font-bold group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors flex items-center gap-1 border-none mt-0.5">
+                                            Opsi Akun <ChevronDown className={`w-3 h-3 transition-transform ${isMobileProfileDropdownOpen ? 'rotate-180' : ''} border-none`} />
+                                        </span>
                                     </div>
                                 </div>
-                                <div className={`flex flex-col overflow-hidden transition-all duration-300 border-none ${isMobileProfileDropdownOpen ? 'max-h-[150px] mt-4 opacity-100' : 'max-h-0 opacity-0'}`}>
+                                <div className={`flex flex-col overflow-hidden transition-all duration-300 border-none ${isMobileProfileDropdownOpen ? 'max-h-[150px] mt-4 opacity-100' : 'max-h-0 opacity-0 mt-0'}`}>
                                     <a href="/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-300 font-bold transition-colors text-[13px] border-none outline-none">
                                         <Settings className="w-4 h-4 border-none" /> Pengaturan Profil
                                     </a>
+                                    <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 mt-1 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 text-red-500 font-bold transition-colors text-[13px] border-none outline-none text-left">
+                                        <LogOut className="w-4 h-4 border-none" /> Keluar
+                                    </button>
                                 </div>
                             </div>
                         ) : (
@@ -334,11 +312,12 @@ export default function Navbar({ isScrolled, supabase }) {
                                 <User className="w-4 h-4 border-none" /> Sign In
                             </button>
                         )}
-                        <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 self-start bg-zinc-100 dark:bg-zinc-900 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] outline-none border-none">
+                        <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 shrink-0 self-start bg-zinc-100 dark:bg-zinc-900 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors outline-none border-none">
                             <X className="w-5 h-5" />
                         </button>
                     </div>
 
+                    {/* DAFTAR MENU NAVIGASI UTAMA DI SIDEBAR */}
                     <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-2">
                         <a href="/" className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors">
                             <Home className="w-5 h-5 text-[#106EBE]" /> Home
@@ -367,17 +346,10 @@ export default function Navbar({ isScrolled, supabase }) {
                             </div>
                         </div>
                     </div>
-
-                    {session && (
-                        <div className="p-4 border-t border-zinc-100 dark:border-zinc-800/60 bg-zinc-50 dark:bg-zinc-950">
-                            <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 font-bold hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors outline-none border-none">
-                                <LogOut className="w-5 h-5" /> Sign Out
-                            </button>
-                        </div>
-                    )}
                 </div>
             </div>
 
+            {/* Modal Pencarian */}
             {showSearchModal && (
                 <div className="fixed inset-0 z-[100] bg-white/95 dark:bg-zinc-950/95 backdrop-blur-3xl overflow-y-auto custom-scrollbar animate-in fade-in duration-300 border-none">
                     <div className="min-h-screen px-4 sm:px-8 py-10 md:py-16 flex flex-col items-center border-none">
