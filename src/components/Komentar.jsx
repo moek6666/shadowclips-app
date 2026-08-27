@@ -247,6 +247,9 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
         setIsSubmitting(true);
         setNotification(null);
 
+        // 🔥 JEDA LOADING 3 DETIK 🔥
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
         const targetParentId = replyTo ? (replyTo.parent_id || replyTo.id) : null;
         const isAdmin = profile?.is_admin || false;
         const userEmail = session.user.email;
@@ -318,7 +321,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
 
         } catch (error) {
             console.error("ERROR INSERT:", error);
-            // setNotification({ type: 'error', message: 'Koneksi terputus. Silakan coba lagi.' });
         } finally {
             setIsSubmitting(false);
         }
@@ -374,7 +376,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                         )}
                     </div>
 
-                    {/* 🔥 PERBAIKAN MOBILE TRUNCATED (EMOTICON TERPOTONG) 🔥 */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-y-3 gap-x-4 px-4 sm:px-5 py-3 bg-zinc-100 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-300 border-none overflow-visible transition-colors">
                         <div className="flex items-center gap-4 shrink-0 border-none">
                             <button type="button" onClick={() => insertFormat('bold')} className="hover:text-zinc-900 dark:hover:text-white transition-colors outline-none border-none shrink-0" title="Bold"><Bold className="w-4 h-4" /></button>
@@ -386,7 +387,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
 
                         <div className="h-4 w-[1px] hidden sm:block bg-zinc-300 dark:bg-zinc-600 mx-1 shrink-0 transition-colors border-none"></div>
 
-                        {/* 🔥 Ditambahkan flex-wrap agar emoticon turun ke baris berikutnya di HP 🔥 */}
                         <div className="flex items-center gap-2 sm:gap-3 flex-wrap flex-1 border-none">
                             {topEmojis.map((emoji) => (
                                 <button key={emoji.code} type="button" onClick={() => insertEmoji(emoji.code)} className="hover:scale-125 transition-transform duration-300 outline-none border-none shrink-0" title={emoji.code.replace(/:/g, '')}>

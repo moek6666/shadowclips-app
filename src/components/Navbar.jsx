@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import useSWR from 'swr';
 import { Search, Menu, X, Home, Compass, Flame, FolderOpen, Crown, ChevronDown, Sun, Moon, LogIn, LogOut, User, Settings } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
@@ -26,8 +26,10 @@ export default function Navbar({ isScrolled, supabase }) {
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const [isMobileProfileDropdownOpen, setIsMobileProfileDropdownOpen] = useState(false);
 
-    const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+    // 🔥 Ref untuk mendeteksi klik di luar Dropdown Desktop 🔥
+    const profileDropdownRef = useRef(null);
 
+    const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
     const getImageUrl = (url) => url || '';
 
     const fetchProfile = async (userId) => {
@@ -57,6 +59,20 @@ export default function Navbar({ isScrolled, supabase }) {
 
         return () => subscription?.unsubscribe();
     }, [supabase]);
+
+    // 🔥 Logika Click Outside untuk Dropdown Dekstop 🔥
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
+                setIsProfileDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     const handleLogout = async () => {
         if (supabase) {
@@ -219,12 +235,11 @@ export default function Navbar({ isScrolled, supabase }) {
 
                         {/* AKSES USER DEKSTOP */}
                         <div className="hidden md:flex items-center gap-4 border-none z-50 ml-2">
-                            {/* 🔥 TOMBOL THEME DIHAPUS DARI SINI 🔥 */}
-
                             <div className="w-[1px] h-5 bg-zinc-200 dark:bg-zinc-800 border-none"></div>
 
                             {session ? (
-                                <div className="relative border-none">
+                                /* 🔥 DITAMBAHKAN REF DI SINI UNTUK KLIK LUAR 🔥 */
+                                <div className="relative border-none" ref={profileDropdownRef}>
                                     <button onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)} className="flex items-center gap-2.5 p-1 pl-3 bg-zinc-100 dark:bg-zinc-900/80 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors outline-none border-none cursor-pointer">
                                         <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 max-w-[100px] truncate border-none">
                                             {profile?.name || (session?.user?.email || '').split('@')[0] || 'User'}
@@ -233,35 +248,30 @@ export default function Navbar({ isScrolled, supabase }) {
                                     </button>
 
                                     {isProfileDropdownOpen && (
-                                        <>
-                                            <div className="fixed inset-0 z-40 border-none" onClick={() => setIsProfileDropdownOpen(false)}></div>
-                                            <div className="absolute top-[calc(100%+0.5rem)] right-0 w-56 bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-none overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
-                                                <div className="px-5 py-4 bg-zinc-50 dark:bg-zinc-800/50 border-none border-b border-zinc-100 dark:border-zinc-800">
-                                                    <p className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1 border-none">Masuk Sebagai</p>
-                                                    <p className="text-[13px] font-bold text-zinc-900 dark:text-white truncate border-none">{session?.user?.email}</p>
-                                                    {profile?.is_premium && <span className="inline-block mt-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] px-2 py-0.5 rounded-[4px] uppercase tracking-wider font-bold border-none">Premium VIP</span>}
-                                                </div>
-
-                                                {/* 🔥 DROPDOWN MENU KUSTOMISASI (Semua Putih di Dark Mode) 🔥 */}
-                                                <div className="flex flex-col p-2 border-none">
-                                                    <a href="/profile" className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-bold text-zinc-600 dark:text-white hover:bg-zinc-50 dark:hover:bg-white/10 rounded-xl transition-colors outline-none border-none cursor-pointer">
-                                                        <Settings className="w-4 h-4 border-none" /> Pengaturan Profil
-                                                    </a>
-
-                                                    {/* TOMBOL THEME PINDAH KESINI */}
-                                                    <button onClick={toggleTheme} className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-bold text-zinc-600 dark:text-white hover:bg-zinc-50 dark:hover:bg-white/10 rounded-xl transition-colors outline-none border-none cursor-pointer text-left">
-                                                        {theme === 'dark' ? <Sun className="w-4 h-4 border-none" /> : <Moon className="w-4 h-4 border-none" />}
-                                                        <span className="border-none">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
-                                                    </button>
-
-                                                    <div className="h-px bg-zinc-100 dark:bg-zinc-800 my-1 border-none"></div>
-
-                                                    <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-bold text-red-500 dark:text-white hover:bg-red-50 dark:hover:bg-white/10 rounded-xl transition-colors outline-none border-none cursor-pointer text-left">
-                                                        <LogOut className="w-4 h-4 border-none" /> Keluar
-                                                    </button>
-                                                </div>
+                                        <div className="absolute top-[calc(100%+0.5rem)] right-0 w-56 bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-none overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
+                                            <div className="px-5 py-4 bg-zinc-50 dark:bg-zinc-800/50 border-none border-b border-zinc-100 dark:border-zinc-800">
+                                                <p className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1 border-none">Masuk Sebagai</p>
+                                                <p className="text-[13px] font-bold text-zinc-900 dark:text-white truncate border-none">{session?.user?.email}</p>
+                                                {profile?.is_premium && <span className="inline-block mt-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] px-2 py-0.5 rounded-[4px] uppercase tracking-wider font-bold border-none">Premium VIP</span>}
                                             </div>
-                                        </>
+
+                                            <div className="flex flex-col p-2 border-none">
+                                                <a href="/profile" className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-bold text-zinc-600 dark:text-white hover:bg-zinc-50 dark:hover:bg-white/10 rounded-xl transition-colors outline-none border-none cursor-pointer">
+                                                    <Settings className="w-4 h-4 border-none" /> Pengaturan Profil
+                                                </a>
+
+                                                <button onClick={toggleTheme} className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-bold text-zinc-600 dark:text-white hover:bg-zinc-50 dark:hover:bg-white/10 rounded-xl transition-colors outline-none border-none cursor-pointer text-left">
+                                                    {theme === 'dark' ? <Sun className="w-4 h-4 border-none" /> : <Moon className="w-4 h-4 border-none" />}
+                                                    <span className="border-none">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+                                                </button>
+
+                                                <div className="h-px bg-zinc-100 dark:bg-zinc-800 my-1 border-none"></div>
+
+                                                <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-bold text-red-500 dark:text-white hover:bg-red-50 dark:hover:bg-white/10 rounded-xl transition-colors outline-none border-none cursor-pointer text-left">
+                                                    <LogOut className="w-4 h-4 border-none" /> Keluar
+                                                </button>
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
                             ) : (
@@ -276,8 +286,6 @@ export default function Navbar({ isScrolled, supabase }) {
                             <button onClick={() => setShowSearchModal(true)} className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none cursor-pointer">
                                 <Search className="w-5 h-5 border-none" />
                             </button>
-                            {/* 🔥 TOMBOL THEME JUGA DIHAPUS DARI SINI 🔥 */}
-
                             <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 ml-1 text-zinc-900 dark:text-white bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-full border-none outline-none cursor-pointer shadow-sm transition-colors">
                                 <Menu className="w-5 h-5 border-none" />
                             </button>
@@ -294,7 +302,7 @@ export default function Navbar({ isScrolled, supabase }) {
 
                     <div className="p-5 flex items-start justify-between border-b border-zinc-100 dark:border-zinc-800/60">
                         {session ? (
-                            /* 🔥 SIDEBAR MOBILE: AVATAR + DROPDOWN (Semua Putih di Dark Mode) 🔥 */
+                            /* 🔥 SIDEBAR MOBILE: AVATAR + DROPDOWN 🔥 */
                             <div className="flex flex-col w-full border-none pr-3">
                                 <div className="flex items-center gap-3 cursor-pointer group border-none" onClick={() => setIsMobileProfileDropdownOpen(!isMobileProfileDropdownOpen)}>
                                     <Avatar url={profile?.avatar_url} frameId={profile?.active_frame} containerClass="w-10 h-10 shrink-0" scale={0.4} />
@@ -310,7 +318,6 @@ export default function Navbar({ isScrolled, supabase }) {
                                         <Settings className="w-4 h-4 border-none" /> Pengaturan Profil
                                     </a>
 
-                                    {/* TOMBOL THEME PINDAH KESINI */}
                                     <button onClick={toggleTheme} className="flex items-center gap-3 px-3 py-2.5 mt-1 rounded-xl hover:bg-zinc-100 dark:hover:bg-white/10 text-zinc-600 dark:text-white font-bold transition-colors text-[13px] border-none outline-none text-left">
                                         {theme === 'dark' ? <Sun className="w-4 h-4 border-none" /> : <Moon className="w-4 h-4 border-none" />}
                                         <span className="border-none">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
