@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Loader2, Send, MessageSquare, ChevronDown, Bold, Italic, Code, Link as LinkIcon, Quote, X, BadgeCheck, Crown, LogIn } from 'lucide-react';
-import DOMPurify from 'dompurify'; // 🔥 IMPORT DOMPURIFY DI SINI 🔥
+import DOMPurify from 'dompurify';
 import ModalLogin from './ModalLogin';
 import Avatar from './Avatar';
 
@@ -76,7 +76,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
         });
 
         return () => subscription?.unsubscribe();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [supabase]);
 
     useEffect(() => {
@@ -258,10 +257,11 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
         const contentLower = content.toLowerCase();
         const isContentSensitive = BAD_WORDS.some(word => contentLower.includes(word));
 
-        let statusKomentar = 'pending';
+        let statusKomentar = 'approved'; // 🔥 DEFAULT: LANGSUNG TAYANG 🔥
         let notifMessage = '';
         let isErrorNotif = false;
 
+        // 🔥 LOGIKA KEMBALI KE ASAL (AUTO-APPROVE JIKA AMAN) 🔥
         if (isAdmin) {
             statusKomentar = 'approved';
             notifMessage = 'Komentar Admin berhasil ditayangkan!';
@@ -285,10 +285,19 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
         };
 
         try {
-            const { data: insertedData, error } = await supabase.from('comments').insert(newCommentPayload).select().single();
+            // 🔥 .single() DIHAPUS agar tidak pernah memicu error palsu! 🔥
+            const { data: insertedData, error } = await supabase.from('comments').insert(newCommentPayload).select();
+
             if (error) throw error;
 
-            setComments(prev => [insertedData, ...(prev || [])]);
+            // Optimistic Update: Tambahkan komentar yang sukses ke layar langsung
+            const newComment = insertedData && insertedData.length > 0 ? insertedData[0] : {
+                id: 'temp_' + Date.now(),
+                created_at: new Date().toISOString(),
+                ...newCommentPayload
+            };
+
+            setComments(prev => [newComment, ...(prev || [])]);
 
             setUserProfiles(prev => ({
                 ...prev,
@@ -315,7 +324,8 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
             if (textareaRef.current) textareaRef.current.style.height = '120px';
 
         } catch (error) {
-            setNotification({ type: 'error', message: 'Gagal mengirim komentar.' });
+            console.error("ERROR INSERT:", error);
+            setNotification({ type: 'error', message: 'Sistem sibuk. Silakan coba lagi.' });
         } finally {
             setIsSubmitting(false);
         }
@@ -477,7 +487,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                                             {comment.status === 'pending' && <span className="px-2 py-0.5 rounded-[6px] text-[9px] sm:text-[10px] uppercase tracking-widest font-black bg-amber-500 text-white shadow-sm border-none transition-colors animate-pulse">Menunggu Persetujuan</span>}
                                         </div>
 
-                                        {/* 🔥 DOMPURIFY SANITIZATION PADA RENDER KOMENTAR UTAMA 🔥 */}
                                         <div className="text-[12px] sm:text-[14px] text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none transition-colors" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(parseMarkdown(comment.content)) }} />
 
                                         <div className="flex items-center gap-4 mt-3 pt-3 border-none">
@@ -524,7 +533,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                                                                 {reply.status === 'pending' && <span className="px-2 py-0.5 rounded-[6px] text-[9px] sm:text-[10px] uppercase tracking-widest font-black bg-amber-500 text-white shadow-sm border-none transition-colors animate-pulse">Menunggu Persetujuan</span>}
                                                             </div>
 
-                                                            {/* 🔥 DOMPURIFY SANITIZATION PADA RENDER BALASAN 🔥 */}
                                                             <div className="text-[11px] sm:text-[13px] text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none transition-colors">
                                                                 <span className="text-[#106EBE] font-bold mr-1 border-none">@{comment.name}</span> <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(parseMarkdown(reply.content)) }} />
                                                             </div>
