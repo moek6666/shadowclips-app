@@ -13,6 +13,7 @@ import {
     User,
     Heart,
     Clock,
+    Bookmark,
     Sparkles,
     Trophy,
     Trash2,
@@ -32,7 +33,6 @@ export default function Profile({ supabase }) {
     const [isSaving, setIsSaving] = useState(false);
     const [notification, setNotification] = useState(null);
 
-    // Accordion / Spoiler Toggle State (Default: hanya activity yang terbuka)
     const [openSections, setOpenSections] = useState({
         wardrobe: false,
         customize: false,
@@ -46,22 +46,19 @@ export default function Profile({ supabase }) {
         }));
     };
 
-    // Form Edit State
     const [editName, setEditName] = useState('');
     const [editAvatarUrl, setEditAvatarUrl] = useState('');
     const [editFrame, setEditFrame] = useState('none');
 
-    // Media Filter Tab: 'likes' | 'history'
     const [mediaTab, setMediaTab] = useState('likes');
 
-    // Delete Account Modal
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
     const [likedVideos, setLikedVideos] = useState([]);
     const [historyVideos, setHistoryVideos] = useState([]);
+    const [savedVideos, setSavedVideos] = useState([]);
 
-    // Fetch Likes & History dari Supabase & LocalStorage
     const fetchActivityData = useCallback(async (currentSession) => {
         if (!supabase) return;
         try {
@@ -86,6 +83,7 @@ export default function Profile({ supabase }) {
             if (userId) queryIds.push(userId);
             if (localDevId) queryIds.push(localDevId);
 
+            // Fetch Likes
             if (queryIds.length > 0) {
                 const { data: likesData, error: likesError } = await supabase
                     .from('user_likes')
@@ -112,6 +110,7 @@ export default function Profile({ supabase }) {
                 }
             }
 
+            // Fetch History
             const localHistory = JSON.parse(localStorage.getItem('shadowclips_history') || '[]');
             if (localHistory && localHistory.length > 0) {
                 const limitedHistory = localHistory.slice(0, 12);
@@ -128,6 +127,34 @@ export default function Profile({ supabase }) {
             } else {
                 setHistoryVideos([]);
             }
+
+            // Fetch Bookmarks (Saved Videos)
+            if (userId) {
+                const { data: bookmarkData, error: bookmarkError } = await supabase
+                    .from('user_bookmarks')
+                    .select('video_id')
+                    .eq('user_id', userId)
+                    .order('created_at', { ascending: false })
+                    .limit(12);
+
+                if (!bookmarkError && bookmarkData && bookmarkData.length > 0) {
+                    const bVideoIds = [...new Set(bookmarkData.map((b) => b.video_id))];
+                    const { data: bVids, error: bVidsError } = await supabase
+                        .from('videos')
+                        .select('id, title, slug, img')
+                        .in('id', bVideoIds);
+
+                    if (!bVidsError && bVids) {
+                        const resolvedSaved = bVideoIds
+                            .map((id) => bVids.find((v) => String(v.id) === String(id)))
+                            .filter(Boolean);
+                        setSavedVideos(resolvedSaved);
+                    }
+                } else {
+                    setSavedVideos([]);
+                }
+            }
+
         } catch (error) {
             console.warn('Activity fetch error:', error);
         }
@@ -297,7 +324,6 @@ export default function Profile({ supabase }) {
         <div className="min-h-screen flex flex-col bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-200 font-sans antialiased transition-colors duration-200">
             <Navbar isScrolled={true} supabase={supabase} />
 
-            {/* Notification Toast */}
             {notification && (
                 <div className="fixed top-24 right-6 z-[100] animate-in fade-in slide-in-from-top-4 duration-200">
                     <div
@@ -316,18 +342,12 @@ export default function Profile({ supabase }) {
 
             <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 pt-28 sm:pt-32 pb-24">
 
-                {/* 2-Column Bento Dashboard */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-                    {/* ========================================== */}
-                    {/* KOLOM KIRI: IDENTITY HUB (4 COLS) */}
-                    {/* ========================================== */}
                     <aside className="lg:col-span-4 space-y-6">
 
-                        {/* Profile ID Card */}
                         <div className="bg-white dark:bg-zinc-800 rounded-3xl p-6 sm:p-8 shadow-sm dark:shadow-md flex flex-col items-center text-center transition-colors">
 
-                            {/* Live Avatar Preview */}
                             <div className="relative mb-5 flex items-center justify-center">
                                 <Avatar
                                     url={editAvatarUrl}
@@ -337,7 +357,6 @@ export default function Profile({ supabase }) {
                                 />
                             </div>
 
-                            {/* User Name */}
                             <h1 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight mb-1">
                                 {displayName}
                             </h1>
@@ -345,7 +364,6 @@ export default function Profile({ supabase }) {
                                 {session.user.email}
                             </p>
 
-                            {/* SOLID BADGES (ADMIN: BIRU, PREMIUM: EMAS, AVATAR: HIJAU) */}
                             <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
                                 {profile.is_admin && (
                                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black bg-[#106EBE] text-white shadow-sm">
@@ -362,7 +380,6 @@ export default function Profile({ supabase }) {
                                 </span>
                             </div>
 
-                            {/* Quick Stats Grid */}
                             <div className="w-full grid grid-cols-3 gap-2 p-3.5 rounded-2xl bg-zinc-100 dark:bg-zinc-700/40 mb-6 transition-colors">
                                 <div className="flex flex-col items-center">
                                     <span className="text-xs font-black text-zinc-900 dark:text-white font-mono">{currentPoints.toLocaleString()}</span>
@@ -373,12 +390,11 @@ export default function Profile({ supabase }) {
                                     <span className="text-[10px] text-zinc-600 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5">Likes</span>
                                 </div>
                                 <div className="flex flex-col items-center">
-                                    <span className="text-xs font-black text-zinc-900 dark:text-white font-mono">{historyVideos.length}</span>
-                                    <span className="text-[10px] text-zinc-600 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5">History</span>
+                                    <span className="text-xs font-black text-zinc-900 dark:text-white font-mono">{savedVideos.length}</span>
+                                    <span className="text-[10px] text-zinc-600 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5">Saved</span>
                                 </div>
                             </div>
 
-                            {/* Reward Progression */}
                             <div className="w-full bg-zinc-100 dark:bg-zinc-700/40 rounded-2xl p-4 text-left space-y-2.5 transition-colors">
                                 <div className="flex items-center justify-between text-xs">
                                     <span className="font-bold text-zinc-800 dark:text-zinc-300 flex items-center gap-1.5">
@@ -404,7 +420,6 @@ export default function Profile({ supabase }) {
                                 </div>
                             </div>
 
-                            {/* Actions (Logout & Delete) */}
                             <div className="w-full flex items-center gap-2 mt-6 pt-2">
                                 <button
                                     onClick={handleLogout}
@@ -424,16 +439,9 @@ export default function Profile({ supabase }) {
                         </div>
                     </aside>
 
-                    {/* ========================================== */}
-                    {/* KOLOM KANAN: ACCORDION SPOILER WORKSPACE (8 COLS) */}
-                    {/* ========================================== */}
                     <div className="lg:col-span-8 space-y-6">
 
-                        {/* ========================================== */}
-                        {/* 1. SPOILER: FRAME WARDROBE VAULT */}
-                        {/* ========================================== */}
                         <section className="bg-white dark:bg-zinc-800 rounded-3xl p-6 sm:p-8 shadow-sm dark:shadow-md transition-colors">
-                            {/* Spoiler Header (Ikon Serasi: Hitam di Light, Abu Terang di Dark) */}
                             <div
                                 onClick={() => toggleSection('wardrobe')}
                                 className="flex items-center justify-between cursor-pointer select-none group"
@@ -460,7 +468,6 @@ export default function Profile({ supabase }) {
                                 </div>
                             </div>
 
-                            {/* Spoiler Body */}
                             {openSections.wardrobe && (
                                 <div className="pt-6 mt-6 border-t border-zinc-100 dark:border-zinc-700/30 animate-in fade-in slide-in-from-top-2 duration-200">
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
@@ -477,13 +484,12 @@ export default function Profile({ supabase }) {
                                                         if (!isLocked) setEditFrame(frame.id);
                                                     }}
                                                     className={`relative rounded-2xl p-4 flex flex-col items-center text-center transition-all cursor-pointer ${isEquipped
-                                                            ? 'bg-zinc-200/90 text-zinc-900 dark:bg-zinc-700 dark:text-white shadow-sm'
-                                                            : isLocked
-                                                                ? 'bg-zinc-100 dark:bg-zinc-700/20 opacity-40 cursor-not-allowed'
-                                                                : 'bg-zinc-100 hover:bg-zinc-200/70 dark:bg-zinc-700/30 dark:hover:bg-zinc-700/60 shadow-sm dark:shadow-none'
+                                                        ? 'bg-zinc-200/90 text-zinc-900 dark:bg-zinc-700 dark:text-white shadow-sm'
+                                                        : isLocked
+                                                            ? 'bg-zinc-100 dark:bg-zinc-700/20 opacity-40 cursor-not-allowed'
+                                                            : 'bg-zinc-100 hover:bg-zinc-200/70 dark:bg-zinc-700/30 dark:hover:bg-zinc-700/60 shadow-sm dark:shadow-none'
                                                         }`}
                                                 >
-                                                    {/* Frame Miniature */}
                                                     <div className="w-14 h-14 relative flex items-center justify-center mb-2.5">
                                                         <Avatar
                                                             url={editAvatarUrl}
@@ -497,17 +503,15 @@ export default function Profile({ supabase }) {
                                                         {frame.name}
                                                     </span>
 
-                                                    {/* Solid Status Badge */}
                                                     <span
                                                         className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded shadow-sm ${isLocked
-                                                                ? 'bg-zinc-200 dark:bg-zinc-600 text-zinc-500 dark:text-zinc-300'
-                                                                : 'bg-emerald-600 text-white'
+                                                            ? 'bg-zinc-200 dark:bg-zinc-600 text-zinc-500 dark:text-zinc-300'
+                                                            : 'bg-emerald-600 text-white'
                                                             }`}
                                                     >
                                                         {frame.unlockPoints === 0 ? 'FREE' : `${frame.unlockPoints.toLocaleString()} PTS`}
                                                     </span>
 
-                                                    {/* Equipped or Lock Indicator */}
                                                     {isEquipped && (
                                                         <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-[#106EBE] text-white flex items-center justify-center shadow-md">
                                                             <Check className="w-3 h-3 stroke-[3]" />
@@ -526,11 +530,7 @@ export default function Profile({ supabase }) {
                             )}
                         </section>
 
-                        {/* ========================================== */}
-                        {/* 2. SPOILER: PROFILE EDIT STUDIO */}
-                        {/* ========================================== */}
                         <section className="bg-white dark:bg-zinc-800 rounded-3xl p-6 sm:p-8 shadow-sm dark:shadow-md transition-colors">
-                            {/* Spoiler Header (Ikon Serasi: Hitam di Light, Abu Terang di Dark) */}
                             <div
                                 onClick={() => toggleSection('customize')}
                                 className="flex items-center justify-between cursor-pointer select-none group"
@@ -559,13 +559,11 @@ export default function Profile({ supabase }) {
                                 </div>
                             </div>
 
-                            {/* Spoiler Body */}
                             {openSections.customize && (
                                 <div className="pt-6 mt-6 border-t border-zinc-100 dark:border-zinc-700/30 animate-in fade-in slide-in-from-top-2 duration-200">
                                     <form onSubmit={handleUpdateProfile} className="space-y-5">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-                                            {/* Display Name Input */}
                                             <div className="space-y-2">
                                                 <label className="block text-xs font-bold uppercase tracking-wider text-zinc-800 dark:text-zinc-300">
                                                     Username
@@ -583,7 +581,6 @@ export default function Profile({ supabase }) {
                                                 </div>
                                             </div>
 
-                                            {/* Avatar Image URL Input */}
                                             <div className="space-y-2">
                                                 <div className="flex items-center justify-between">
                                                     <label className="block text-xs font-bold uppercase tracking-wider text-zinc-800 dark:text-zinc-300">
@@ -629,11 +626,7 @@ export default function Profile({ supabase }) {
                             )}
                         </section>
 
-                        {/* ========================================== */}
-                        {/* 3. SPOILER: MEDIA REELS (LIKES & WATCH HISTORY) */}
-                        {/* ========================================== */}
                         <section className="bg-white dark:bg-zinc-800 rounded-3xl p-6 sm:p-8 shadow-sm dark:shadow-md transition-colors">
-                            {/* Spoiler Header (Ikon Serasi: Hitam di Light, Abu Terang di Dark) */}
                             <div
                                 onClick={() => toggleSection('activity')}
                                 className="flex items-center justify-between cursor-pointer select-none group"
@@ -645,14 +638,14 @@ export default function Profile({ supabase }) {
                                             Activity & Media Reels
                                         </h2>
                                         <p className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
-                                            Koleksi video favorit dan riwayat tontonan akun Anda.
+                                            Koleksi video favorit, tersimpan, dan riwayat Anda.
                                         </p>
                                     </div>
                                 </div>
 
                                 <div className="flex items-center gap-3">
                                     <span className="text-xs font-mono font-bold px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-700/50 text-zinc-800 dark:text-zinc-200 hidden sm:inline-block shadow-sm dark:shadow-none">
-                                        {likedVideos.length + historyVideos.length} Items
+                                        {likedVideos.length + historyVideos.length + savedVideos.length} Items
                                     </span>
                                     <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-700/50 flex items-center justify-center text-zinc-500 dark:text-zinc-400">
                                         <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${openSections.activity ? 'rotate-180' : ''}`} />
@@ -660,34 +653,41 @@ export default function Profile({ supabase }) {
                                 </div>
                             </div>
 
-                            {/* Spoiler Body */}
                             {openSections.activity && (
                                 <div className="pt-6 mt-6 border-t border-zinc-100 dark:border-zinc-700/30 animate-in fade-in slide-in-from-top-2 duration-200">
-                                    {/* Tabs */}
-                                    <div className="flex items-center gap-2 mb-6">
+                                    <div className="flex flex-wrap items-center gap-2 mb-6">
                                         <button
                                             type="button"
                                             onClick={() => setMediaTab('likes')}
                                             className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${mediaTab === 'likes'
-                                                    ? 'bg-zinc-200 text-zinc-900 dark:bg-zinc-700 dark:text-white shadow-sm'
-                                                    : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 dark:bg-zinc-700/30 dark:text-zinc-400 dark:hover:bg-zinc-700/60 dark:hover:text-zinc-200'
+                                                ? 'bg-zinc-200 text-zinc-900 dark:bg-zinc-700 dark:text-white shadow-sm'
+                                                : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 dark:bg-zinc-700/30 dark:text-zinc-400 dark:hover:bg-zinc-700/60 dark:hover:text-zinc-200'
                                                 }`}
                                         >
                                             <Heart className={`w-4 h-4 ${mediaTab === 'likes' ? 'text-rose-500' : 'text-zinc-400'}`} /> Disukai ({likedVideos.length})
                                         </button>
                                         <button
                                             type="button"
+                                            onClick={() => setMediaTab('saved')}
+                                            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${mediaTab === 'saved'
+                                                ? 'bg-zinc-200 text-zinc-900 dark:bg-zinc-700 dark:text-white shadow-sm'
+                                                : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 dark:bg-zinc-700/30 dark:text-zinc-400 dark:hover:bg-zinc-700/60 dark:hover:text-zinc-200'
+                                                }`}
+                                        >
+                                            <Bookmark className={`w-4 h-4 ${mediaTab === 'saved' ? 'text-[#106EBE] dark:text-[#32ADFF]' : 'text-zinc-400'}`} /> Tersimpan ({savedVideos.length})
+                                        </button>
+                                        <button
+                                            type="button"
                                             onClick={() => setMediaTab('history')}
                                             className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${mediaTab === 'history'
-                                                    ? 'bg-zinc-200 text-zinc-900 dark:bg-zinc-700 dark:text-white shadow-sm'
-                                                    : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 dark:bg-zinc-700/30 dark:text-zinc-400 dark:hover:bg-zinc-700/60 dark:hover:text-zinc-200'
+                                                ? 'bg-zinc-200 text-zinc-900 dark:bg-zinc-700 dark:text-white shadow-sm'
+                                                : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 dark:bg-zinc-700/30 dark:text-zinc-400 dark:hover:bg-zinc-700/60 dark:hover:text-zinc-200'
                                                 }`}
                                         >
                                             <Clock className={`w-4 h-4 ${mediaTab === 'history' ? 'text-[#106EBE] dark:text-[#32ADFF]' : 'text-zinc-400'}`} /> Riwayat ({historyVideos.length})
                                         </button>
                                     </div>
 
-                                    {/* Video Grid Render */}
                                     {mediaTab === 'likes' && (
                                         likedVideos.length > 0 ? (
                                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
@@ -719,6 +719,41 @@ export default function Profile({ supabase }) {
                                             <div className="py-12 flex flex-col items-center justify-center text-center text-zinc-500 dark:text-zinc-400 space-y-2 bg-zinc-100 dark:bg-zinc-700/20 rounded-2xl transition-colors">
                                                 <Heart className="w-8 h-8 opacity-40 text-zinc-400 dark:text-zinc-500" />
                                                 <p className="text-xs font-bold">Belum ada video yang Anda sukai.</p>
+                                            </div>
+                                        )
+                                    )}
+
+                                    {mediaTab === 'saved' && (
+                                        savedVideos.length > 0 ? (
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
+                                                {savedVideos.map((vid) => (
+                                                    <a
+                                                        key={vid.id}
+                                                        href={`/streaming/${vid.slug || vid.id}`}
+                                                        className="group flex flex-col gap-2 outline-none"
+                                                        title={vid.title}
+                                                    >
+                                                        <div className="relative aspect-video rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-700/30 shadow-sm">
+                                                            <img
+                                                                src={getImageUrl(vid.img)}
+                                                                loading="lazy"
+                                                                alt={vid.title}
+                                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                            />
+                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                                <Play className="w-7 h-7 text-white fill-white drop-shadow-lg" />
+                                                            </div>
+                                                        </div>
+                                                        <h3 className="text-xs font-bold text-zinc-800 dark:text-zinc-300 group-hover:text-[#106EBE] dark:group-hover:text-white truncate px-0.5 transition-colors">
+                                                            {vid.title}
+                                                        </h3>
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="py-12 flex flex-col items-center justify-center text-center text-zinc-500 dark:text-zinc-400 space-y-2 bg-zinc-100 dark:bg-zinc-700/20 rounded-2xl transition-colors">
+                                                <Bookmark className="w-8 h-8 opacity-40 text-zinc-400 dark:text-zinc-500" />
+                                                <p className="text-xs font-bold">Belum ada video yang Anda simpan.</p>
                                             </div>
                                         )
                                     )}
@@ -767,7 +802,6 @@ export default function Profile({ supabase }) {
 
             <Footer />
 
-            {/* Modal Konfirmasi Hapus Akun */}
             {showDeleteConfirm && (
                 <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
                     <div className="bg-white dark:bg-zinc-800 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-200 transition-colors">

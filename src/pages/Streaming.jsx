@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Play, Download, Clock, Share2, Heart, HardDrive, FolderArchive, Database, Server, X, ZoomIn, LayoutGrid, Loader2, ExternalLink, Lock, ChevronDown, Gift, Info, Search } from 'lucide-react';
+import { Play, Download, Clock, Share2, ThumbsUp, Bookmark, HardDrive, FolderArchive, Database, Server, X, ZoomIn, LayoutGrid, Loader2, ExternalLink, Lock, ChevronDown, Gift, Info, Search } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomPlayer from '../components/CustomPlayer';
@@ -34,8 +34,11 @@ export default function Streaming({ supabase }) {
     const [activeServer, setActiveServer] = useState('main');
     const [isServerDropdownOpen, setIsServerDropdownOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
+
     const [likes, setLikes] = useState(0);
     const [hasLiked, setHasLiked] = useState(false);
+    const [hasBookmarked, setHasBookmarked] = useState(false);
+
     const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
     const [modalStatus, setModalStatus] = useState('waiting');
     const [modalProgress, setModalProgress] = useState(0);
@@ -45,6 +48,8 @@ export default function Streaming({ supabase }) {
     const [hasCommented, setHasCommented] = useState(false);
 
     const [secureUrls, setSecureUrls] = useState({ main: '', alt: '', alt2: '', img: '' });
+
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -104,6 +109,15 @@ export default function Streaming({ supabase }) {
             } catch (error) { }
         }
         setHasCommented(isCommented);
+
+        let isBookmarked = false;
+        if (userEmail) {
+            try {
+                const { data: bookmarkData } = await supabase.from('user_bookmarks').select('id').eq('video_id', String(videoId)).eq('user_id', activeDeviceId).maybeSingle();
+                if (bookmarkData) isBookmarked = true;
+            } catch (error) { }
+        }
+        setHasBookmarked(isBookmarked);
 
         const uMain = vidData.trailer_url || '';
         const uAlt = vidData.alternative_server || '';
@@ -227,6 +241,28 @@ export default function Streaming({ supabase }) {
 
             await checkVipAccess(video.id, video, hasCommented, newHasLiked);
         } catch (e) { console.error("Like Error:", e); }
+    };
+
+    const handleBookmark = async () => {
+        if (!supabase || !video) return;
+
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session?.user) {
+            setIsLoginModalOpen(true);
+            return;
+        }
+
+        const newBookmarkState = !hasBookmarked;
+        setHasBookmarked(newBookmarkState);
+
+        try {
+            const { error } = await supabase.rpc('toggle_user_bookmark', { p_video_id: String(video.id) });
+            if (error) throw error;
+        } catch (error) {
+            console.error("Bookmark Error:", error);
+            setHasBookmarked(!newBookmarkState);
+        }
     };
 
     const handleShare = async () => {
@@ -363,15 +399,13 @@ export default function Streaming({ supabase }) {
                             ) : (<div className="text-zinc-400 dark:text-zinc-500 flex flex-col items-center p-12 border-none"><Play className="w-12 h-12 mb-2 opacity-50 border-none" /><p className="border-none">Video unavailable</p></div>)}
                         </div>
 
-                        {/* 🔥 ACTION BAR: SERVER & DOWNLOAD (CENTER ALIGNED & BLUE CONSISTENT) 🔥 */}
+                        {/* ACTION BAR: SERVER & DOWNLOAD */}
                         {isVipUnlocked && (
-                            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mt-4 mb-3 border-none w-full">
-
-                                {/* Pilihan Server */}
+                            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mt-4 mb-1 border-none w-full">
                                 <div className="relative min-w-0 border-none">
                                     {serverOptions.length > 1 ? (
                                         <>
-                                            <button onClick={() => setIsServerDropdownOpen(!isServerDropdownOpen)} className="flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl text-[12px] sm:text-[13px] font-bold transition-all bg-[#106EBE] hover:bg-[#0e5c9f] text-white shadow-md dark:shadow-[0_5px_15px_rgba(16,110,190,0.3)] border-none relative z-[101] outline-none cursor-pointer">
+                                            <button onClick={() => setIsServerDropdownOpen(!isServerDropdownOpen)} className="flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-[12px] sm:text-[13px] font-bold transition-all bg-[#106EBE] hover:bg-[#0e5c9f] text-white shadow-md dark:shadow-[0_5px_15px_rgba(16,110,190,0.3)] border-none relative z-[101] outline-none cursor-pointer">
                                                 <Server className="w-4 h-4 shrink-0 text-white border-none" />
                                                 <span className="truncate border-none">{activeServerLabel}</span>
                                                 <ChevronDown className={`w-4 h-4 transition-transform duration-300 shrink-0 border-none ${isServerDropdownOpen ? 'rotate-180' : ''}`} />
@@ -386,38 +420,54 @@ export default function Streaming({ supabase }) {
                                             </div>
                                         </>
                                     ) : serverOptions.length === 1 ? (
-                                        <button className="flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl text-[12px] sm:text-[13px] font-bold transition-all bg-[#106EBE] text-white shadow-md dark:shadow-[0_5px_15px_rgba(16,110,190,0.3)] cursor-default outline-none border-none">
+                                        <button className="flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-[12px] sm:text-[13px] font-bold transition-all bg-[#106EBE] text-white shadow-md dark:shadow-[0_5px_15px_rgba(16,110,190,0.3)] cursor-default outline-none border-none">
                                             <Server className="w-4 h-4 shrink-0 text-white border-none" /> {serverOptions[0].label}
                                         </button>
                                     ) : null}
                                 </div>
 
-                                {/* Tombol Download */}
                                 {hasDownloadLink && (
-                                    <button onClick={() => { setIsDownloadModalOpen(true); setModalStatus('waiting'); setModalProgress(0); }} className="flex items-center justify-center gap-2 bg-[#106EBE] hover:bg-[#0e5c9f] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl text-[12px] sm:text-[13px] font-bold transition-all shadow-md hover:shadow-lg dark:shadow-[0_5px_15px_rgba(16,110,190,0.3)] outline-none border-none shrink-0 cursor-pointer">
+                                    <button onClick={() => { setIsDownloadModalOpen(true); setModalStatus('waiting'); setModalProgress(0); }} className="flex items-center justify-center gap-2 bg-[#106EBE] hover:bg-[#0e5c9f] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-[12px] sm:text-[13px] font-bold transition-all shadow-md hover:shadow-lg dark:shadow-[0_5px_15px_rgba(16,110,190,0.3)] outline-none border-none shrink-0 cursor-pointer">
                                         <Download className="w-4 h-4 shrink-0 border-none" /> Download
                                     </button>
                                 )}
                             </div>
                         )}
 
-                        <div className="bg-zinc-100 dark:bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] flex flex-col gap-5 border-none shadow-none transition-colors">
+                        <div className="bg-zinc-100 dark:bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] flex flex-col gap-4 border-none shadow-none transition-colors">
                             <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-zinc-900 dark:text-white leading-snug tracking-tight transition-colors border-none" title={video?.title}>{video?.title}</h1>
-                            <div className="flex flex-wrap items-center gap-4 text-xs sm:text-[13px] text-zinc-500 dark:text-zinc-400 font-medium transition-colors border-none">
-                                <span className="flex items-center gap-1.5 border-none"><Clock className="w-3.5 h-3.5 text-[#106EBE] border-none" /> {video?.created_at ? new Date(video.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</span>
-                                {video?.duration && video.duration !== 'EMPTY' && <span className="flex items-center gap-1.5 border-none"><Clock className="w-3.5 h-3.5 text-[#106EBE] border-none" /> {video.duration}</span>}
-                                {video?.size && video.size !== 'EMPTY' && <span className="flex items-center gap-1.5 border-none"><HardDrive className="w-3.5 h-3.5 text-[#106EBE] border-none" /> {video.size}</span>}
-                                {video?.type && video.type !== 'EMPTY' && <span className="flex items-center gap-1.5 border-none"><FolderArchive className="w-3.5 h-3.5 text-[#106EBE] border-none" /> {video.type}</span>}
-                                {video?.source && video.source !== 'EMPTY' && <span className="flex items-center gap-1.5 border-none"><Database className="w-3.5 h-3.5 text-[#106EBE] border-none" /> {video.source}</span>}
-                                <SynopsisTooltip text={video?.sinopsis || ''} />
-                            </div>
-                            <div className="flex flex-wrap items-center gap-3 w-full pt-2 border-none">
-                                <button onClick={handleLike} className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all text-xs sm:text-sm outline-none border-none cursor-pointer ${hasLiked ? 'bg-[#106EBE] text-white shadow-md dark:shadow-[0_5px_15px_rgba(16,110,190,0.3)]' : 'bg-white dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white'}`}>
-                                    <Heart className={`w-4 h-4 transition-all duration-300 border-none ${hasLiked ? 'fill-current scale-110' : ''}`} /> <span className="border-none">{likes > 0 ? formatViews(likes) : 'Like'}</span>
-                                </button>
-                                <button onClick={handleShare} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all text-xs sm:text-sm bg-white dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white outline-none border-none cursor-pointer">
-                                    <Share2 className="w-4 h-4 border-none" /> <span className="border-none">Share</span>
-                                </button>
+
+                            {/* 🔥 INFO & BUTTONS ROW 🔥 */}
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 w-full pt-1 border-none">
+
+                                {/* Info Video */}
+                                <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-[13px] text-zinc-500 dark:text-zinc-400 font-medium transition-colors border-none">
+                                    <span className="flex items-center gap-1.5 border-none"><Clock className="w-3.5 h-3.5 text-[#106EBE] border-none" /> {video?.created_at ? new Date(video.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</span>
+                                    {video?.duration && video.duration !== 'EMPTY' && <span className="flex items-center gap-1.5 border-none"><Clock className="w-3.5 h-3.5 text-[#106EBE] border-none" /> {video.duration}</span>}
+                                    {video?.size && video.size !== 'EMPTY' && <span className="flex items-center gap-1.5 border-none"><HardDrive className="w-3.5 h-3.5 text-[#106EBE] border-none" /> {video.size}</span>}
+                                    {video?.type && video.type !== 'EMPTY' && <span className="flex items-center gap-1.5 border-none"><FolderArchive className="w-3.5 h-3.5 text-[#106EBE] border-none" /> {video.type}</span>}
+                                    {video?.source && video.source !== 'EMPTY' && <span className="flex items-center gap-1.5 border-none"><Database className="w-3.5 h-3.5 text-[#106EBE] border-none" /> {video.source}</span>}
+                                    <SynopsisTooltip text={video?.sinopsis || ''} />
+                                </div>
+
+                                {/* Grup Tombol Interaksi (Like, Bookmark, Share) */}
+                                <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0 border-none">
+                                    <button onClick={handleLike} className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-full font-bold transition-all text-xs sm:text-[13px] outline-none border-none cursor-pointer ${hasLiked ? 'bg-[#106EBE] text-white shadow-md dark:shadow-[0_5px_15px_rgba(16,110,190,0.3)]' : 'bg-white dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white'}`}>
+                                        <ThumbsUp className={`w-4 h-4 transition-all duration-300 border-none ${hasLiked ? 'fill-current scale-110' : ''}`} />
+                                        <span className="border-none">{likes > 0 ? formatViews(likes) : 'Like'}</span>
+                                    </button>
+
+                                    {/* 🔥 TOMBOL BOOKMARK DENGAN TEKS "SAVE/SAVED" 🔥 */}
+                                    <button onClick={handleBookmark} className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-full font-bold transition-all text-xs sm:text-[13px] outline-none border-none cursor-pointer ${hasBookmarked ? 'bg-[#106EBE] text-white shadow-md dark:shadow-[0_5px_15px_rgba(16,110,190,0.3)]' : 'bg-white dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white'}`}>
+                                        <Bookmark className={`w-4 h-4 transition-all duration-300 border-none ${hasBookmarked ? 'fill-current scale-110' : ''}`} />
+                                        <span className="border-none">{hasBookmarked ? 'Saved' : 'Save'}</span>
+                                    </button>
+
+                                    <button onClick={handleShare} className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-full font-bold transition-all text-xs sm:text-[13px] bg-white dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white outline-none border-none cursor-pointer">
+                                        <Share2 className="w-4 h-4 border-none" />
+                                        <span className="border-none hidden sm:inline-block">Share</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -485,7 +535,16 @@ export default function Streaming({ supabase }) {
                 </div>
             )}
 
-            {/* 🔥 MODAL DOWNLOAD (KOTAK BERSIH & MODERN) 🔥 */}
+            {isLoginModalOpen && (
+                <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300 border-none transition-colors">
+                    <div className="bg-white dark:bg-zinc-900 p-8 rounded-2xl max-w-sm w-full text-center shadow-2xl animate-in zoom-in-95 border-none">
+                        <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-3">Harap Sign In</h3>
+                        <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">Anda harus masuk ke akun Google Anda untuk bisa menggunakan fitur Bookmark.</p>
+                        <button onClick={() => setIsLoginModalOpen(false)} className="px-6 py-3 w-full bg-[#106EBE] text-white font-bold rounded-xl outline-none border-none">Tutup</button>
+                    </div>
+                </div>
+            )}
+
             {isDownloadModalOpen && (
                 <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300 border-none transition-colors">
                     <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-8 max-w-md w-full shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-300 relative border-none">
