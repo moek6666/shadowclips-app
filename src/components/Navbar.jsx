@@ -261,7 +261,7 @@ export default function Navbar({ isScrolled, supabase }) {
                                                 <div className="h-px bg-zinc-100 dark:bg-zinc-800 my-1 border-none"></div>
 
                                                 <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-bold text-red-500 dark:text-white hover:bg-red-50 dark:hover:bg-white/10 rounded-xl transition-colors outline-none border-none cursor-pointer text-left">
-                                                    <LogOut className="w-4 h-4 border-none" /> Log Out
+                                                    <LogOut className="w-4 h-4 border-none" /> Logout
                                                 </button>
                                             </div>
                                         </div>
@@ -269,7 +269,7 @@ export default function Navbar({ isScrolled, supabase }) {
                                 </div>
                             ) : (
                                 <button onClick={() => setIsLoginModalOpen(true)} className="flex items-center gap-2 text-sm font-bold text-white bg-[#106EBE] hover:bg-[#0e5c9f] px-4 py-2 rounded-xl transition-all shadow-md hover:shadow-lg outline-none border-none cursor-pointer">
-                                    <User className="w-4 h-4 border-none" /> Log In
+                                    <User className="w-4 h-4 border-none" /> Login
                                 </button>
                             )}
                         </div>
