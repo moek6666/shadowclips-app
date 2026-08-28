@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     Shield,
     Crown,
@@ -18,7 +18,9 @@ import {
     Trophy,
     Trash2,
     CheckCircle2,
-    ChevronDown
+    ChevronDown,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -59,6 +61,16 @@ export default function Profile({ supabase }) {
     const [historyVideos, setHistoryVideos] = useState([]);
     const [savedVideos, setSavedVideos] = useState([]);
 
+    // 🔥 REF UNTUK SLIDER SAVED VIDEO 🔥
+    const savedScrollRef = useRef(null);
+
+    const scrollSaved = (direction) => {
+        if (savedScrollRef.current) {
+            const scrollAmount = direction === 'left' ? -300 : 300;
+            savedScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        }
+    };
+
     const fetchActivityData = useCallback(async (currentSession) => {
         if (!supabase) return;
         try {
@@ -83,7 +95,6 @@ export default function Profile({ supabase }) {
             if (userId) queryIds.push(userId);
             if (localDevId) queryIds.push(localDevId);
 
-            // Fetch Likes
             if (queryIds.length > 0) {
                 const { data: likesData, error: likesError } = await supabase
                     .from('user_likes')
@@ -110,7 +121,6 @@ export default function Profile({ supabase }) {
                 }
             }
 
-            // Fetch History
             const localHistory = JSON.parse(localStorage.getItem('shadowclips_history') || '[]');
             if (localHistory && localHistory.length > 0) {
                 const limitedHistory = localHistory.slice(0, 12);
@@ -128,14 +138,13 @@ export default function Profile({ supabase }) {
                 setHistoryVideos([]);
             }
 
-            // Fetch Bookmarks (Saved Videos)
             if (userId) {
                 const { data: bookmarkData, error: bookmarkError } = await supabase
                     .from('user_bookmarks')
                     .select('video_id')
                     .eq('user_id', userId)
                     .order('created_at', { ascending: false })
-                    .limit(12);
+                    .limit(20); // Ditingkatkan limitnya karena menggunakan slider
 
                 if (!bookmarkError && bookmarkData && bookmarkData.length > 0) {
                     const bVideoIds = [...new Set(bookmarkData.map((b) => b.video_id))];
@@ -723,32 +732,55 @@ export default function Profile({ supabase }) {
                                         )
                                     )}
 
+                                    {/* 🔥 SLIDER KHUSUS TAB SAVED 🔥 */}
                                     {mediaTab === 'saved' && (
                                         savedVideos.length > 0 ? (
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
-                                                {savedVideos.map((vid) => (
-                                                    <a
-                                                        key={vid.id}
-                                                        href={`/streaming/${vid.slug || vid.id}`}
-                                                        className="group flex flex-col gap-2 outline-none"
-                                                        title={vid.title}
-                                                    >
-                                                        <div className="relative aspect-video rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-700/30 shadow-sm">
-                                                            <img
-                                                                src={getImageUrl(vid.img)}
-                                                                loading="lazy"
-                                                                alt={vid.title}
-                                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                            />
-                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                                <Play className="w-7 h-7 text-white fill-white drop-shadow-lg" />
+                                            <div className="relative group/slider">
+
+                                                <button
+                                                    onClick={() => scrollSaved('left')}
+                                                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/80 dark:bg-zinc-800/80 backdrop-blur-md shadow-md flex items-center justify-center text-zinc-600 dark:text-zinc-300 opacity-0 group-hover/slider:opacity-100 hover:bg-white dark:hover:bg-zinc-700 transition-all outline-none border-none pointer-events-auto"
+                                                >
+                                                    <ChevronLeft className="w-5 h-5" />
+                                                </button>
+
+                                                <div
+                                                    ref={savedScrollRef}
+                                                    className="flex overflow-x-auto gap-3.5 pb-2 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
+                                                    style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}
+                                                >
+                                                    {savedVideos.map((vid) => (
+                                                        <a
+                                                            key={vid.id}
+                                                            href={`/streaming/${vid.slug || vid.id}`}
+                                                            className="shrink-0 w-[150px] sm:w-[180px] snap-start group flex flex-col gap-2 outline-none"
+                                                            title={vid.title}
+                                                        >
+                                                            <div className="relative aspect-video rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-700/30 shadow-sm">
+                                                                <img
+                                                                    src={getImageUrl(vid.img)}
+                                                                    loading="lazy"
+                                                                    alt={vid.title}
+                                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                                />
+                                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                                    <Play className="w-7 h-7 text-white fill-white drop-shadow-lg" />
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                        <h3 className="text-xs font-bold text-zinc-800 dark:text-zinc-300 group-hover:text-[#106EBE] dark:group-hover:text-white truncate px-0.5 transition-colors">
-                                                            {vid.title}
-                                                        </h3>
-                                                    </a>
-                                                ))}
+                                                            <h3 className="text-xs font-bold text-zinc-800 dark:text-zinc-300 group-hover:text-[#106EBE] dark:group-hover:text-white truncate px-0.5 transition-colors">
+                                                                {vid.title}
+                                                            </h3>
+                                                        </a>
+                                                    ))}
+                                                </div>
+
+                                                <button
+                                                    onClick={() => scrollSaved('right')}
+                                                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/80 dark:bg-zinc-800/80 backdrop-blur-md shadow-md flex items-center justify-center text-zinc-600 dark:text-zinc-300 opacity-0 group-hover/slider:opacity-100 hover:bg-white dark:hover:bg-zinc-700 transition-all outline-none border-none pointer-events-auto"
+                                                >
+                                                    <ChevronRight className="w-5 h-5" />
+                                                </button>
+
                                             </div>
                                         ) : (
                                             <div className="py-12 flex flex-col items-center justify-center text-center text-zinc-500 dark:text-zinc-400 space-y-2 bg-zinc-100 dark:bg-zinc-700/20 rounded-2xl transition-colors">
