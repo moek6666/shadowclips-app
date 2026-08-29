@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">shadowclips-app</string>
+    <string name="title_activity_main">shadowclips-app</string>
+    <string name="package_name">com.shadowclips.app</string>
+    <string name="custom_url_scheme">com.shadowclips.app</string>
+</resources>
