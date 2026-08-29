@@ -1,0 +1,20 @@
+name: Generate Keystore
+
+on: workflow_dispatch
+
+jobs:
+  create-key:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Eksekusi Pembuat Kunci
+        run: |
+          keytool -genkey -v -keystore shadowclips.jks -keyalg RSA -keysize 2048 -validity 10000 -alias shadowclips -dname "CN=Shadowclips, OU=App, O=Shadowclips, L=Jakarta, S=DKI, C=ID" -storepass 123456 -keypass 123456
+          base64 -w 0 shadowclips.jks > keystore_base64.txt
+
+      - name: Upload Kunci ke Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: shadowclips-keystore-files
+          path: |
+            shadowclips.jks
+            keystore_base64.txt
