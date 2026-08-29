@@ -1,12 +1,13 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { App as CapApp } from '@capacitor/app';
-import { SplashScreen as CapSplash } from '@capacitor/splash-screen'; // <-- TAMBAHAN: Plugin Splash Asli
+import { SplashScreen as CapSplash } from '@capacitor/splash-screen';
+import { Capacitor } from '@capacitor/core'; // <-- Import Capacitor Core untuk mendeteksi perangkat
 
 // 1. IMPORT KOMPONEN GLOBAL
 import AgeVerification from './components/AgeVerification';
 import AntiAdBlock from './components/AntiAdBlock';
 import ExoclickPopunder from './components/ExoclickPopunder';
-import CustomSplashScreen from './components/SplashScreen'; // <-- TAMBAHAN: Komponen Splash Animasi Kita
+import CustomSplashScreen from './components/SplashScreen';
 
 // 2. CODE SPLITTING / LAZY LOADING HALAMAN
 const Home = lazy(() => import('./pages/Home'));
@@ -43,11 +44,16 @@ const loadSupabase = () => {
 
 export default function App() {
     const [supabase, setSupabase] = useState(null);
-    const [showSplash, setShowSplash] = useState(true); // <-- TAMBAHAN: State pengontrol animasi pembuka
+
+    // Splash Screen HANYA bernilai TRUE jika dibuka dari aplikasi (APK/iOS).
+    // Jika dibuka lewat Website/Browser, nilainya otomatis FALSE.
+    const [showSplash, setShowSplash] = useState(Capacitor.isNativePlatform());
 
     useEffect(() => {
-        // Sembunyikan seketika Splash Screen Native Android agar React Splash mengambil alih
-        CapSplash.hide().catch(() => { });
+        // Sembunyikan Splash Screen Native Android hanya jika berjalan di perangkat Native
+        if (Capacitor.isNativePlatform()) {
+            CapSplash.hide().catch(() => { });
+        }
 
         loadSupabase().then((supa) => {
             const client = supa.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -82,7 +88,7 @@ export default function App() {
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
-            {/* TAMBAHAN: Merender Animasi Pembuka di lapisan paling atas */}
+            {/* Animasi Pembuka HANYA TAMPIL JIKA showSplash bernilai true (Di APK Android) */}
             {showSplash && <CustomSplashScreen onFinish={() => setShowSplash(false)} />}
 
             <AgeVerification />
