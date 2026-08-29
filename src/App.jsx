@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { App as CapApp } from '@capacitor/app';
 import { SplashScreen as CapSplash } from '@capacitor/splash-screen';
-import { Capacitor } from '@capacitor/core'; // <-- Import Capacitor Core untuk mendeteksi perangkat
+import { Capacitor } from '@capacitor/core';
 
 // 1. IMPORT KOMPONEN GLOBAL
 import AgeVerification from './components/AgeVerification';
@@ -44,15 +44,18 @@ const loadSupabase = () => {
 
 export default function App() {
     const [supabase, setSupabase] = useState(null);
-
-    // Splash Screen HANYA bernilai TRUE jika dibuka dari aplikasi (APK/iOS).
-    // Jika dibuka lewat Website/Browser, nilainya otomatis FALSE.
-    const [showSplash, setShowSplash] = useState(Capacitor.isNativePlatform());
+    
+    // KUNCI UTAMA: Splash screen HANYA tampil sekali di sesi pertama aplikasi dibuka (Native + Belum pernah dimuat)
+    const [showSplash, setShowSplash] = useState(() => {
+        if (!Capacitor.isNativePlatform()) return false;
+        const hasLoadedBefore = sessionStorage.getItem('shadowclips_splash_shown');
+        if (hasLoadedBefore) return false;
+        return true;
+    });
 
     useEffect(() => {
-        // Sembunyikan Splash Screen Native Android hanya jika berjalan di perangkat Native
         if (Capacitor.isNativePlatform()) {
-            CapSplash.hide().catch(() => { });
+            CapSplash.hide().catch(() => {});
         }
 
         loadSupabase().then((supa) => {
@@ -60,13 +63,15 @@ export default function App() {
             setSupabase(client);
         });
 
-        // Penanganan tombol kembali (back button) khusus Android APK
+        // PERBAIKAN TOMBOL BACK ANDROID: Mencegah langsung keluar saat navigasi dalam
         const backButtonListener = CapApp.addListener('backButton', ({ canGoBack }) => {
-            if (window.location.pathname === '/') {
-                // Jika berada di halaman utama, keluar aplikasi
+            const currentPath = window.location.pathname;
+            
+            if (currentPath === '/') {
+                // Jika benar-benar di halaman utama paling luar, baru keluar aplikasi
                 CapApp.exitApp();
-            } else if (canGoBack || window.history.length > 1) {
-                // Mundur ke halaman sebelumnya
+            } else if (window.history.length > 1) {
+                // Jika masih ada riwayat halaman sebelumnya (termasuk klik card/detail), mundur normal
                 window.history.back();
             } else {
                 CapApp.exitApp();
@@ -78,6 +83,14 @@ export default function App() {
         };
     }, []);
 
+    // Fungsi saat splash screen selesai, tandai di sesi bahwa sudah ditampilkan
+    const handleSplashFinish = () => {
+        setShowSplash(false);
+        if (Capacitor.isNativePlatform()) {
+            sessionStorage.setItem('shadowclips_splash_shown', 'true');
+        }
+    };
+
     const pathname = window.location.pathname;
 
     return (
@@ -88,8 +101,8 @@ export default function App() {
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
-            {/* Animasi Pembuka HANYA TAMPIL JIKA showSplash bernilai true (Di APK Android) */}
-            {showSplash && <CustomSplashScreen onFinish={() => setShowSplash(false)} />}
+            {/* Splash screen hanya dirender jika showSplash true */}
+            {showSplash && <CustomSplashScreen onFinish={handleSplashFinish} />}
 
             <AgeVerification />
             <AntiAdBlock />
