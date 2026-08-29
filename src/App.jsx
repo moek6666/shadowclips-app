@@ -1,13 +1,9 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { App as CapApp } from '@capacitor/app';
-import { SplashScreen as CapSplash } from '@capacitor/splash-screen';
-import { Capacitor } from '@capacitor/core';
 
 // 1. IMPORT KOMPONEN GLOBAL
 import AgeVerification from './components/AgeVerification';
 import AntiAdBlock from './components/AntiAdBlock';
 import ExoclickPopunder from './components/ExoclickPopunder';
-import CustomSplashScreen from './components/SplashScreen';
 
 // 2. CODE SPLITTING / LAZY LOADING HALAMAN
 const Home = lazy(() => import('./pages/Home'));
@@ -45,67 +41,12 @@ const loadSupabase = () => {
 export default function App() {
     const [supabase, setSupabase] = useState(null);
 
-    // Splash screen HANYA tampil sekali di sesi pertama aplikasi dibuka (Native + Belum pernah dimuat)
-    const [showSplash, setShowSplash] = useState(() => {
-        if (!Capacitor.isNativePlatform()) return false;
-        const hasLoadedBefore = sessionStorage.getItem('shadowclips_splash_shown');
-        if (hasLoadedBefore) return false;
-        return true;
-    });
-
     useEffect(() => {
-        if (Capacitor.isNativePlatform()) {
-            CapSplash.hide().catch(() => { });
-        }
-
         loadSupabase().then((supa) => {
             const client = supa.createClient(SUPABASE_URL, SUPABASE_KEY);
             setSupabase(client);
         });
-
-        // Tangkap URL balikan dari login Google/Discord OAuth (Deep Linking APK)
-        const urlListener = CapApp.addListener('appUrlOpen', async ({ url }) => {
-            if (url && url.includes('com.shadowclips.app')) {
-                const queryParams = new URL(url.replace('#', '?')).searchParams;
-                const accessToken = queryParams.get('access_token');
-                const refreshToken = queryParams.get('refresh_token');
-
-                if (accessToken && refreshToken && window.supabase) {
-                    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                    await client.auth.setSession({
-                        access_token: accessToken,
-                        refresh_token: refreshToken,
-                    });
-                    window.location.href = '/profile';
-                }
-            }
-        });
-
-        // Penanganan tombol kembali (back button) khusus Android APK agar tidak langsung exit
-        const backButtonListener = CapApp.addListener('backButton', ({ canGoBack }) => {
-            const currentPath = window.location.pathname;
-
-            if (currentPath === '/') {
-                CapApp.exitApp();
-            } else if (window.history.length > 1) {
-                window.history.back();
-            } else {
-                CapApp.exitApp();
-            }
-        });
-
-        return () => {
-            urlListener.then(listener => listener.remove());
-            backButtonListener.then(listener => listener.remove());
-        };
     }, []);
-
-    const handleSplashFinish = () => {
-        setShowSplash(false);
-        if (Capacitor.isNativePlatform()) {
-            sessionStorage.setItem('shadowclips_splash_shown', 'true');
-        }
-    };
 
     const pathname = window.location.pathname;
 
@@ -116,8 +57,6 @@ export default function App() {
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
-
-            {showSplash && <CustomSplashScreen onFinish={handleSplashFinish} />}
 
             <AgeVerification />
             <AntiAdBlock />
