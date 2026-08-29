@@ -3,36 +3,36 @@
   "WorkspaceRootPath": "F:\\shadowclips-app\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\shadowclips-app\\src\\pages\\Koleksi.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\pages\\Koleksi.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\shadowclips-app\\src\\pages\\Streaming.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\pages\\Streaming.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\shadowclips-app\\src\\pages\\Home.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\pages\\Home.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\shadowclips-app\\src\\pages\\Populer.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\pages\\Populer.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\shadowclips-app\\src\\pages\\LegalPages.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\pages\\LegalPages.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\shadowclips-app\\src\\pages\\DetailKoleksi.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\pages\\DetailKoleksi.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\shadowclips-app\\src\\components\\Footer.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\Footer.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\shadowclips-app\\src\\components\\Navbar.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\Navbar.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\shadowclips-app\\src\\components\\Footer.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\components\\Footer.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\shadowclips-app\\src\\pages\\DetailKoleksi.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\pages\\DetailKoleksi.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\shadowclips-app\\src\\pages\\Home.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\pages\\Home.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\shadowclips-app\\src\\pages\\Koleksi.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\pages\\Koleksi.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\shadowclips-app\\src\\pages\\LegalPages.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\pages\\LegalPages.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\shadowclips-app\\src\\pages\\Populer.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\pages\\Populer.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\shadowclips-app\\src\\pages\\Streaming.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\pages\\Streaming.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     }
   ],
   "DocumentGroupContainers": [
@@ -42,11 +42,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 7,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 7,
               "Title": "Streaming.jsx",
               "DocumentMoniker": "F:\\shadowclips-app\\src\\pages\\Streaming.jsx",
               "RelativeDocumentMoniker": "src\\pages\\Streaming.jsx",
@@ -59,72 +59,70 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 6,
               "Title": "Populer.jsx",
               "DocumentMoniker": "F:\\shadowclips-app\\src\\pages\\Populer.jsx",
               "RelativeDocumentMoniker": "src\\pages\\Populer.jsx",
               "ToolTip": "F:\\shadowclips-app\\src\\pages\\Populer.jsx",
               "RelativeToolTip": "src\\pages\\Populer.jsx",
-              "ViewState": "AgIAACwAAAAAAAAAAAAEwDYAAAArAAAAAAAAAA==",
+              "ViewState": "AgIAACwAAAAAAAAAAAAEwDYAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
               "WhenOpened": "2026-07-29T13:55:20.407Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "LegalPages.jsx",
               "DocumentMoniker": "F:\\shadowclips-app\\src\\pages\\LegalPages.jsx",
               "RelativeDocumentMoniker": "src\\pages\\LegalPages.jsx",
               "ToolTip": "F:\\shadowclips-app\\src\\pages\\LegalPages.jsx",
               "RelativeToolTip": "src\\pages\\LegalPages.jsx",
-              "ViewState": "AgIAACAAAAAAAAAAAAAEwCoAAAA2AAAAAAAAAA==",
+              "ViewState": "AgIAACAAAAAAAAAAAAAEwCoAAAAmAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
               "WhenOpened": "2026-07-29T13:55:13.591Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 4,
               "Title": "Koleksi.jsx",
               "DocumentMoniker": "F:\\shadowclips-app\\src\\pages\\Koleksi.jsx",
               "RelativeDocumentMoniker": "src\\pages\\Koleksi.jsx",
               "ToolTip": "F:\\shadowclips-app\\src\\pages\\Koleksi.jsx",
               "RelativeToolTip": "src\\pages\\Koleksi.jsx",
-              "ViewState": "AgIAAIIAAAAAAAAAAAAYwLQAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAHoAAAAAAAAAAAAAAHoAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
               "WhenOpened": "2026-07-29T13:55:06.004Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "Home.jsx",
               "DocumentMoniker": "F:\\shadowclips-app\\src\\pages\\Home.jsx",
               "RelativeDocumentMoniker": "src\\pages\\Home.jsx",
               "ToolTip": "F:\\shadowclips-app\\src\\pages\\Home.jsx",
               "RelativeToolTip": "src\\pages\\Home.jsx",
-              "ViewState": "AgIAANoAAAAAAAAAAAAcwAwBAAABAAAAAAAAAA==",
+              "ViewState": "AgIAANkAAAAAAAAAAAAAANkAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
               "WhenOpened": "2026-07-29T13:54:34.562Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 2,
               "Title": "DetailKoleksi.jsx",
               "DocumentMoniker": "F:\\shadowclips-app\\src\\pages\\DetailKoleksi.jsx",
               "RelativeDocumentMoniker": "src\\pages\\DetailKoleksi.jsx",
               "ToolTip": "F:\\shadowclips-app\\src\\pages\\DetailKoleksi.jsx",
               "RelativeToolTip": "src\\pages\\DetailKoleksi.jsx",
-              "ViewState": "AgIAADgAAAAAAAAAAAAEwEIAAAA2AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
-              "WhenOpened": "2026-07-29T13:54:23.76Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-29T13:54:23.76Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 1,
               "Title": "Navbar.jsx",
               "DocumentMoniker": "F:\\shadowclips-app\\src\\components\\Navbar.jsx",
               "RelativeDocumentMoniker": "src\\components\\Navbar.jsx",
@@ -137,7 +135,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 0,
               "Title": "Footer.jsx",
               "DocumentMoniker": "F:\\shadowclips-app\\src\\components\\Footer.jsx",
               "RelativeDocumentMoniker": "src\\components\\Footer.jsx",

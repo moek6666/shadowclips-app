@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
+import { App as CapApp } from '@capacitor/app';
 
 // 1. IMPORT KOMPONEN GLOBAL
 import AgeVerification from './components/AgeVerification';
@@ -46,6 +47,23 @@ export default function App() {
             const client = supa.createClient(SUPABASE_URL, SUPABASE_KEY);
             setSupabase(client);
         });
+
+        // Penanganan tombol kembali (back button) khusus Android APK
+        const backButtonListener = CapApp.addListener('backButton', ({ canGoBack }) => {
+            if (window.location.pathname === '/') {
+                // Jika berada di halaman utama, keluar aplikasi
+                CapApp.exitApp();
+            } else if (canGoBack || window.history.length > 1) {
+                // Mundur ke halaman sebelumnya
+                window.history.back();
+            } else {
+                CapApp.exitApp();
+            }
+        });
+
+        return () => {
+            backButtonListener.then(listener => listener.remove());
+        };
     }, []);
 
     const pathname = window.location.pathname;
@@ -61,8 +79,6 @@ export default function App() {
             <AgeVerification />
             <AntiAdBlock />
             <ExoclickPopunder />
-
-       
 
             <Suspense fallback={
                 <div className="min-h-screen bg-zinc-50 dark:bg-[#121212] flex items-center justify-center transition-colors duration-300">
