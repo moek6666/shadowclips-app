@@ -1,10 +1,12 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { App as CapApp } from '@capacitor/app';
+import { SplashScreen as CapSplash } from '@capacitor/splash-screen'; // <-- TAMBAHAN: Plugin Splash Asli
 
 // 1. IMPORT KOMPONEN GLOBAL
 import AgeVerification from './components/AgeVerification';
 import AntiAdBlock from './components/AntiAdBlock';
 import ExoclickPopunder from './components/ExoclickPopunder';
+import CustomSplashScreen from './components/SplashScreen'; // <-- TAMBAHAN: Komponen Splash Animasi Kita
 
 // 2. CODE SPLITTING / LAZY LOADING HALAMAN
 const Home = lazy(() => import('./pages/Home'));
@@ -41,8 +43,12 @@ const loadSupabase = () => {
 
 export default function App() {
     const [supabase, setSupabase] = useState(null);
+    const [showSplash, setShowSplash] = useState(true); // <-- TAMBAHAN: State pengontrol animasi pembuka
 
     useEffect(() => {
+        // Sembunyikan seketika Splash Screen Native Android agar React Splash mengambil alih
+        CapSplash.hide().catch(() => { });
+
         loadSupabase().then((supa) => {
             const client = supa.createClient(SUPABASE_URL, SUPABASE_KEY);
             setSupabase(client);
@@ -75,6 +81,9 @@ export default function App() {
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
+
+            {/* TAMBAHAN: Merender Animasi Pembuka di lapisan paling atas */}
+            {showSplash && <CustomSplashScreen onFinish={() => setShowSplash(false)} />}
 
             <AgeVerification />
             <AntiAdBlock />
