@@ -49,6 +49,10 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleRelease
 
+      - name: Install Android Build Tools
+        run: |
+          echo "y" | sudo ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "build-tools;29.0.3"
+
       - name: Sign Release APK
         uses: r0adkll/sign-android-release@v1
         id: sign_app
