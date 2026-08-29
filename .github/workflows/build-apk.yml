@@ -30,7 +30,6 @@ jobs:
       - name: Inject Capacitor Android
         run: |
           npm install @capacitor/android
-          npx cap add android
           npx cap sync
 
       - name: Setup Java Environment
