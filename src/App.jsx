@@ -44,8 +44,8 @@ const loadSupabase = () => {
 
 export default function App() {
     const [supabase, setSupabase] = useState(null);
-    
-    // KUNCI UTAMA: Splash screen HANYA tampil sekali di sesi pertama aplikasi dibuka (Native + Belum pernah dimuat)
+
+    // Splash screen HANYA tampil sekali di sesi pertama aplikasi dibuka (Native + Belum pernah dimuat)
     const [showSplash, setShowSplash] = useState(() => {
         if (!Capacitor.isNativePlatform()) return false;
         const hasLoadedBefore = sessionStorage.getItem('shadowclips_splash_shown');
@@ -55,7 +55,7 @@ export default function App() {
 
     useEffect(() => {
         if (Capacitor.isNativePlatform()) {
-            CapSplash.hide().catch(() => {});
+            CapSplash.hide().catch(() => { });
         }
 
         loadSupabase().then((supa) => {
@@ -63,15 +63,31 @@ export default function App() {
             setSupabase(client);
         });
 
-        // PERBAIKAN TOMBOL BACK ANDROID: Mencegah langsung keluar saat navigasi dalam
+        // Tangkap URL balikan dari login Google/Discord OAuth (Deep Linking APK)
+        const urlListener = CapApp.addListener('appUrlOpen', async ({ url }) => {
+            if (url && url.includes('com.shadowclips.app')) {
+                const queryParams = new URL(url.replace('#', '?')).searchParams;
+                const accessToken = queryParams.get('access_token');
+                const refreshToken = queryParams.get('refresh_token');
+
+                if (accessToken && refreshToken && window.supabase) {
+                    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    await client.auth.setSession({
+                        access_token: accessToken,
+                        refresh_token: refreshToken,
+                    });
+                    window.location.href = '/profile';
+                }
+            }
+        });
+
+        // Penanganan tombol kembali (back button) khusus Android APK agar tidak langsung exit
         const backButtonListener = CapApp.addListener('backButton', ({ canGoBack }) => {
             const currentPath = window.location.pathname;
-            
+
             if (currentPath === '/') {
-                // Jika benar-benar di halaman utama paling luar, baru keluar aplikasi
                 CapApp.exitApp();
             } else if (window.history.length > 1) {
-                // Jika masih ada riwayat halaman sebelumnya (termasuk klik card/detail), mundur normal
                 window.history.back();
             } else {
                 CapApp.exitApp();
@@ -79,11 +95,11 @@ export default function App() {
         });
 
         return () => {
+            urlListener.then(listener => listener.remove());
             backButtonListener.then(listener => listener.remove());
         };
     }, []);
 
-    // Fungsi saat splash screen selesai, tandai di sesi bahwa sudah ditampilkan
     const handleSplashFinish = () => {
         setShowSplash(false);
         if (Capacitor.isNativePlatform()) {
@@ -101,7 +117,6 @@ export default function App() {
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
-            {/* Splash screen hanya dirender jika showSplash true */}
             {showSplash && <CustomSplashScreen onFinish={handleSplashFinish} />}
 
             <AgeVerification />
@@ -113,7 +128,6 @@ export default function App() {
                     <div className="w-14 h-14 border-4 border-zinc-200 dark:border-zinc-800 border-t-[#106EBE] dark:border-t-[#106EBE] rounded-full animate-spin shadow-[0_0_20px_rgba(16,110,190,0.2)] dark:shadow-[0_0_20px_rgba(16,110,190,0.5)]"></div>
                 </div>
             }>
-                {/* LOGIKA ROUTING LENGKAP & BERSIH */}
                 {pathname.startsWith('/streaming/') ? (
                     <Streaming supabase={supabase} />
                 ) : pathname.startsWith('/page/') ? (
