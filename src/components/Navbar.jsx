@@ -268,7 +268,7 @@ export default function Navbar({ isScrolled, supabase }) {
                                     )}
                                 </div>
                             ) : (
-                                <button onClick={() => setIsLoginModalOpen(true)} className="flex items-center gap-2 text-sm font-bold text-white bg-[#106EBE] hover:bg-[#0e5c9f] px-4 py-2 rounded-xl transition-all shadow-md hover:shadow-lg outline-none border-none cursor-pointer">
+                                <button onClick={() => setIsLoginModalOpen(true)} className="flex items-center gap-2 text-[13px] font-bold text-white bg-[#106EBE] hover:bg-[#0e5c9f] px-4 py-1.5 rounded-[10px] transition-all shadow-sm hover:shadow outline-none border-none cursor-pointer">
                                     <User className="w-4 h-4 border-none" /> Login
                                 </button>
                             )}
@@ -320,7 +320,7 @@ export default function Navbar({ isScrolled, supabase }) {
                                 </div>
                             </div>
                         ) : (
-                            <button onClick={() => { setIsMobileMenuOpen(false); setIsLoginModalOpen(true); }} className="flex items-center gap-2 bg-[#106EBE] hover:bg-[#0e5c9f] text-white font-bold px-4 py-2 rounded-xl transition-colors shadow-md outline-none border-none">
+                            <button onClick={() => { setIsMobileMenuOpen(false); setIsLoginModalOpen(true); }} className="flex items-center gap-2 bg-[#106EBE] hover:bg-[#0e5c9f] text-white font-bold text-[13px] px-4 py-2 rounded-[10px] transition-colors shadow-sm outline-none border-none cursor-pointer">
                                 <User className="w-4 h-4 border-none" /> Sign In
                             </button>
                         )}

@@ -282,12 +282,12 @@ export default function Streaming({ supabase }) {
     if (fetchError || !video) return (
         <div className="min-h-screen bg-white dark:bg-zinc-950 flex flex-col items-center justify-center transition-colors px-4 text-center border-none">
             <Navbar isScrolled={true} supabase={supabase} />
-            <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mb-6 shadow-sm border-none mt-20">
+            <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-900 rounded-[10px] flex items-center justify-center mb-6 shadow-sm border-none mt-20">
                 <Search className="w-10 h-10 text-zinc-400 border-none" />
             </div>
             <h2 className="text-2xl font-black text-zinc-900 dark:text-white mb-2 border-none">Oops!</h2>
             <p className="text-zinc-500 font-medium mb-6 border-none max-w-lg">{fetchError}</p>
-            <a href="/" className="px-6 py-3 bg-[#106EBE] text-white rounded-xl font-bold shadow-md hover:bg-[#0e5c9f] transition-colors outline-none border-none">Kembali ke Beranda</a>
+            <a href="/" className="px-6 py-3 bg-[#106EBE] text-white rounded-[10px] font-bold shadow-md hover:bg-[#0e5c9f] transition-colors outline-none border-none">Kembali ke Beranda</a>
         </div>
     );
 
@@ -332,14 +332,14 @@ export default function Streaming({ supabase }) {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 border-none">
                     <div className="lg:col-span-8 flex flex-col gap-4 border-none">
 
-                        <div className={`w-full ${!isVipUnlocked ? 'aspect-auto min-h-[350px] sm:min-h-0 sm:aspect-video' : (currentVideoUrl || showGallery ? 'aspect-video' : 'min-h-[400px] max-h-[80vh]')} bg-zinc-100 dark:bg-zinc-950 rounded-[1.5rem] overflow-hidden relative flex items-center justify-center shadow-md dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-none transition-colors`}>
+                        <div className={`w-full ${!isVipUnlocked ? 'aspect-auto min-h-[350px] sm:min-h-0 sm:aspect-video' : (currentVideoUrl || showGallery ? 'aspect-video' : 'min-h-[400px] max-h-[80vh]')} bg-zinc-100 dark:bg-zinc-950 rounded-[1.5rem] overflow-hidden relative flex items-center justify-center shadow-none border-none transition-colors`}>
                             {!isVipUnlocked ? (
                                 lockReason === 'payment' ? (
                                     <div className="absolute inset-0 flex flex-col items-center justify-center p-4 sm:p-8 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-3xl z-50 text-center transition-colors overflow-y-auto border-none">
                                         <div className="absolute inset-0 z-[-1] opacity-10 dark:opacity-20 pointer-events-none border-none">
                                             <img src={coverImage} className="w-full h-full object-cover blur-sm border-none" alt="locked background" />
                                         </div>
-                                        <div className="w-12 h-12 sm:w-20 sm:h-20 bg-amber-500 rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-md dark:shadow-[0_0_40px_rgba(245,158,11,0.4)] mb-3 sm:mb-6 transform rotate-3 hover:rotate-0 transition-transform shrink-0 border-none">
+                                        <div className="w-12 h-12 sm:w-20 sm:h-20 bg-amber-500 rounded-[10px] sm:rounded-[10px] flex items-center justify-center shadow-md dark:shadow-[0_0_40px_rgba(245,158,11,0.4)] mb-3 sm:mb-6 transform rotate-3 hover:rotate-0 transition-transform shrink-0 border-none">
                                             <Lock className="w-6 h-6 sm:w-10 sm:h-10 text-white border-none" />
                                         </div>
                                         <h2 className="text-lg sm:text-3xl font-black text-zinc-900 dark:text-white mb-1.5 sm:mb-3 tracking-tight transition-colors border-none">Premium Content</h2>
@@ -347,10 +347,10 @@ export default function Streaming({ supabase }) {
                                             Video eksklusif ini terkunci. Dukung admin untuk terus mengembangkan ShadowClips dengan memberikan <strong className="text-zinc-900 dark:text-white border-none">Donasi (Min. Rp 10.000)</strong> via Saweria untuk membuka akses penuh.
                                         </p>
                                         <div className="flex flex-col items-center gap-2.5 sm:gap-4 w-full max-w-sm px-2 sm:px-0 border-none">
-                                            <a href="https://saweria.co/shadowclips" target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 sm:py-3.5 px-4 sm:px-6 rounded-xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-1 outline-none border-none text-[12px] sm:text-base">
+                                            <a href="https://saweria.co/shadowclips" target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-[10px] transition-all shadow-sm hover:shadow outline-none border-none text-[12px] sm:text-[13px]">
                                                 <Gift className="w-4 h-4 sm:w-5 sm:h-5 border-none shrink-0" /> Dukung & Donasi
                                             </a>
-                                            <div className="flex items-start gap-2 sm:gap-3 w-full bg-[#106EBE]/5 dark:bg-[#106EBE]/10 border border-[#106EBE]/20 dark:border-[#106EBE]/30 p-2.5 sm:p-4 rounded-xl text-left shadow-sm">
+                                            <div className="flex items-start gap-2 sm:gap-3 w-full bg-[#106EBE]/5 dark:bg-[#106EBE]/10 border border-[#106EBE]/20 dark:border-[#106EBE]/30 p-2.5 sm:p-4 rounded-[10px] text-left shadow-sm">
                                                 <Info className="w-4 h-4 sm:w-5 sm:h-5 text-[#106EBE] dark:text-[#32ADFF] shrink-0 mt-0.5 border-none" />
                                                 <p className="text-[9px] sm:text-[12px] text-zinc-700 dark:text-zinc-300 leading-snug sm:leading-relaxed border-none"><strong className="text-[#106EBE] dark:text-[#32ADFF] border-none">Perhatian:</strong> Wajib mencantumkan <strong className="border-none">Email Google</strong> Anda pada pesan donasi agar sistem memberikan akses.</p>
                                             </div>
@@ -361,7 +361,7 @@ export default function Streaming({ supabase }) {
                                         <div className="absolute inset-0 z-[-1] opacity-10 dark:opacity-20 pointer-events-none border-none">
                                             <img src={coverImage} className="w-full h-full object-cover blur-sm border-none" alt="locked background" />
                                         </div>
-                                        <div className="w-12 h-12 sm:w-20 sm:h-20 bg-gradient-to-br from-[#106EBE] to-[#0e5c9f] rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-md dark:shadow-[0_0_40px_rgba(16,110,190,0.6)] mb-3 sm:mb-6 transform rotate-3 hover:rotate-0 transition-transform shrink-0 border-none">
+                                        <div className="w-12 h-12 sm:w-20 sm:h-20 bg-gradient-to-br from-[#106EBE] to-[#0e5c9f] rounded-[10px] sm:rounded-[10px] flex items-center justify-center shadow-md dark:shadow-[0_0_40px_rgba(16,110,190,0.6)] mb-3 sm:mb-6 transform rotate-3 hover:rotate-0 transition-transform shrink-0 border-none">
                                             <Lock className="w-6 h-6 sm:w-10 h-10 text-white border-none" />
                                         </div>
                                         <h2 className="text-lg sm:text-3xl font-black text-zinc-900 dark:text-white mb-1.5 sm:mb-3 tracking-tight transition-colors border-none">VIP Content Locked</h2>
@@ -374,7 +374,7 @@ export default function Streaming({ supabase }) {
                                             </span>
                                             <a
                                                 href="/tutorial"
-                                                className="text-xs sm:text-sm font-bold text-[#106EBE] dark:text-[#32ADFF] hover:text-[#0e5c9f] dark:hover:text-white transition-colors underline decoration-[#106EBE] dark:decoration-[#32ADFF] hover:decoration-[#0e5c9f] dark:hover:decoration-white underline-offset-4 outline-none border-none cursor-pointer drop-shadow-md text-center"
+                                                className="text-xs sm:text-[13px] font-bold text-[#106EBE] dark:text-[#32ADFF] hover:text-[#0e5c9f] dark:hover:text-white transition-colors underline decoration-[#106EBE] dark:decoration-[#32ADFF] hover:decoration-[#0e5c9f] dark:hover:decoration-white underline-offset-4 outline-none border-none cursor-pointer drop-shadow-md text-center"
                                             >
                                                 Cek panduan (Tutorial) di sini
                                             </a>
@@ -390,7 +390,7 @@ export default function Streaming({ supabase }) {
                                             <div key={idx} onClick={() => setSelectedImage(imgUrl)} className="relative group cursor-pointer aspect-[3/4] rounded-2xl overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none shadow-sm dark:shadow-lg hover:shadow-md dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.6)] transition-all duration-500">
                                                 <img src={imgUrl} alt={`Gallery Image ${idx + 2}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 select-none border-none" draggable="false" loading="lazy" />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-500 border-none">
-                                                    <div className="bg-white/10 backdrop-blur-md p-3 sm:p-4 rounded-full transform scale-50 group-hover:scale-100 transition-transform duration-500 shadow-[0_0_20px_rgba(0,0,0,0.5)] border-none"><ZoomIn className="w-6 h-6 sm:w-8 sm:h-8 text-white drop-shadow-md border-none" /></div>
+                                                    <div className="bg-white/10 backdrop-blur-md p-3 sm:p-4 rounded-[10px] transform scale-50 group-hover:scale-100 transition-transform duration-500 shadow-[0_0_20px_rgba(0,0,0,0.5)] border-none"><ZoomIn className="w-6 h-6 sm:w-8 sm:h-8 text-white drop-shadow-md border-none" /></div>
                                                 </div>
                                             </div>
                                         ))}
@@ -405,30 +405,30 @@ export default function Streaming({ supabase }) {
                                 <div className="relative min-w-0 border-none">
                                     {serverOptions.length > 1 ? (
                                         <>
-                                            <button onClick={() => setIsServerDropdownOpen(!isServerDropdownOpen)} className="flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-[12px] sm:text-[13px] font-bold transition-all bg-[#106EBE] hover:bg-[#0e5c9f] text-white shadow-md dark:shadow-[0_5px_15px_rgba(16,110,190,0.3)] border-none relative z-[101] outline-none cursor-pointer">
+                                            <button onClick={() => setIsServerDropdownOpen(!isServerDropdownOpen)} className="flex items-center justify-center gap-2 px-4 py-1.5 sm:py-2 rounded-[10px] text-[13px] font-bold transition-all bg-[#106EBE] hover:bg-[#0e5c9f] text-white shadow-sm hover:shadow relative z-40 outline-none cursor-pointer border-none">
                                                 <Server className="w-4 h-4 shrink-0 text-white border-none" />
                                                 <span className="truncate border-none">{activeServerLabel}</span>
                                                 <ChevronDown className={`w-4 h-4 transition-transform duration-300 shrink-0 border-none ${isServerDropdownOpen ? 'rotate-180' : ''}`} />
                                             </button>
-                                            {isServerDropdownOpen && <div className="fixed inset-0 z-[90] border-none" onClick={() => setIsServerDropdownOpen(false)}></div>}
-                                            <div className={`absolute top-full right-0 sm:left-0 sm:right-auto mt-2 w-40 bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-none overflow-hidden z-[100] flex flex-col py-1.5 transition-all duration-300 origin-top ${isServerDropdownOpen ? 'opacity-100 scale-y-100 visible' : 'opacity-0 scale-y-95 invisible'}`}>
+                                            {isServerDropdownOpen && <div className="fixed inset-0 z-30 border-none" onClick={() => setIsServerDropdownOpen(false)}></div>}
+                                            <div className={`absolute top-full right-0 sm:left-0 sm:right-auto mt-2 w-40 bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-none overflow-hidden z-40 flex flex-col py-1.5 transition-all duration-300 origin-top ${isServerDropdownOpen ? 'opacity-100 scale-y-100 visible' : 'opacity-0 scale-y-95 invisible'}`}>
                                                 {serverOptions.map(option => (
-                                                    <button key={option.id} onClick={() => { setActiveServer(option.id); setIsServerDropdownOpen(false); }} className={`flex items-center gap-2.5 px-4 py-2.5 text-[12px] sm:text-[13px] font-bold transition-colors w-full text-left outline-none border-none cursor-pointer ${effectiveServer === option.id ? 'text-[#106EBE] dark:text-[#32ADFF] bg-zinc-50 dark:bg-zinc-800/50' : 'text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}>
+                                                    <button key={option.id} onClick={() => { setActiveServer(option.id); setIsServerDropdownOpen(false); }} className={`flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-bold transition-colors w-full text-left outline-none border-none cursor-pointer ${effectiveServer === option.id ? 'text-[#106EBE] dark:text-[#32ADFF] bg-zinc-50 dark:bg-zinc-800/50' : 'text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}>
                                                         <Server className="w-4 h-4 shrink-0 border-none" /> {option.label}
                                                     </button>
                                                 ))}
                                             </div>
                                         </>
                                     ) : serverOptions.length === 1 ? (
-                                        <button className="flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-[12px] sm:text-[13px] font-bold transition-all bg-[#106EBE] text-white shadow-md dark:shadow-[0_5px_15px_rgba(16,110,190,0.3)] cursor-default outline-none border-none">
-                                            <Server className="w-4 h-4 shrink-0 text-white border-none" /> {serverOptions[0].label}
+                                        <button className="flex items-center justify-center gap-2 px-4 py-1.5 sm:py-2 rounded-[10px] text-[13px] font-bold transition-all bg-[#106EBE] text-white shadow-sm cursor-default outline-none border-none">
+                                            <Server className="w-4 h-4 shrink-0 text-white border-none" /> <span className="border-none">{serverOptions[0].label}</span>
                                         </button>
                                     ) : null}
                                 </div>
 
                                 {hasDownloadLink && (
-                                    <button onClick={() => { setIsDownloadModalOpen(true); setModalStatus('waiting'); setModalProgress(0); }} className="flex items-center justify-center gap-2 bg-[#106EBE] hover:bg-[#0e5c9f] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-[12px] sm:text-[13px] font-bold transition-all shadow-md hover:shadow-lg dark:shadow-[0_5px_15px_rgba(16,110,190,0.3)] outline-none border-none shrink-0 cursor-pointer">
-                                        <Download className="w-4 h-4 shrink-0 border-none" /> Download
+                                    <button onClick={() => { setIsDownloadModalOpen(true); setModalStatus('waiting'); setModalProgress(0); }} className="flex items-center justify-center gap-2 px-4 py-1.5 sm:py-2 rounded-[10px] text-[13px] font-bold transition-all bg-[#106EBE] hover:bg-[#0e5c9f] text-white shadow-sm hover:shadow outline-none border-none shrink-0 cursor-pointer">
+                                        <Download className="w-4 h-4 shrink-0 border-none" /> <span className="border-none">Download</span>
                                     </button>
                                 )}
                             </div>
@@ -437,11 +437,11 @@ export default function Streaming({ supabase }) {
                         <div className="bg-zinc-100 dark:bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] flex flex-col gap-4 border-none shadow-none transition-colors">
                             <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-zinc-900 dark:text-white leading-snug tracking-tight transition-colors border-none" title={video?.title}>{video?.title}</h1>
 
-                            {/* 🔥 INFO & BUTTONS ROW 🔥 */}
+                            {/* INFO & BUTTONS ROW */}
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 w-full pt-1 border-none">
 
                                 {/* Info Video */}
-                                <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-[13px] text-zinc-500 dark:text-zinc-400 font-medium transition-colors border-none">
+                                <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[13px] text-zinc-500 dark:text-zinc-400 font-medium transition-colors border-none">
                                     <span className="flex items-center gap-1.5 border-none"><Clock className="w-3.5 h-3.5 text-[#106EBE] border-none" /> {video?.created_at ? new Date(video.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</span>
                                     {video?.duration && video.duration !== 'EMPTY' && <span className="flex items-center gap-1.5 border-none"><Clock className="w-3.5 h-3.5 text-[#106EBE] border-none" /> {video.duration}</span>}
                                     {video?.size && video.size !== 'EMPTY' && <span className="flex items-center gap-1.5 border-none"><HardDrive className="w-3.5 h-3.5 text-[#106EBE] border-none" /> {video.size}</span>}
@@ -452,18 +452,17 @@ export default function Streaming({ supabase }) {
 
                                 {/* Grup Tombol Interaksi (Like, Bookmark, Share) */}
                                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0 border-none">
-                                    <button onClick={handleLike} className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-full font-bold transition-all text-xs sm:text-[13px] outline-none border-none cursor-pointer ${hasLiked ? 'bg-[#106EBE] text-white shadow-md dark:shadow-[0_5px_15px_rgba(16,110,190,0.3)]' : 'bg-white dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white'}`}>
+                                    <button onClick={handleLike} className={`flex items-center justify-center gap-2 px-4 py-1.5 sm:py-2 rounded-[10px] text-[13px] font-bold transition-all outline-none border-none cursor-pointer ${hasLiked ? 'bg-[#106EBE] text-white shadow-sm hover:shadow' : 'bg-white dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white'}`}>
                                         <ThumbsUp className={`w-4 h-4 transition-all duration-300 border-none ${hasLiked ? 'fill-current scale-110' : ''}`} />
                                         <span className="border-none">{likes > 0 ? formatViews(likes) : 'Like'}</span>
                                     </button>
 
-                                    {/* 🔥 TOMBOL BOOKMARK DENGAN TEKS "SAVE/SAVED" 🔥 */}
-                                    <button onClick={handleBookmark} className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-full font-bold transition-all text-xs sm:text-[13px] outline-none border-none cursor-pointer ${hasBookmarked ? 'bg-[#106EBE] text-white shadow-md dark:shadow-[0_5px_15px_rgba(16,110,190,0.3)]' : 'bg-white dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white'}`}>
+                                    <button onClick={handleBookmark} className={`flex items-center justify-center gap-2 px-4 py-1.5 sm:py-2 rounded-[10px] text-[13px] font-bold transition-all outline-none border-none cursor-pointer ${hasBookmarked ? 'bg-[#106EBE] text-white shadow-sm hover:shadow' : 'bg-white dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white'}`}>
                                         <Bookmark className={`w-4 h-4 transition-all duration-300 border-none ${hasBookmarked ? 'fill-current scale-110' : ''}`} />
                                         <span className="border-none">{hasBookmarked ? 'Saved' : 'Save'}</span>
                                     </button>
 
-                                    <button onClick={handleShare} className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-full font-bold transition-all text-xs sm:text-[13px] bg-white dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white outline-none border-none cursor-pointer">
+                                    <button onClick={handleShare} className="flex items-center justify-center gap-2 px-4 py-1.5 sm:py-2 rounded-[10px] text-[13px] font-bold transition-all bg-white dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white outline-none border-none cursor-pointer">
                                         <Share2 className="w-4 h-4 border-none" />
                                         <span className="border-none hidden sm:inline-block">Share</span>
                                     </button>
@@ -537,17 +536,17 @@ export default function Streaming({ supabase }) {
 
             {isLoginModalOpen && (
                 <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300 border-none transition-colors">
-                    <div className="bg-white dark:bg-zinc-900 p-8 rounded-2xl max-w-sm w-full text-center shadow-2xl animate-in zoom-in-95 border-none">
+                    <div className="bg-white dark:bg-zinc-900 p-8 rounded-[10px] max-w-sm w-full text-center shadow-2xl animate-in zoom-in-95 border-none">
                         <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-3">Harap Sign In</h3>
                         <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">Anda harus masuk ke akun Google Anda untuk bisa menggunakan fitur Bookmark.</p>
-                        <button onClick={() => setIsLoginModalOpen(false)} className="px-6 py-3 w-full bg-[#106EBE] text-white font-bold rounded-xl outline-none border-none">Tutup</button>
+                        <button onClick={() => setIsLoginModalOpen(false)} className="px-4 py-2 w-full bg-[#106EBE] text-white text-[13px] font-bold rounded-[10px] shadow-sm hover:shadow outline-none border-none">Tutup</button>
                     </div>
                 </div>
             )}
 
             {isDownloadModalOpen && (
                 <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300 border-none transition-colors">
-                    <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-8 max-w-md w-full shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-300 relative border-none">
+                    <div className="bg-white dark:bg-zinc-900 rounded-[10px] p-8 max-w-md w-full shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-300 relative border-none">
 
                         <button onClick={() => setIsDownloadModalOpen(false)} className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-white transition-colors outline-none border-none cursor-pointer">
                             <X className="w-5 h-5 border-none" />
@@ -592,7 +591,7 @@ export default function Streaming({ supabase }) {
                         </div>
 
                         <div className="w-full mb-8 flex flex-col items-center border-none">
-                            <div className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden mb-3 border-none transition-colors">
+                            <div className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-[10px] overflow-hidden mb-3 border-none transition-colors">
                                 <div className="h-full bg-[#106EBE] transition-all duration-75 ease-linear shadow-md dark:shadow-[0_0_15px_rgba(16,110,190,0.8)] border-none" style={{ width: `${modalProgress}%` }}></div>
                             </div>
                             <span className="text-[11px] font-bold text-zinc-500 tracking-wide h-4 border-none">
@@ -602,7 +601,7 @@ export default function Streaming({ supabase }) {
 
                         <div className="w-full border-none">
                             {modalStatus === 'waiting' ? (
-                                <button disabled className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-zinc-100 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 cursor-wait transition-all border-none outline-none font-bold text-[13px]">
+                                <button disabled className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-[10px] bg-zinc-100 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 cursor-wait transition-all border-none outline-none font-bold text-[13px]">
                                     <Loader2 className="w-4 h-4 animate-spin shrink-0 border-none" /><span className="border-none">Please wait...</span>
                                 </button>
                             ) : (
@@ -611,7 +610,7 @@ export default function Streaming({ supabase }) {
                                     if (targetUrl) window.open(targetUrl, '_blank');
                                     else alert("Download link is not available for this video.");
                                     setIsDownloadModalOpen(false);
-                                }} className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#106EBE] text-white hover:bg-[#0e5c9f] transition-all transform hover:-translate-y-0.5 shadow-md dark:shadow-[0_10px_20px_rgba(16,110,190,0.3)] border-none outline-none cursor-pointer font-bold text-[13px]">
+                                }} className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-[10px] bg-[#106EBE] text-white hover:bg-[#0e5c9f] transition-all transform hover:-translate-y-0.5 shadow-sm hover:shadow border-none outline-none cursor-pointer font-bold text-[13px]">
                                     <ExternalLink className="w-4 h-4 shrink-0 border-none" /><span className="border-none">Continue to download</span>
                                 </button>
                             )}
