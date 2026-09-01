@@ -22,6 +22,7 @@ import {
     ChevronLeft,
     ChevronRight
 } from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Avatar, { FRAME_OPTIONS } from '../components/Avatar';
@@ -61,7 +62,7 @@ export default function Profile({ supabase }) {
     const [historyVideos, setHistoryVideos] = useState([]);
     const [savedVideos, setSavedVideos] = useState([]);
 
-    // 🔥 REF UNTUK SLIDER SAVED VIDEO 🔥
+    // 櫨 REF UNTUK SLIDER SAVED VIDEO 櫨
     const savedScrollRef = useRef(null);
 
     const scrollSaved = (direction) => {
@@ -238,7 +239,6 @@ export default function Profile({ supabase }) {
         if (e) e.preventDefault();
         if (!supabase || !session) return;
         setIsSaving(true);
-        setNotification(null);
 
         try {
             const { error } = await supabase
@@ -249,11 +249,9 @@ export default function Profile({ supabase }) {
             if (error) throw error;
             setProfile((prev) => ({ ...prev, name: editName, avatar_url: editAvatarUrl, active_frame: editFrame }));
 
-            setNotification({ type: 'success', message: 'Profil berhasil diperbarui.' });
-            setTimeout(() => setNotification(null), 3500);
+            toast.success('Profil berhasil diperbarui.');
         } catch (err) {
-            setNotification({ type: 'error', message: 'Gagal memperbarui profil.' });
-            setTimeout(() => setNotification(null), 3500);
+            toast.error('Gagal memperbarui profil.');
         } finally {
             setIsSaving(false);
         }
@@ -331,6 +329,7 @@ export default function Profile({ supabase }) {
 
     return (
         <div className="min-h-screen flex flex-col bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-200 font-sans antialiased transition-colors duration-200">
+            <Toaster position="top-center" reverseOrder={false} />
             <Navbar isScrolled={true} supabase={supabase} />
 
             {notification && (
@@ -732,7 +731,7 @@ export default function Profile({ supabase }) {
                                         )
                                     )}
 
-                                    {/* 🔥 SLIDER KHUSUS TAB SAVED 🔥 */}
+                                    {/* 櫨 SLIDER KHUSUS TAB SAVED 櫨 */}
                                     {mediaTab === 'saved' && (
                                         savedVideos.length > 0 ? (
                                             <div className="relative group/slider">

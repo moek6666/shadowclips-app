@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Play, Download, Clock, Share2, ThumbsUp, Bookmark, HardDrive, FolderArchive, Database, Server, X, ZoomIn, LayoutGrid, Loader2, ExternalLink, Lock, ChevronDown, Gift, Info, Search } from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomPlayer from '../components/CustomPlayer';
@@ -240,7 +241,10 @@ export default function Streaming({ supabase }) {
             }
 
             await checkVipAccess(video.id, video, hasCommented, newHasLiked);
-        } catch (e) { console.error("Like Error:", e); }
+        } catch (e) {
+            console.error("Like Error:", e);
+            toast.error("Gagal menyukai video.");
+        }
     };
 
     const handleBookmark = async () => {
@@ -259,17 +263,32 @@ export default function Streaming({ supabase }) {
         try {
             const { error } = await supabase.rpc('toggle_user_bookmark', { p_video_id: String(video.id) });
             if (error) throw error;
+
+            if (newBookmarkState) {
+                toast.success('Video berhasil disimpan ke koleksi!');
+            } else {
+                toast.success('Video dihapus dari koleksi.');
+            }
         } catch (error) {
             console.error("Bookmark Error:", error);
             setHasBookmarked(!newBookmarkState);
+            toast.error("Terjadi kesalahan saat menyimpan video.");
         }
     };
 
     const handleShare = async () => {
         try {
-            if (navigator.share) await navigator.share({ title: video?.title || 'ShadowClips', url: window.location.href });
-            else { await navigator.clipboard.writeText(window.location.href); alert('Link copied!'); }
-        } catch (err) { }
+            if (navigator.share) {
+                await navigator.share({ title: video?.title || 'ShadowClips', url: window.location.href });
+            } else {
+                await navigator.clipboard.writeText(window.location.href);
+                toast.success('Link berhasil disalin ke clipboard!');
+            }
+        } catch (err) {
+            if (err.name !== 'AbortError') {
+                toast.error("Gagal membagikan link.");
+            }
+        }
     };
 
     if (loading) return (
@@ -327,6 +346,7 @@ export default function Streaming({ supabase }) {
 
     return (
         <>
+            <Toaster position="top-center" reverseOrder={false} />
             <Navbar isScrolled={isScrolled} supabase={supabase} />
             <div className="pt-24 pb-20 max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 min-h-screen relative transition-colors border-none">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 border-none">
@@ -608,7 +628,9 @@ export default function Streaming({ supabase }) {
                                 <button onClick={() => {
                                     const targetUrl = video.embed_url || video.url_download;
                                     if (targetUrl) window.open(targetUrl, '_blank');
-                                    else alert("Download link is not available for this video.");
+                                    else {
+                                        toast.error("Link download tidak tersedia untuk video ini.");
+                                    }
                                     setIsDownloadModalOpen(false);
                                 }} className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-[10px] bg-[#106EBE] text-white hover:bg-[#0e5c9f] transition-all transform hover:-translate-y-0.5 shadow-sm hover:shadow border-none outline-none cursor-pointer font-bold text-[13px]">
                                     <ExternalLink className="w-4 h-4 shrink-0 border-none" /><span className="border-none">Continue to download</span>
