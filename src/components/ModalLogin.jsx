@@ -19,6 +19,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
     const [isForgotPass, setIsForgotPass] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [username, setUsername] = useState('');
     const [loading, setLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
@@ -29,11 +30,44 @@ function ModalLogin({ isOpen, onClose, supabase }) {
 
     if (!isOpen) return null;
 
+    // Kalkulator Kekuatan Password
+    const getPasswordStrength = (pass) => {
+        let score = 0;
+        if (!pass) return score;
+        if (pass.length > 5) score += 20;
+        if (pass.length >= 8) score += 20;
+        if (/[A-Z]/.test(pass)) score += 20;
+        if (/[0-9]/.test(pass)) score += 20;
+        if (/[^A-Za-z0-9]/.test(pass)) score += 20;
+        return score;
+    };
+
+    const strengthScore = getPasswordStrength(password);
+    let strengthColor = 'bg-slate-200 dark:bg-zinc-700';
+    let strengthText = '';
+
+    if (password) {
+        if (strengthScore <= 40) { strengthColor = 'bg-red-500'; strengthText = 'Weak'; }
+        else if (strengthScore <= 80) { strengthColor = 'bg-yellow-500'; strengthText = 'Fair'; }
+        else { strengthColor = 'bg-green-500'; strengthText = 'Strong'; }
+    }
+
     const handleEmailAuth = async (e) => {
         e.preventDefault();
         if (!supabase || !captchaToken) {
             setErrorMsg('Silakan selesaikan verifikasi keamanan terlebih dahulu.');
             return;
+        }
+
+        if (!isLogin && !isForgotPass) {
+            if (!username.trim()) {
+                setErrorMsg('Username wajib diisi saat mendaftar!');
+                return;
+            }
+            if (!email.toLowerCase().endsWith('@gmail.com')) {
+                setErrorMsg('Hanya alamat email @gmail.com yang diizinkan untuk mendaftar!');
+                return;
+            }
         }
 
         setLoading(true);
@@ -53,14 +87,27 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                 onClose();
                 window.location.reload();
             } else {
-                const { error } = await supabase.auth.signUp({
+                const { data, error } = await supabase.auth.signUp({
                     email,
                     password,
                     options: {
-                        emailRedirectTo: `${window.location.origin}/verified-success`
+                        emailRedirectTo: `${window.location.origin}/verified-success`,
+                        data: {
+                            name: username,
+                        }
                     }
                 });
                 if (error) throw error;
+
+                if (data?.user) {
+                    const { error: profileError } = await supabase.from('profiles').upsert({
+                        id: data.user.id,
+                        name: username,
+                    }, { onConflict: 'id' });
+
+                    if (profileError) console.warn("Sinkronisasi profil gagal:", profileError.message);
+                }
+
                 window.location.href = '/verify-email';
             }
         } catch (err) {
@@ -111,7 +158,6 @@ function ModalLogin({ isOpen, onClose, supabase }) {
         setErrorMsg('Proses login Google dibatalkan atau gagal.');
     };
 
-    // Fungsi khusus pengaman untuk Android APK agar tidak error saat tombol Google ditekan
     const handleAndroidGoogleLogin = async () => {
         if (!supabase) return;
         setLoading(true);
@@ -162,14 +208,10 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                 className="relative w-full max-w-[1000px] bg-white dark:bg-[#0E1116] rounded-2xl md:rounded-[1.5rem] shadow-2xl shadow-slate-300/50 dark:shadow-[0_20px_60px_rgba(0,0,0,0.9)] animate-in zoom-in-95 duration-300 border-none overflow-hidden flex flex-col md:flex-row min-h-[600px] transition-colors"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* KOLOM KIRI (POSTER NETFLIX STYLE) */}
                 <div className="hidden md:flex flex-col w-[55%] p-10 lg:p-12 relative overflow-hidden bg-slate-100 dark:bg-[#07090D] border-none transition-colors">
-
-                    {/* Efek Cahaya Orb (Tetap Dipertahankan) */}
                     <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500/10 dark:bg-blue-600/20 blur-[100px] rounded-full pointer-events-none z-0"></div>
                     <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-500/10 dark:bg-blue-600/15 blur-[100px] rounded-full pointer-events-none z-0"></div>
 
-                    {/* BACKGROUND POSTER WALL (NETFLIX STYLE) */}
                     <div className="absolute inset-[-25%] z-0 transform -rotate-[8deg] scale-[1.15] pointer-events-none flex gap-3 opacity-40 dark:opacity-30">
                         {[0, 1, 2, 3].map((colIdx) => (
                             <div key={colIdx} className={`flex flex-col gap-3 w-1/4 ${colIdx % 2 === 0 ? 'translate-y-[-15%]' : 'translate-y-[5%]'}`}>
@@ -222,7 +264,6 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                         <polygon points="0,0 45,52.5 0,100" fill="url(#grad-left-modal)" />
                                     </g>
                                 </svg>
-
                                 <h3 className="text-[28px] lg:text-[32px] font-black tracking-tighter text-slate-900 dark:text-white leading-none">
                                     Shadow<span className="text-[#3b82f6]">Clips</span>
                                 </h3>
@@ -257,7 +298,6 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                     </div>
                 </div>
 
-                {/* KOLOM KANAN (FORM) */}
                 <div className="w-full md:w-[45%] p-8 sm:p-12 flex flex-col justify-center relative bg-white dark:bg-[#0E1116]">
                     <button
                         type="button"
@@ -291,6 +331,23 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                         )}
 
                         <form onSubmit={handleEmailAuth} className="flex flex-col gap-4">
+                            {!isLogin && !isForgotPass && (
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-[12px] font-semibold text-slate-700 dark:text-zinc-300 ml-1">Username</label>
+                                    <div className="relative group">
+                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#3b82f6]" strokeWidth={1.5} />
+                                        <input
+                                            type="text"
+                                            placeholder="Enter your username"
+                                            value={username}
+                                            onChange={(e) => { setUsername(e.target.value); setErrorMsg(''); setSuccessMsg(''); }}
+                                            required
+                                            className="w-full bg-slate-100 dark:bg-[#161921] py-3 pl-11 pr-4 rounded-[8px] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#3b82f6]/50 text-[13px] border-none"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-[12px] font-semibold text-slate-700 dark:text-zinc-300 ml-1">Email Address</label>
                                 <div className="relative group">
@@ -307,8 +364,26 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                             </div>
 
                             {!isForgotPass && (
-                                <div className="flex flex-col gap-1.5">
-                                    <label className="text-[12px] font-semibold text-slate-700 dark:text-zinc-300 ml-1">Password</label>
+                                <div className="flex flex-col gap-1">
+                                    <div className="flex justify-between items-end ml-1 mb-0.5">
+                                        <label className="text-[12px] font-semibold text-slate-700 dark:text-zinc-300">Password</label>
+                                        {!isLogin && password.length > 0 && (
+                                            <span className={`text-[10px] font-bold ${strengthScore <= 40 ? 'text-red-500' : strengthScore <= 80 ? 'text-yellow-500' : 'text-green-500'}`}>
+                                                {strengthText}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Progress bar disembunyikan jika tidak ada input password */}
+                                    {!isLogin && password.length > 0 && (
+                                        <div className="w-full h-1 bg-slate-200 dark:bg-[#272A35] rounded-full overflow-hidden mb-1.5">
+                                            <div
+                                                className={`h-full transition-all duration-300 ${strengthColor}`}
+                                                style={{ width: `${strengthScore}%` }}
+                                            ></div>
+                                        </div>
+                                    )}
+
                                     <div className="relative group">
                                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#3b82f6]" strokeWidth={1.5} />
                                         <input
@@ -386,7 +461,6 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3 w-full mb-4">
-                                    {/* TOMBOL GOOGLE: Otomatis pakai GoogleLogin asli di Web, dan OAuth Native di Android APK */}
                                     {Capacitor.isNativePlatform() ? (
                                         <button
                                             type="button"
@@ -444,7 +518,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                             {!isForgotPass && (
                                 <button
                                     type="button"
-                                    onClick={() => { setIsLogin(!isLogin); setErrorMsg(''); setSuccessMsg(''); }}
+                                    onClick={() => { setIsLogin(!isLogin); setErrorMsg(''); setSuccessMsg(''); setUsername(''); setPassword(''); }}
                                     className="text-[#3b82f6] hover:underline font-semibold bg-transparent cursor-pointer border-none"
                                 >
                                     {isLogin ? 'Sign up' : 'Login'}
