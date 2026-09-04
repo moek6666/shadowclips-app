@@ -17,6 +17,7 @@ const Profile = lazy(() => import('./pages/Profile'));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const VerifiedSuccess = lazy(() => import('./pages/VerifiedSuccess'));
 const UpdatePassword = lazy(() => import('./pages/UpdatePassword'));
+const DownloadApk = lazy(() => import('./pages/DownloadApk'));
 
 // ROUTING FOLDER BARU
 const DetailCategory = lazy(() => import('./pages/Category/DetailCategory'));
@@ -73,6 +74,8 @@ export default function App() {
                     <LegalPages />
                 ) : pathname === '/tutorial' ? (
                     <Tutorial supabase={supabase} />
+                ) : pathname === '/download-apk' ? (
+                    <DownloadApk supabase={supabase} />
                 ) : pathname === '/populer' ? (
                     <Populer supabase={supabase} />
                 ) : pathname === '/koleksi' ? (

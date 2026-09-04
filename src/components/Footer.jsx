@@ -1,5 +1,5 @@
 import React from 'react';
-import { Send, AlertTriangle, Shield, FileText, Scale } from 'lucide-react';
+import { Send, AlertTriangle, Shield, FileText, Scale, Download } from 'lucide-react';
 
 export default function Footer() {
     return (
@@ -11,6 +11,9 @@ export default function Footer() {
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center lg:justify-end gap-5 sm:gap-6 font-medium border-none">
+                    <a href="/download-apk" className="flex items-center gap-1.5 group text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none">
+                        <Download className="w-4 h-4 text-zinc-500 dark:text-zinc-400 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors border-none" /> APK
+                    </a>
                     <a href="/page/dmca" className="flex items-center gap-1.5 group text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none">
                         <AlertTriangle className="w-4 h-4 text-zinc-500 dark:text-zinc-400 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors border-none" /> DMCA
                     </a>

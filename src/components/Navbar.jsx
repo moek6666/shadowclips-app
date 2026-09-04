@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import useSWR from 'swr';
-import { Search, Menu, X, Home, Compass, Flame, FolderOpen, Crown, ChevronDown, Sun, Moon, LogIn, LogOut, User, Settings } from 'lucide-react';
+import { Search, Menu, X, Home, Compass, Flame, FolderOpen, Crown, ChevronDown, Sun, Moon, LogIn, LogOut, User, Settings, Download } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
 import ModalLogin from './ModalLogin';
 import Avatar from './Avatar';
@@ -217,6 +217,10 @@ export default function Navbar({ isScrolled, supabase }) {
                                     )}
                                 </div>
                             </div>
+
+                            <a href="/download-apk" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ml-2 ${pathname === '/download-apk' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
+                                <Download className="w-4 h-4 border-none" /> APK
+                            </a>
                         </div>
                     </div>
 
@@ -356,6 +360,10 @@ export default function Navbar({ isScrolled, supabase }) {
                                 ))}
                             </div>
                         </div>
+
+                        <a href="/download-apk" className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors mt-2">
+                            <Download className="w-5 h-5 text-[#106EBE]" /> APK
+                        </a>
                     </div>
                 </div>
             </div>
