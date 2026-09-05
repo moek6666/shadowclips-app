@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import useSWR from 'swr';
-import { Play, Eye, Clock, FolderOpen } from 'lucide-react';
+import { Play, Clock, FolderOpen, Loader2 } from 'lucide-react';
 
 import { SiOnlyfans, SiTelegram } from 'react-icons/si';
 import { FaCrown, FaVideo, FaFire, FaBan, FaRandom, FaFilm, FaMask, FaMobileAlt, FaGlobeAmericas, FaGem, FaUserSecret, FaHeart } from 'react-icons/fa';
@@ -12,10 +12,6 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 const getImageUrl = (imgString) => imgString ? imgString.split(',')[0].trim() : '';
-const formatViews = (views) => {
-    if (!views) return '0';
-    return Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(views);
-};
 
 const getCategoryIcon = (categoryName) => {
     const name = categoryName.toLowerCase();
@@ -84,6 +80,7 @@ const getCategoryIcon = (categoryName) => {
 };
 
 export default function Jelajahi({ supabase }) {
+    const [visibleCategories, setVisibleCategories] = useState(5);
 
     useEffect(() => {
         document.title = "Explore Categories | ShadowClips";
@@ -91,7 +88,7 @@ export default function Jelajahi({ supabase }) {
 
     const fetchSemuaKategori = async () => {
         if (!supabase) throw new Error("Supabase not initialized");
-        const { data, error } = await supabase.from('videos').select('*').order('created_at', { ascending: false }).limit(300);
+        const { data, error } = await supabase.from('videos').select('*').order('created_at', { ascending: false }).limit(500);
 
         if (error) throw new Error(error.message);
 
@@ -121,19 +118,25 @@ export default function Jelajahi({ supabase }) {
         { revalidateOnFocus: false, dedupingInterval: 300000, keepPreviousData: true }
     );
 
+    const handleLoadMore = () => {
+        setVisibleCategories(prev => prev + 5);
+    };
+
+    const displayedCategories = kategoriData.slice(0, visibleCategories);
+    const hasMore = visibleCategories < kategoriData.length;
+
     return (
         <>
             <Navbar isScrolled={true} supabase={supabase} />
 
             <main className="max-w-[1440px] mx-auto px-4 sm:px-8 pt-32 pb-24 overflow-hidden">
-
                 {loading ? (
                     <div className="flex justify-center items-center py-32">
                         <div className="w-14 h-14 border-4 border-zinc-200 dark:border-zinc-800 border-t-[#106EBE] rounded-full animate-spin shadow-sm dark:shadow-[0_0_20px_rgba(16,110,190,0.5)]"></div>
                     </div>
-                ) : kategoriData.length > 0 ? (
+                ) : displayedCategories.length > 0 ? (
                     <div className="flex flex-col gap-20">
-                        {kategoriData.map(([kategori, videos]) => {
+                        {displayedCategories.map(([kategori, videos]) => {
                             const heroVideo = videos[0];
                             const subVideos = videos.slice(1, 5);
 
@@ -148,7 +151,6 @@ export default function Jelajahi({ supabase }) {
                                             <h2 className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors">{kategori}</h2>
                                         </div>
 
-                                        {/* 🔥 PERBAIKAN: "View All" dengan warna abu, tanpa angka, huruf sesuai, dan hover biru 🔥 */}
                                         <div className="flex items-center gap-1 text-zinc-500 dark:text-zinc-400 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors">
                                             <span className="text-sm font-bold tracking-wider hidden sm:block">View All</span>
                                         </div>
@@ -221,11 +223,22 @@ export default function Jelajahi({ supabase }) {
                                                 ))}
                                             </div>
                                         )}
-
                                     </div>
                                 </section>
                             );
                         })}
+
+                        {hasMore && (
+                            <div className="flex justify-center mt-10">
+                                <button
+                                    onClick={handleLoadMore}
+                                    className="flex items-center gap-2 px-8 py-3 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800/80 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-bold rounded-[10px] transition-colors outline-none border-none cursor-pointer shadow-sm hover:shadow-md"
+                                >
+                                    <Loader2 className="w-4 h-4 animate-spin text-zinc-500 hidden" />
+                                    Load More Categories
+                                </button>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div className="text-center text-zinc-500 py-32 bg-zinc-100 dark:bg-zinc-900/40 rounded-[4px] border border-zinc-200 dark:border-transparent mx-4 transition-colors">

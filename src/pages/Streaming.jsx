@@ -34,6 +34,10 @@ export default function Streaming({ supabase }) {
 
     const [activeServer, setActiveServer] = useState('main');
     const [isServerDropdownOpen, setIsServerDropdownOpen] = useState(false);
+
+    // State baru untuk transisi loading saat pindah server
+    const [isServerChanging, setIsServerChanging] = useState(false);
+
     const [selectedImage, setSelectedImage] = useState(null);
 
     const [likes, setLikes] = useState(0);
@@ -52,11 +56,19 @@ export default function Streaming({ supabase }) {
 
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
+    // State untuk mengontrol tampilan video asli vs cover image
+    const [isPlaying, setIsPlaying] = useState(false);
+
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    // Reset state play setiap kali ganti server atau ganti video
+    useEffect(() => {
+        setIsPlaying(false);
+    }, [activeServer, video?.id]);
 
     const checkVipAccess = useCallback(async (videoId, vidData, forceCommented = null, forceLiked = null) => {
         if (!supabase || !vidData) return;
@@ -402,7 +414,40 @@ export default function Streaming({ supabase }) {
                                     </div>
                                 )
                             ) : currentVideoUrl ? (
-                                isDirectVideo ? <CustomPlayer key={currentVideoUrl} src={currentVideoUrl} poster={coverImage} /> : <iframe key={currentVideoUrl} src={currentVideoUrl} className="w-full h-full object-contain border-none" frameBorder="0" allowFullScreen title={video.title}></iframe>
+                                <div className="relative w-full h-full border-none">
+                                    {/* Efek Loading Saat Ganti Server */}
+                                    {isServerChanging && (
+                                        <div className="absolute inset-0 z-[60] bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center border-none transition-all duration-300">
+                                            <Loader2 className="w-10 h-10 sm:w-12 sm:h-12 animate-spin text-[#106EBE] mb-3 border-none" />
+                                            <span className="text-white text-[13px] sm:text-sm font-bold tracking-wide border-none">
+                                                Menghubungkan ke {activeServerLabel}...
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {!isPlaying ? (
+                                        <div
+                                            className="relative w-full h-full cursor-pointer group flex items-center justify-center bg-black border-none"
+                                            onClick={() => setIsPlaying(true)}
+                                        >
+                                            <img
+                                                src={coverImage}
+                                                alt={video?.title || "Video Cover"}
+                                                className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-60 transition-opacity duration-300 border-none"
+                                                loading="lazy"
+                                            />
+                                            {/* Overlay gelap tipis agar tombol putih selalu terlihat jelas */}
+                                            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors duration-300 border-none z-10"></div>
+
+                                            {/* Tombol Play Putih Minimalis (Seragam dengan Card Hover) */}
+                                            <div className="absolute inset-0 flex items-center justify-center z-20 border-none">
+                                                <Play className="w-16 h-16 sm:w-20 sm:h-20 text-white/90 fill-current drop-shadow-2xl scale-90 group-hover:scale-110 transition-transform duration-300 border-none" />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        isDirectVideo ? <CustomPlayer key={currentVideoUrl} src={currentVideoUrl} poster={coverImage} autoPlay={true} /> : <iframe key={currentVideoUrl} src={currentVideoUrl} className="w-full h-full object-contain border-none" frameBorder="0" allowFullScreen allow="autoplay; fullscreen" title={video.title}></iframe>
+                                    )}
+                                </div>
                             ) : showGallery ? (
                                 <div className="w-full h-full overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar bg-zinc-100 dark:bg-zinc-950/40 transition-colors border-none" onContextMenu={(e) => e.preventDefault()}>
                                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 border-none">
@@ -433,7 +478,21 @@ export default function Streaming({ supabase }) {
                                             {isServerDropdownOpen && <div className="fixed inset-0 z-30 border-none" onClick={() => setIsServerDropdownOpen(false)}></div>}
                                             <div className={`absolute top-full right-0 sm:left-0 sm:right-auto mt-2 w-40 bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-none overflow-hidden z-40 flex flex-col py-1.5 transition-all duration-300 origin-top ${isServerDropdownOpen ? 'opacity-100 scale-y-100 visible' : 'opacity-0 scale-y-95 invisible'}`}>
                                                 {serverOptions.map(option => (
-                                                    <button key={option.id} onClick={() => { setActiveServer(option.id); setIsServerDropdownOpen(false); }} className={`flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-bold transition-colors w-full text-left outline-none border-none cursor-pointer ${effectiveServer === option.id ? 'text-[#106EBE] dark:text-[#32ADFF] bg-zinc-50 dark:bg-zinc-800/50' : 'text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}>
+                                                    <button
+                                                        key={option.id}
+                                                        onClick={() => {
+                                                            if (activeServer !== option.id) {
+                                                                setIsServerChanging(true);
+                                                                setActiveServer(option.id);
+                                                                setIsServerDropdownOpen(false);
+                                                                // Simulasi waktu pindah server agar animasi terlihat natural
+                                                                setTimeout(() => setIsServerChanging(false), 600);
+                                                            } else {
+                                                                setIsServerDropdownOpen(false);
+                                                            }
+                                                        }}
+                                                        className={`flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-bold transition-colors w-full text-left outline-none border-none cursor-pointer ${effectiveServer === option.id ? 'text-[#106EBE] dark:text-[#32ADFF] bg-zinc-50 dark:bg-zinc-800/50' : 'text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}
+                                                    >
                                                         <Server className="w-4 h-4 shrink-0 border-none" /> {option.label}
                                                     </button>
                                                 ))}
@@ -573,30 +632,11 @@ export default function Streaming({ supabase }) {
                         </button>
 
                         <div className="flex items-center justify-center gap-3 sm:gap-4 mb-6 w-full border-none">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-12 h-12 shrink-0 border-none drop-shadow-md">
-                                <defs>
-                                    <clipPath id="play-clip-modal">
-                                        <path d="M22 25.5C22 18.5 29.5 14 35.5 17.5L82.5 44.5C88.5 48 88.5 57 82.5 60.5L35.5 87.5C29.5 91 22 86.5 22 79.5V25.5Z" />
-                                    </clipPath>
-                                    <linearGradient id="grad-top-modal" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stopColor="#32ADFF" />
-                                        <stop offset="100%" stopColor="#007AFF" />
-                                    </linearGradient>
-                                    <linearGradient id="grad-left-modal" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stopColor="#007AFF" />
-                                        <stop offset="100%" stopColor="#0052CC" />
-                                    </linearGradient>
-                                    <linearGradient id="grad-bottom-modal" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stopColor="#003D82" />
-                                        <stop offset="100%" stopColor="#001233" />
-                                    </linearGradient>
-                                </defs>
-                                <g clipPath="url(#play-clip-modal)">
-                                    <polygon points="0,0 100,0 100,52.5 45,52.5" fill="url(#grad-top-modal)" />
-                                    <polygon points="0,100 45,52.5 100,52.5 100,100" fill="url(#grad-bottom-modal)" />
-                                    <polygon points="0,0 45,52.5 0,100" fill="url(#grad-left-modal)" />
-                                </g>
-                            </svg>
+                            <img
+                                src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/New%20Logo%20Shadowclips.webp"
+                                alt="ShadowClips Logo"
+                                className="w-12 h-12 shrink-0 border-none drop-shadow-md object-contain"
+                            />
                             <div className="flex flex-col justify-center text-left border-none">
                                 <span className="text-xl sm:text-2xl font-black tracking-tighter text-zinc-900 dark:text-white leading-none mb-1 border-none transition-colors">Shadow<span className="text-[#106EBE]">Clips</span></span>
                                 <span className="text-[9px] sm:text-[10px] font-bold tracking-[0.22em] text-[#106EBE] dark:text-[#A0B3C6] uppercase ml-[1px] leading-none border-none transition-colors">www.shadowclips.asia</span>
