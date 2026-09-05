@@ -9,7 +9,7 @@ export default function DownloadApk({ supabase }) {
     const [lang, setLang] = useState('id');
 
     const apkDownloadLink = "https://1024terabox.com/s/1W8jfJBQDunHi5Xqv3rpsVg";
-    const logoUrl = "https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/Cover/Logo%20APK/shadowclips_apk.webp";
+    const logoUrl = "https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/Cover/Logo%20APK/sadowclips-APK.webp";
     const bannerUrl = "https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/Cover/Archu%20TT%20.webp";
 
     useEffect(() => {
