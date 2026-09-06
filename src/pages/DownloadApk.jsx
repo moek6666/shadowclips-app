@@ -8,7 +8,7 @@ export default function DownloadApk({ supabase }) {
     const [searchInput, setSearchInput] = useState('');
     const [lang, setLang] = useState('id');
 
-    const apkDownloadLink = "https://www.mediafire.com/file/jy9roq3nvm6uyfm/Shadoclips_Update.apk/file";
+    const apkDownloadLink = "https://www.mediafire.com/file/qrrl93nzsh3joed/ShadowCLips_Final.apk/file";
     const logoUrl = "https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/Cover/Logo%20APK/sadowclips-APK.webp";
     const bannerUrl = "https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/Cover/Archu%20TT%20.webp";
 
