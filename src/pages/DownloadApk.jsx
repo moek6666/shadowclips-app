@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Download, ShieldAlert, ArrowDownCircle, Settings, CheckCircle2, Globe, FileDown } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import Komentar from '../components/Komentar';
 
 export default function DownloadApk({ supabase }) {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -32,6 +33,7 @@ export default function DownloadApk({ supabase }) {
             release: 'Dirilis: September 2026',
             alertTitle: 'Informasi Keamanan (Play Protect)',
             alertDesc: 'Karena aplikasi ini didistribusikan secara independen, sistem Android mungkin menampilkan peringatan standar. Sistem kami terverifikasi aman dan bersih.',
+            alertNote: 'Bila ada kendala terkait APK, Anda bisa berkomentar di bawah.',
             tutorialTitle: 'Panduan Pemasangan Cepat',
             step1Title: 'Unduh File APK',
             step1Desc: 'Ketuk tombol unduh dan tunggu file tersimpan sempurna di penyimpanan perangkat Anda.',
@@ -51,6 +53,7 @@ export default function DownloadApk({ supabase }) {
             release: 'Released: September 2026',
             alertTitle: 'Security Information (Play Protect)',
             alertDesc: 'Since this app is distributed independently, Android may show a standard warning. Our system is verified safe and clean.',
+            alertNote: 'If you experience any issues regarding the APK, feel free to leave a comment below.',
             tutorialTitle: 'Quick Setup Guide',
             step1Title: 'Download APK File',
             step1Desc: 'Tap the download button and wait for the file to save completely to your device storage.',
@@ -137,14 +140,17 @@ export default function DownloadApk({ supabase }) {
                             </div>
                         </div>
 
-                        {/* Security Alert */}
+                        {/* Security Alert & Informasi Tambahan Kendala APK */}
                         <div className="bg-amber-50 dark:bg-amber-500/5 p-5 rounded-[1.5rem] flex items-start gap-4">
                             <ShieldAlert className="w-6 h-6 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
                             <div>
                                 <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 dark:text-amber-500 mb-1.5">{text.alertTitle}</h4>
-                                <p className="text-[13px] text-amber-800/80 dark:text-amber-200/70 leading-relaxed font-medium">
+                                <p className="text-[13px] text-amber-800/80 dark:text-amber-200/70 leading-relaxed font-medium mb-3">
                                     {text.alertDesc}
                                 </p>
+                                <div className="pt-2.5 border-t border-amber-200/60 dark:border-amber-500/10 text-xs font-semibold text-amber-900 dark:text-amber-400 flex items-center gap-1.5">
+                                    <span>💬</span> {text.alertNote}
+                                </div>
                             </div>
                         </div>
 
@@ -214,6 +220,12 @@ export default function DownloadApk({ supabase }) {
                         </div>
                     </div>
                 </div>
+
+                {/* Section Komentar: Dibuat simetris di tengah & ukuran pas */}
+                <div className="mt-20 border-t border-zinc-200 dark:border-zinc-800/80 pt-12 max-w-3xl mx-auto w-full">
+                    <Komentar videoId="apk_download" supabase={supabase} />
+                </div>
+
             </div>
 
             <Footer />
