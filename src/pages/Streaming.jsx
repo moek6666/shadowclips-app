@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Play, Download, Clock, Share2, ThumbsUp, Bookmark, HardDrive, FolderArchive, Database, Server, X, ZoomIn, LayoutGrid, ExternalLink, Lock, ChevronDown, Gift, Info, Search } from 'lucide-react';
+import { Play, Download, Clock, Share2, ThumbsUp, Bookmark, HardDrive, FolderArchive, Database, Server, X, ZoomIn, LayoutGrid, Loader2, ExternalLink, Lock, ChevronDown, Gift, Info, Search } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -34,6 +34,7 @@ export default function Streaming({ supabase }) {
 
     const [activeServer, setActiveServer] = useState('main');
     const [isServerDropdownOpen, setIsServerDropdownOpen] = useState(false);
+    const [isServerChanging, setIsServerChanging] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
 
     const [likes, setLikes] = useState(0);
@@ -50,9 +51,10 @@ export default function Streaming({ supabase }) {
 
     const [secureUrls, setSecureUrls] = useState({ original: '', main: '', alt: '', alt2: '', img: '' });
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-    const [isPlaying, setIsPlaying] = useState(false);
 
-    // State untuk memantau apakah server lokal merespon
+    // State Pengontrol Player & Pengecekan Server
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [isCheckingPlay, setIsCheckingPlay] = useState(false);
     const [isOriginalOnline, setIsOriginalOnline] = useState(false);
     const [showOfflineNotice, setShowOfflineNotice] = useState(false);
 
@@ -62,32 +64,32 @@ export default function Streaming({ supabase }) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // Reset status setiap kali ganti server atau video
+    // Reset status saat ganti server/video
     useEffect(() => {
         setIsPlaying(false);
         setIsOriginalOnline(false);
         setShowOfflineNotice(false);
+        setIsCheckingPlay(false);
     }, [activeServer, video?.id]);
 
-    // Listener sinyal balik dari player_2.html
+    // Listener sinyal balik (Handshake) dari player.html
     useEffect(() => {
         const handleMessage = (event) => {
             if (event.data?.type === 'ORIGINAL_SERVER_ALIVE') {
                 setIsOriginalOnline(true);
-                setShowOfflineNotice(false); // HILANGKAN PERINGATAN KARENA SERVER MENYALA
+                setShowOfflineNotice(false);
             }
         };
-
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);
     }, []);
 
-    // Timer: Jika dalam 3.5 detik player tidak memberi respon sinyal, anggap server PC mati
+    // Timer peringatan offline jika tidak ada sinyal Handshake
     useEffect(() => {
         let timer;
         if (activeServer === 'original' && isPlaying && !isOriginalOnline) {
             timer = setTimeout(() => {
-                setShowOfflineNotice(true); // TAMPILKAN PERINGATAN HANYA JIKA TIDAK ADA RESPON
+                setShowOfflineNotice(true);
             }, 3500);
         }
         return () => clearTimeout(timer);
@@ -238,10 +240,10 @@ export default function Streaming({ supabase }) {
     }, [supabase, checkVipAccess]);
 
     useEffect(() => {
-        if (selectedImage || isDownloadModalOpen) document.body.style.overflow = 'hidden';
+        if (selectedImage || isDownloadModalOpen || isLoginModalOpen) document.body.style.overflow = 'hidden';
         else document.body.style.overflow = 'unset';
         return () => { document.body.style.overflow = 'unset'; }
-    }, [selectedImage, isDownloadModalOpen]);
+    }, [selectedImage, isDownloadModalOpen, isLoginModalOpen]);
 
     useEffect(() => {
         let timer;
@@ -285,17 +287,17 @@ export default function Streaming({ supabase }) {
     const handleBookmark = async () => {
         if (!supabase || !video) return;
 
-        const { data: { session } } = await supabase.auth.getSession();
-
-        if (!session?.user) {
-            setIsLoginModalOpen(true);
-            return;
-        }
-
-        const newBookmarkState = !hasBookmarked;
-        setHasBookmarked(newBookmarkState);
-
         try {
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+            if (sessionError || !session?.user) {
+                setIsLoginModalOpen(true);
+                return;
+            }
+
+            const newBookmarkState = !hasBookmarked;
+            setHasBookmarked(newBookmarkState);
+
             const { error } = await supabase.rpc('toggle_user_bookmark', { p_video_id: String(video.id) });
             if (error) throw error;
 
@@ -306,7 +308,7 @@ export default function Streaming({ supabase }) {
             }
         } catch (error) {
             console.error("Bookmark Error:", error);
-            setHasBookmarked(!newBookmarkState);
+            setHasBookmarked(hasBookmarked);
             toast.error("Terjadi kesalahan saat menyimpan video.");
         }
     };
@@ -383,6 +385,36 @@ export default function Streaming({ supabase }) {
     if (hasAlternativeServer2) serverOptions.push({ id: 'alt2', label: 'Server 3' });
     const activeServerLabel = serverOptions.find(s => s.id === effectiveServer)?.label || 'Server';
 
+    // FUNGSI GATEKEEPER: Cek server saat Play diklik (Mencegah Layar Abu-abu)
+    const handlePlayClick = async () => {
+        if (isCheckingPlay || !currentVideoUrl) return;
+
+        if (activeServer === 'original') {
+            setIsCheckingPlay(true);
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+                await fetch(currentVideoUrl, { method: 'HEAD', mode: 'no-cors', cache: 'no-store', signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                setIsCheckingPlay(false);
+                setIsPlaying(true);
+            } catch (error) {
+                setIsCheckingPlay(false);
+                setShowOfflineNotice(true);
+                toast.error("Original Server PC Anda sedang Offline. Mengalihkan ke Server 1...");
+
+                // Fallback cerdas jika mati
+                if (hasMain) setActiveServer('main');
+                else if (hasAlternativeServer) setActiveServer('alt');
+                else if (hasAlternativeServer2) setActiveServer('alt2');
+            }
+        } else {
+            setIsPlaying(true);
+        }
+    };
+
     return (
         <>
             <Toaster position="top-center" reverseOrder={false} />
@@ -393,10 +425,18 @@ export default function Streaming({ supabase }) {
 
                         <div className={`w-full ${!isVipUnlocked ? 'aspect-auto min-h-[350px] sm:min-h-0 sm:aspect-video' : (currentVideoUrl || showGallery ? 'aspect-video' : 'min-h-[400px] max-h-[80vh]')} bg-zinc-100 dark:bg-zinc-950 rounded-[1.5rem] overflow-hidden relative flex items-center justify-center shadow-none border-none transition-colors`}>
 
-                            {/* NOTIFIKASI OFFLINE: Hanya muncul JIKA server tidak merespon dalam 3.5 detik */}
                             {effectiveServer === 'original' && showOfflineNotice && (
                                 <div className="absolute top-0 left-0 w-full bg-red-600/90 text-white text-[11px] sm:text-xs font-bold text-center py-2.5 z-50 shadow-md backdrop-blur-sm pointer-events-none flex items-center justify-center gap-2">
                                     <span>⚠️ Server Lokal Offline atau terputus. Silakan ganti ke Server 1 di bawah.</span>
+                                </div>
+                            )}
+
+                            {isServerChanging && (
+                                <div className="absolute inset-0 z-[60] bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center border-none transition-all duration-300">
+                                    <Loader2 className="w-10 h-10 sm:w-12 sm:h-12 animate-spin text-[#106EBE] mb-3 border-none" />
+                                    <span className="text-white text-[13px] sm:text-sm font-bold tracking-wide border-none">
+                                        Menghubungkan ke {activeServerLabel}...
+                                    </span>
                                 </div>
                             )}
 
@@ -431,11 +471,18 @@ export default function Streaming({ supabase }) {
                             ) : currentVideoUrl ? (
                                 <div className="relative w-full h-full border-none">
                                     {!isPlaying ? (
-                                        <div className="relative w-full h-full cursor-pointer group flex items-center justify-center bg-black border-none" onClick={() => setIsPlaying(true)}>
+                                        <div className="relative w-full h-full cursor-pointer group flex items-center justify-center bg-black border-none" onClick={handlePlayClick}>
                                             <img src={coverImage} alt="Video Cover" className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-60 transition-opacity border-none" loading="lazy" />
                                             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors border-none z-10"></div>
                                             <div className="absolute inset-0 flex items-center justify-center z-20 border-none">
-                                                <Play className="w-16 h-16 sm:w-20 sm:h-20 text-white/90 fill-current drop-shadow-2xl scale-90 group-hover:scale-110 transition-transform border-none" />
+                                                {isCheckingPlay ? (
+                                                    <div className="flex flex-col items-center justify-center gap-2 border-none">
+                                                        <Loader2 className="w-12 h-12 sm:w-16 sm:h-16 text-white animate-spin border-none drop-shadow-xl" />
+                                                        <span className="text-white text-[11px] sm:text-xs font-bold tracking-wide drop-shadow-md border-none">Memeriksa Server...</span>
+                                                    </div>
+                                                ) : (
+                                                    <Play className="w-16 h-16 sm:w-20 sm:h-20 text-white/90 fill-current drop-shadow-2xl scale-90 group-hover:scale-110 transition-transform border-none" />
+                                                )}
                                             </div>
                                         </div>
                                     ) : (
@@ -475,8 +522,10 @@ export default function Streaming({ supabase }) {
                                                         key={option.id}
                                                         onClick={() => {
                                                             if (activeServer !== option.id) {
+                                                                setIsServerChanging(true);
                                                                 setActiveServer(option.id);
                                                                 setIsServerDropdownOpen(false);
+                                                                setTimeout(() => setIsServerChanging(false), 800);
                                                             } else {
                                                                 setIsServerDropdownOpen(false);
                                                             }
@@ -592,6 +641,83 @@ export default function Streaming({ supabase }) {
                 </div>
             </div>
             <Footer />
+
+            {/* MODAL POP-UPS */}
+
+            {selectedImage && (
+                <div className="fixed inset-0 z-[100] bg-white/95 dark:bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300 border-none transition-colors" onClick={() => setSelectedImage(null)} onContextMenu={(e) => e.preventDefault()}>
+                    <button className="absolute top-4 right-4 sm:top-8 sm:right-8 bg-zinc-200 dark:bg-zinc-900 hover:bg-[#106EBE] dark:hover:bg-[#106EBE] text-zinc-600 hover:text-white dark:text-white p-3 rounded-full transition-colors z-50 group border-none cursor-pointer"><X className="w-6 h-6 group-hover:rotate-90 transition-transform border-none" /></button>
+                    <img src={selectedImage} alt="Fullscreen View" className="max-w-full max-h-full object-contain rounded-2xl select-none shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.9)] border-none" draggable="false" onContextMenu={(e) => e.preventDefault()} onDragStart={(e) => e.preventDefault()} />
+                </div>
+            )}
+
+            {isLoginModalOpen && (
+                <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300 border-none transition-colors">
+                    <div className="bg-white dark:bg-zinc-900 p-8 rounded-[10px] max-w-sm w-full text-center shadow-2xl animate-in zoom-in-95 border-none">
+                        <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-3 border-none">Harap Sign In</h3>
+                        <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6 border-none">Anda harus masuk ke akun Google Anda untuk bisa menggunakan fitur Bookmark.</p>
+                        <button onClick={() => setIsLoginModalOpen(false)} className="px-4 py-2 w-full bg-[#106EBE] text-white text-[13px] font-bold rounded-[10px] shadow-sm hover:shadow outline-none border-none cursor-pointer">Tutup</button>
+                    </div>
+                </div>
+            )}
+
+            {isDownloadModalOpen && (
+                <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300 border-none transition-colors">
+                    <div className="bg-white dark:bg-zinc-900 rounded-[10px] p-8 max-w-md w-full shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-300 relative border-none">
+
+                        <button onClick={() => setIsDownloadModalOpen(false)} className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-white transition-colors outline-none border-none cursor-pointer">
+                            <X className="w-5 h-5 border-none" />
+                        </button>
+
+                        <div className="flex items-center justify-center gap-3 sm:gap-4 mb-6 w-full border-none">
+                            <img
+                                src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/New%20Logo%20Shadowclips.webp"
+                                alt="ShadowClips Logo"
+                                className="w-12 h-12 shrink-0 border-none drop-shadow-md object-contain"
+                            />
+                            <div className="flex flex-col justify-center text-left border-none">
+                                <span className="text-xl sm:text-2xl font-black tracking-tighter text-zinc-900 dark:text-white leading-none mb-1 border-none transition-colors">Shadow<span className="text-[#106EBE]">Clips</span></span>
+                                <span className="text-[9px] sm:text-[10px] font-bold tracking-[0.22em] text-[#106EBE] dark:text-[#A0B3C6] uppercase ml-[1px] leading-none border-none transition-colors">www.shadowclips.asia</span>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3 mb-8 w-full border-none">
+                            <p className="text-zinc-600 dark:text-zinc-300 text-[13px] sm:text-[14px] leading-relaxed border-none transition-colors">
+                                ShadowClips never sells or charges a single penny for this file. We provide this link 100% free for entertainment purposes.<br />
+                                <span className="text-zinc-500 text-[11px] mt-2 block border-none">Please be aware of any scams claiming to represent us.</span>
+                            </p>
+                        </div>
+
+                        <div className="w-full mb-8 flex flex-col items-center border-none">
+                            <div className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-[10px] overflow-hidden mb-3 border-none transition-colors">
+                                <div className="h-full bg-[#106EBE] transition-all duration-75 ease-linear shadow-md border-none" style={{ width: `${modalProgress}%` }}></div>
+                            </div>
+                            <span className="text-[11px] font-bold text-zinc-500 tracking-wide h-4 border-none">
+                                {modalStatus === 'waiting' && `Preparing secure link... ${Math.ceil(4 - (modalProgress / 25))}s`}
+                            </span>
+                        </div>
+
+                        <div className="w-full border-none">
+                            {modalStatus === 'waiting' ? (
+                                <button disabled className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-[10px] bg-zinc-100 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 cursor-wait transition-all border-none outline-none font-bold text-[13px]">
+                                    <Loader2 className="w-4 h-4 animate-spin shrink-0 border-none" /><span className="border-none">Please wait...</span>
+                                </button>
+                            ) : (
+                                <button onClick={() => {
+                                    const targetUrl = video.embed_url || video.url_download;
+                                    if (targetUrl) window.open(targetUrl, '_blank');
+                                    else {
+                                        toast.error("Link download tidak tersedia untuk video ini.");
+                                    }
+                                    setIsDownloadModalOpen(false);
+                                }} className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-[10px] bg-[#106EBE] text-white hover:bg-[#0e5c9f] transition-all transform hover:-translate-y-0.5 shadow-sm hover:shadow border-none outline-none cursor-pointer font-bold text-[13px]">
+                                    <ExternalLink className="w-4 h-4 shrink-0 border-none" /><span className="border-none">Continue to download</span>
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
