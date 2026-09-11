@@ -105,9 +105,11 @@ export default function Home({ supabase }) {
         <>
             <Navbar isScrolled={isScrolled} supabase={supabase} />
 
-            <main className="max-w-[1440px] mx-auto px-4 sm:px-8 relative z-20 pb-10 pt-32 min-h-screen animate-in fade-in zoom-in-95 slide-in-from-bottom-8 duration-700 ease-out">
+            {/* PENTING: px-0 untuk memaksa card menempel tepi di mobile */}
+            <main className="max-w-[1440px] mx-auto px-0 sm:px-8 relative z-20 pb-10 pt-32 min-h-screen animate-in fade-in zoom-in-95 slide-in-from-bottom-8 duration-700 ease-out">
 
-                <div className="mb-10 text-center md:text-left animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-4xl">
+                {/* Header Teks diberi padding (px-4) agar tidak ikut menabrak layar */}
+                <div className="mb-8 px-4 sm:px-0 text-center md:text-left animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-4xl">
                     {currentPage === 1 ? (
                         <h1 className="text-zinc-600 dark:text-zinc-400 text-sm md:text-base leading-relaxed transition-colors">
                             <strong className="text-zinc-900 dark:text-white font-black text-lg md:text-xl tracking-tight mr-2 transition-colors">Shadow<span className="text-[#106EBE]">Clips</span></strong>
@@ -120,14 +122,19 @@ export default function Home({ supabase }) {
                     )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-y-8 md:gap-x-6">
+                {/* GRID: Menggunakan gap-y-6 di mobile agar jaraknya hanya atas-bawah */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-y-6 sm:gap-6 md:gap-y-8 md:gap-x-6">
 
                     {isLoading ? (
                         Array.from({ length: 12 }).map((_, i) => (
-                            <div key={i} className="animate-pulse flex flex-col gap-2">
-                                <div className="aspect-video bg-zinc-200 dark:bg-zinc-800/50 rounded-[4px] transition-colors"></div>
-                                <div className="h-4 bg-zinc-200 dark:bg-zinc-800/50 rounded w-full transition-colors"></div>
-                                <div className="h-4 bg-zinc-200 dark:bg-zinc-800/50 rounded w-2/3 mx-auto transition-colors"></div>
+                            <div key={i} className="animate-pulse flex flex-col w-full">
+                                {/* Skeleton Gambar: rounded-none di mobile */}
+                                <div className="w-full aspect-video bg-zinc-200 dark:bg-zinc-800/50 rounded-none sm:rounded-[4px] transition-colors"></div>
+                                {/* Skeleton Teks: Rata tengah */}
+                                <div className="px-4 sm:px-0 mt-3 w-full flex flex-col items-center gap-1.5">
+                                    <div className="h-4 bg-zinc-200 dark:bg-zinc-800/50 rounded w-[90%] transition-colors"></div>
+                                    <div className="h-4 bg-zinc-200 dark:bg-zinc-800/50 rounded w-2/3 transition-colors"></div>
+                                </div>
                             </div>
                         ))
                     ) : videos.length > 0 ? (
@@ -142,9 +149,10 @@ export default function Home({ supabase }) {
                                         </div>
                                     )}
 
-                                    <div onClick={() => window.location.href = `/streaming/${video.slug || video.id}`} className="group cursor-pointer flex flex-col gap-2">
+                                    <div onClick={() => window.location.href = `/streaming/${video.slug || video.id}`} className="group cursor-pointer flex flex-col w-full">
 
-                                        <div className="relative aspect-video rounded-[4px] overflow-hidden bg-zinc-100 dark:bg-zinc-900 border-none transition-colors">
+                                        {/* GAMBAR CARD: Lebar 100%, ujung siku-siku (rounded-none) khusus di mobile */}
+                                        <div className="relative w-full aspect-video rounded-none sm:rounded-[4px] overflow-hidden bg-zinc-100 dark:bg-zinc-900 border-none transition-colors">
                                             <img src={getImageUrl(video.img)} alt={video.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
 
                                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
@@ -158,8 +166,9 @@ export default function Home({ supabase }) {
                                             )}
                                         </div>
 
-                                        <div className="px-1 text-center">
-                                            <h3 className="font-bold text-[13px] md:text-[14px] text-zinc-800 dark:text-zinc-300 group-hover:text-black dark:group-hover:text-white transition-colors line-clamp-2 leading-snug" title={video.title}>
+                                        {/* JUDUL: Tetap ditengah (text-center) dan diberi ruang kiri-kanan (px-4) agar nyaman dibaca */}
+                                        <div className="px-4 sm:px-1 text-center mt-2.5">
+                                            <h3 className="font-bold text-[14px] md:text-[14px] text-zinc-800 dark:text-zinc-300 group-hover:text-black dark:group-hover:text-white transition-colors line-clamp-2 leading-snug" title={video.title}>
                                                 {video.title}
                                             </h3>
                                         </div>
@@ -180,8 +189,9 @@ export default function Home({ supabase }) {
                     <ins className="eas6a97888e20" data-zoneid="6002934" data-sub="123450000"></ins>
                 </div>
 
+                {/* Pagination diberi padding agar tidak menabrak batas HP */}
                 {!isLoading && totalPages > 1 && (
-                    <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mt-10">
+                    <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mt-10 px-4 sm:px-0">
                         {currentPage > 1 && (
                             <button onClick={() => handlePageChange(currentPage - 1)} className="px-4 h-10 flex items-center justify-center gap-1 rounded-full font-bold text-sm transition-all text-zinc-700 dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-[#0FFCBE]">
                                 <ChevronLeft className="w-4 h-4" /> Prev

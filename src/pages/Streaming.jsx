@@ -5,7 +5,6 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CustomPlayer from '../components/CustomPlayer';
 import Komentar from '../components/Komentar';
-import SynopsisTooltip from '../components/SynopsisTooltip';
 import IklanCustom from '../components/IklanCustom';
 
 const getImageUrl = (imgString) => imgString ? imgString.split(',')[0].trim() : '';
@@ -52,7 +51,6 @@ export default function Streaming({ supabase }) {
     const [secureUrls, setSecureUrls] = useState({ original: '', main: '', alt: '', alt2: '', img: '' });
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
-    // State Pengontrol Player & Pengecekan Server
     const [isPlaying, setIsPlaying] = useState(false);
     const [isOriginalOnline, setIsOriginalOnline] = useState(false);
     const [showOfflineNotice, setShowOfflineNotice] = useState(false);
@@ -63,14 +61,12 @@ export default function Streaming({ supabase }) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // Reset status saat ganti server/video
     useEffect(() => {
         setIsPlaying(false);
         setIsOriginalOnline(false);
         setShowOfflineNotice(false);
     }, [activeServer, video?.id]);
 
-    // Listener sinyal balik (Handshake) dari player.html
     useEffect(() => {
         const handleMessage = (event) => {
             if (event.data?.type === 'ORIGINAL_SERVER_ALIVE') {
@@ -82,7 +78,6 @@ export default function Streaming({ supabase }) {
         return () => window.removeEventListener('message', handleMessage);
     }, []);
 
-    // Timer peringatan offline jika tidak ada sinyal Handshake
     useEffect(() => {
         let timer;
         if (activeServer === 'original' && isPlaying && !isOriginalOnline) {
@@ -387,11 +382,14 @@ export default function Streaming({ supabase }) {
         <>
             <Toaster position="top-center" reverseOrder={false} />
             <Navbar isScrolled={isScrolled} supabase={supabase} />
-            <div className="pt-24 pb-20 max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 min-h-screen relative transition-colors border-none">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 border-none">
-                    <div className="lg:col-span-8 flex flex-col gap-4 border-none">
+            
+            <div className="pt-[72px] sm:pt-24 pb-20 max-w-[1500px] mx-auto px-0 sm:px-6 lg:px-8 min-h-screen relative transition-colors border-none">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 sm:gap-6 lg:gap-8 border-none">
+                    
+                    {/* BAGIAN KIRI (Video Player Utama) */}
+                    <div className="lg:col-span-8 flex flex-col gap-0 sm:gap-4 border-none">
 
-                        <div className={`w-full ${!isVipUnlocked ? 'aspect-auto min-h-[350px] sm:min-h-0 sm:aspect-video' : (currentVideoUrl || showGallery ? 'aspect-video' : 'min-h-[400px] max-h-[80vh]')} bg-zinc-100 dark:bg-zinc-950 rounded-[1.5rem] overflow-hidden relative flex items-center justify-center shadow-none border-none transition-colors`}>
+                        <div className={`w-full ${!isVipUnlocked ? 'aspect-auto min-h-[250px] sm:min-h-0 sm:aspect-video' : (currentVideoUrl || showGallery ? 'aspect-video' : 'min-h-[250px] sm:min-h-[400px] max-h-[80vh]')} bg-zinc-100 dark:bg-black sm:dark:bg-zinc-950 rounded-none sm:rounded-[1.5rem] overflow-hidden relative flex items-center justify-center shadow-none border-none transition-colors`}>
 
                             {effectiveServer === 'original' && showOfflineNotice && (
                                 <div className="absolute top-0 left-0 w-full bg-red-600/90 text-white text-[11px] sm:text-xs font-bold text-center py-2.5 z-50 shadow-md backdrop-blur-sm pointer-events-none flex items-center justify-center gap-2">
@@ -466,23 +464,22 @@ export default function Streaming({ supabase }) {
                             ) : (<div className="text-zinc-400 dark:text-zinc-500 flex flex-col items-center p-12 border-none"><Play className="w-12 h-12 mb-2 opacity-50 border-none" /><p className="border-none">Video unavailable</p></div>)}
                         </div>
 
+                        {/* TOMBOL (Server & Download) */}
                         {isVipUnlocked && (
-                            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mt-4 mb-1 border-none w-full">
+                            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mt-4 mb-2 sm:mb-1 border-none w-full px-4 sm:px-0">
                                 <div className="relative min-w-0 border-none">
                                     {serverOptions.length > 1 ? (
                                         <>
-                                            <button onClick={() => setIsServerDropdownOpen(!isServerDropdownOpen)} className="flex items-center justify-center gap-2 px-4 py-1.5 sm:py-2 rounded-[10px] text-[13px] font-bold transition-all bg-[#106EBE] hover:bg-[#0e5c9f] text-white shadow-sm hover:shadow relative sm:z-40 outline-none cursor-pointer border-none">
+                                            <button onClick={() => setIsServerDropdownOpen(!isServerDropdownOpen)} className="flex items-center justify-center gap-2 px-4 py-2 sm:py-2 rounded-[10px] text-[13px] font-bold transition-all bg-[#106EBE] hover:bg-[#0e5c9f] text-white shadow-sm hover:shadow relative sm:z-40 outline-none cursor-pointer border-none">
                                                 <Server className="w-4 h-4 shrink-0 text-white border-none" />
                                                 <span className="truncate border-none">{activeServerLabel}</span>
                                                 <ChevronDown className={`w-4 h-4 transition-transform shrink-0 border-none ${isServerDropdownOpen ? 'rotate-180' : ''}`} />
                                             </button>
 
-                                            {/* Latar Belakang Overlay: Gelap di Mobile (Modal), Transparan di Desktop (Dropdown) */}
                                             {isServerDropdownOpen && (
                                                 <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm sm:bg-transparent sm:backdrop-blur-none sm:z-30 border-none transition-all" onClick={() => setIsServerDropdownOpen(false)}></div>
                                             )}
 
-                                            {/* Container Pilihan Server: Modal di Mobile, Dropdown di Desktop */}
                                             <div className={`
                                                 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] max-w-[320px] z-[101]
                                                 sm:absolute sm:top-full sm:left-0 sm:-translate-x-0 sm:-translate-y-0 sm:mt-2 sm:w-56 sm:z-40
@@ -516,58 +513,74 @@ export default function Streaming({ supabase }) {
                                             </div>
                                         </>
                                     ) : serverOptions.length === 1 ? (
-                                        <button className="flex items-center justify-center gap-2 px-4 py-1.5 sm:py-2 rounded-[10px] text-[13px] font-bold transition-all bg-[#106EBE] text-white shadow-sm cursor-default outline-none border-none">
+                                        <button className="flex items-center justify-center gap-2 px-4 py-2 sm:py-2 rounded-[10px] text-[13px] font-bold transition-all bg-[#106EBE] text-white shadow-sm cursor-default outline-none border-none">
                                             <Server className="w-4 h-4 shrink-0 text-white border-none" /> <span className="border-none">{serverOptions[0].label}</span>
                                         </button>
                                     ) : null}
                                 </div>
 
                                 {hasDownloadLink && (
-                                    <button onClick={() => { setIsDownloadModalOpen(true); setModalStatus('waiting'); setModalProgress(0); }} className="flex items-center justify-center gap-2 px-4 py-1.5 sm:py-2 rounded-[10px] text-[13px] font-bold transition-all bg-[#106EBE] hover:bg-[#0e5c9f] text-white shadow-sm hover:shadow outline-none border-none shrink-0 cursor-pointer">
+                                    <button onClick={() => { setIsDownloadModalOpen(true); setModalStatus('waiting'); setModalProgress(0); }} className="flex items-center justify-center gap-2 px-4 py-2 sm:py-2 rounded-[10px] text-[13px] font-bold transition-all bg-[#106EBE] hover:bg-[#0e5c9f] text-white shadow-sm hover:shadow outline-none border-none shrink-0 cursor-pointer">
                                         <Download className="w-4 h-4 shrink-0 border-none" /> <span className="border-none">Download</span>
                                     </button>
                                 )}
                             </div>
                         )}
 
-                        <div className="bg-zinc-100 dark:bg-zinc-900/40 p-5 sm:p-6 rounded-[1.5rem] flex flex-col gap-4 border-none shadow-none transition-colors">
-                            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-zinc-900 dark:text-white border-none" title={video?.title}>{video?.title}</h1>
+                        {/* JUDUL DAN METADATA UTAMA */}
+                        <div className="bg-transparent sm:bg-zinc-100 sm:dark:bg-zinc-900/40 px-4 py-2 sm:p-6 rounded-none sm:rounded-[1.5rem] flex flex-col gap-3 sm:gap-4 border-none shadow-none transition-colors w-full">
+                            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-zinc-900 dark:text-white border-none leading-snug" title={video?.title}>{video?.title}</h1>
 
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 w-full pt-1 border-none">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-5 w-full pt-1 border-none">
 
-                                <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[13px] text-zinc-500 dark:text-zinc-400 font-medium border-none">
+                                <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[12px] sm:text-[13px] text-zinc-500 dark:text-zinc-400 font-medium border-none">
                                     <span className="flex items-center gap-1.5 border-none"><Clock className="w-3.5 h-3.5 text-[#106EBE] border-none" /> {video?.created_at ? new Date(video.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</span>
                                     {video?.duration && video.duration !== 'EMPTY' && <span className="flex items-center gap-1.5 border-none"><Clock className="w-3.5 h-3.5 text-[#106EBE] border-none" /> {video.duration}</span>}
                                     {video?.size && video.size !== 'EMPTY' && <span className="flex items-center gap-1.5 border-none"><HardDrive className="w-3.5 h-3.5 text-[#106EBE] border-none" /> {video.size}</span>}
                                     {video?.type && video.type !== 'EMPTY' && <span className="flex items-center gap-1.5 border-none"><FolderArchive className="w-3.5 h-3.5 text-[#106EBE] border-none" /> {video.type}</span>}
                                     {video?.source && video.source !== 'EMPTY' && <span className="flex items-center gap-1.5 border-none"><Database className="w-3.5 h-3.5 text-[#106EBE] border-none" /> {video.source}</span>}
-                                    <SynopsisTooltip text={video?.sinopsis || ''} />
                                 </div>
 
-                                <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0 border-none">
-                                    <button onClick={handleLike} className={`flex items-center justify-center gap-2 px-4 py-1.5 rounded-[10px] text-[13px] font-bold transition-all cursor-pointer border-none ${hasLiked ? 'bg-[#106EBE] text-white shadow-sm' : 'bg-white dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300'}`}>
+                                <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0 border-none overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                                    <button onClick={handleLike} className={`flex items-center justify-center gap-2 px-4 py-2 sm:py-1.5 rounded-full sm:rounded-[10px] text-[13px] font-bold transition-all cursor-pointer border-none shrink-0 ${hasLiked ? 'bg-[#106EBE] text-white shadow-sm' : 'bg-zinc-100 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300'}`}>
                                         <ThumbsUp className={`w-4 h-4 border-none ${hasLiked ? 'fill-current scale-110' : ''}`} />
                                         <span className="border-none">{likes > 0 ? formatViews(likes) : 'Like'}</span>
                                     </button>
 
-                                    <button onClick={handleBookmark} className={`flex items-center justify-center gap-2 px-4 py-1.5 rounded-[10px] text-[13px] font-bold transition-all cursor-pointer border-none ${hasBookmarked ? 'bg-[#106EBE] text-white shadow-sm' : 'bg-white dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300'}`}>
+                                    <button onClick={handleBookmark} className={`flex items-center justify-center gap-2 px-4 py-2 sm:py-1.5 rounded-full sm:rounded-[10px] text-[13px] font-bold transition-all cursor-pointer border-none shrink-0 ${hasBookmarked ? 'bg-[#106EBE] text-white shadow-sm' : 'bg-zinc-100 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300'}`}>
                                         <Bookmark className={`w-4 h-4 border-none ${hasBookmarked ? 'fill-current scale-110' : ''}`} />
                                         <span className="border-none">{hasBookmarked ? 'Saved' : 'Save'}</span>
                                     </button>
 
-                                    <button onClick={handleShare} className="flex items-center justify-center gap-2 px-4 py-1.5 rounded-[10px] text-[13px] font-bold bg-white dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 cursor-pointer border-none">
+                                    <button onClick={handleShare} className="flex items-center justify-center gap-2 px-4 py-2 sm:py-1.5 rounded-full sm:rounded-[10px] text-[13px] font-bold bg-zinc-100 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 cursor-pointer border-none shrink-0">
                                         <Share2 className="w-4 h-4 border-none" />
-                                        <span className="border-none hidden sm:inline-block">Share</span>
+                                        <span className="border-none">Share</span>
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="w-full border-none">
+                        {/* KONTENER SINOPSIS BARU (Soft & Borderless) */}
+                        {video?.sinopsis && video.sinopsis.trim() !== '' && video.sinopsis !== 'EMPTY' && (
+                            <div className="px-4 sm:px-0 w-full mb-2 sm:mb-0 border-none">
+                                <div className="bg-zinc-50 dark:bg-zinc-800/30 p-4 sm:p-6 rounded-2xl sm:rounded-[1.5rem] border-none shadow-none transition-colors w-full">
+                                    <h3 className="text-[14px] font-black text-zinc-900 dark:text-white flex items-center gap-2 mb-2 border-none">
+                                        <Info className="w-4 h-4 text-[#106EBE] border-none" /> Sinopsis
+                                    </h3>
+                                    <p className="text-[13px] sm:text-[14px] text-zinc-600 dark:text-zinc-400 font-medium leading-relaxed whitespace-pre-wrap border-none">
+                                        {video.sinopsis}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* IKLAN */}
+                        <div className="w-full border-none my-2 sm:my-0 px-4 sm:px-0">
                             <IklanCustom className="border-none" />
                         </div>
 
-                        <div className="bg-zinc-100 dark:bg-zinc-900/40 p-2 sm:p-6 rounded-[1.5rem] w-full border-none shadow-none overflow-hidden transition-colors">
+                        {/* KOMENTAR */}
+                        <div className="bg-transparent sm:bg-zinc-100 sm:dark:bg-zinc-900/40 px-4 py-2 sm:p-6 rounded-none sm:rounded-[1.5rem] w-full border-none shadow-none overflow-hidden transition-colors">
                             <Komentar videoId={video?.id} supabase={supabase} onCommentSuccess={async () => {
                                 setHasCommented(true);
                                 try {
@@ -581,35 +594,42 @@ export default function Streaming({ supabase }) {
                         </div>
                     </div>
 
+                    {/* BAGIAN KANAN (Related Videos) */}
                     <div className="lg:col-span-4 flex flex-col gap-4 w-full border-none">
-                        <div className="bg-zinc-100 dark:bg-zinc-900/40 p-3 sm:p-5 rounded-[1.5rem] flex flex-col gap-3 sm:gap-4 border-none shadow-none transition-colors">
-                            <h3 className="text-[15px] font-black text-zinc-900 dark:text-white flex items-center gap-2 border-none">
+                        <div className="bg-transparent sm:bg-zinc-100 sm:dark:bg-zinc-900/40 py-3 sm:p-5 rounded-none sm:rounded-[1.5rem] flex flex-col gap-4 sm:gap-4 border-none shadow-none transition-colors">
+                            
+                            <h3 className="px-4 sm:px-0 text-[15px] font-black text-zinc-900 dark:text-white flex items-center gap-2 border-none">
                                 <LayoutGrid className="w-4 h-4 text-[#106EBE] border-none" /> Related Videos
                             </h3>
-                            <div className="flex flex-col gap-4 border-none">
+                            
+                            <div className="flex flex-col gap-6 sm:gap-4 border-none">
 
                                 {relatedVideos?.map((item) => (
-                                    <div key={item.id} onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer flex flex-row items-start gap-3 border-none">
-                                        <div className="relative w-[110px] min-[400px]:w-[130px] sm:w-[180px] aspect-video rounded-xl overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none shrink-0 shadow-sm transition-colors">
+                                    <div key={item.id} onClick={() => window.location.href = `/streaming/${item.slug || item.id}`} className="group cursor-pointer flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-3 border-none w-full">
+                                        
+                                        <div className="relative w-full sm:w-[180px] shrink-0 aspect-video rounded-none sm:rounded-xl overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none shadow-sm transition-colors">
                                             <img src={getImageUrl(item.img)} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 border-none" loading="lazy" />
                                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20 border-none">
-                                                <Play className="w-8 h-8 text-white/90 fill-current drop-shadow-lg scale-75 group-hover:scale-100 transition-transform border-none" />
+                                                <Play className="w-12 h-12 sm:w-8 sm:h-8 text-white/90 fill-current drop-shadow-lg scale-75 group-hover:scale-100 transition-transform border-none" />
                                             </div>
                                             {item.duration && item.duration !== 'EMPTY' && (
-                                                <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-[3px] border-none">
+                                                <div className="absolute bottom-1.5 right-1.5 sm:bottom-1 sm:right-1 bg-black/80 text-white text-[10px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-[3px] border-none">
                                                     {item.duration}
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="flex flex-col flex-1 min-w-0 border-none">
-                                            <h4 className="font-bold text-[12px] min-[400px]:text-[13px] sm:text-[14px] text-zinc-800 dark:text-zinc-100 group-hover:text-[#106EBE] transition-colors line-clamp-3 mb-1 border-none" title={item.title}>
+                                        
+                                        <div className="flex flex-col flex-1 min-w-0 border-none px-4 sm:px-0 w-full sm:w-auto text-center sm:text-left items-center sm:items-start mt-1 sm:mt-0">
+                                            <h4 className="font-bold text-[14px] text-zinc-800 dark:text-zinc-100 group-hover:text-black dark:group-hover:text-white transition-colors line-clamp-2 sm:line-clamp-3 mb-1.5 sm:mb-1 border-none" title={item.title}>
                                                 {item.title}
                                             </h4>
-                                            <div className="flex items-center gap-1.5 text-[10px] font-medium text-zinc-500 border-none transition-colors mt-auto">
+                                            
+                                            <div className="flex items-center justify-center sm:justify-start gap-1.5 text-[11px] sm:text-[10px] font-medium text-zinc-500 border-none transition-colors mt-auto sm:mt-auto">
                                                 <Clock className="w-3 h-3 text-[#106EBE] border-none shrink-0" />
                                                 <span className="truncate border-none">{new Date(item.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                                             </div>
                                         </div>
+
                                     </div>
                                 ))}
 
@@ -619,8 +639,6 @@ export default function Streaming({ supabase }) {
                 </div>
             </div>
             <Footer />
-
-            {/* MODAL POP-UPS */}
 
             {selectedImage && (
                 <div className="fixed inset-0 z-[100] bg-white/95 dark:bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300 border-none transition-colors" onClick={() => setSelectedImage(null)} onContextMenu={(e) => e.preventDefault()}>
