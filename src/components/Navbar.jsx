@@ -60,7 +60,7 @@ export default function Navbar({ isScrolled, supabase }) {
         return () => subscription?.unsubscribe();
     }, [supabase]);
 
-    // REAL-TIME LISTENER STATUS SERVER (ANTI-GAGAL & DEBUGGING)
+    // REAL-TIME LISTENER STATUS SERVER (PRODUCTION MODE)
     useEffect(() => {
         if (!supabase) return;
 
@@ -69,17 +69,13 @@ export default function Navbar({ isScrolled, supabase }) {
                 const { data, error } = await supabase.from('server_status').select('status').limit(1).maybeSingle();
                 if (data) setPcServerStatus(data.status);
             } catch (err) {
-                console.error('Error fetch awal:', err);
+                // Biarkan error fetching awal agar bisa ditangani
             }
         };
         fetchInitialServerStatus();
 
-        // Gunakan nama channel yang sederhana dan tambahkan pelacak status (subscribe status)
         const channel = supabase.channel('public-server-status')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'server_status' }, (payload) => {
-                console.log("🔔 DATA MASUK DARI SUPABASE:", payload);
-
-                // Terkadang payload.new kosong pada UPDATE jika Replica Identity belum FULL
                 const newStatus = payload.new?.status;
 
                 if (newStatus) {
@@ -91,11 +87,7 @@ export default function Navbar({ isScrolled, supabase }) {
                     });
                 }
             })
-            .subscribe((status, err) => {
-                // INI SANGAT PENTING UNTUK MENGETAHUI PENYEBABNYA
-                console.log("📡 STATUS KONEKSI REALTIME:", status);
-                if (err) console.error("Error Koneksi Realtime:", err);
-            });
+            .subscribe();
 
         return () => {
             supabase.removeChannel(channel);
@@ -115,7 +107,7 @@ export default function Navbar({ isScrolled, supabase }) {
                     const unread = data.filter(n => !readNotifs.includes(n.id)).length;
                     setUnreadCount(prev => prev + unread);
                 }
-            } catch (err) { console.error('Error fetching notifications:', err.message); }
+            } catch (err) { }
         };
         fetchNotifications();
     }, [supabase]);
