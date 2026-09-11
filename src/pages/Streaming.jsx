@@ -54,7 +54,6 @@ export default function Streaming({ supabase }) {
 
     // State Pengontrol Player & Pengecekan Server
     const [isPlaying, setIsPlaying] = useState(false);
-    const [isCheckingPlay, setIsCheckingPlay] = useState(false);
     const [isOriginalOnline, setIsOriginalOnline] = useState(false);
     const [showOfflineNotice, setShowOfflineNotice] = useState(false);
 
@@ -69,7 +68,6 @@ export default function Streaming({ supabase }) {
         setIsPlaying(false);
         setIsOriginalOnline(false);
         setShowOfflineNotice(false);
-        setIsCheckingPlay(false);
     }, [activeServer, video?.id]);
 
     // Listener sinyal balik (Handshake) dari player.html
@@ -385,36 +383,6 @@ export default function Streaming({ supabase }) {
     if (hasAlternativeServer2) serverOptions.push({ id: 'alt2', label: 'Server 3' });
     const activeServerLabel = serverOptions.find(s => s.id === effectiveServer)?.label || 'Server';
 
-    // FUNGSI GATEKEEPER: Cek server saat Play diklik (Mencegah Layar Abu-abu)
-    const handlePlayClick = async () => {
-        if (isCheckingPlay || !currentVideoUrl) return;
-
-        if (activeServer === 'original') {
-            setIsCheckingPlay(true);
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3500);
-
-                await fetch(currentVideoUrl, { method: 'HEAD', mode: 'no-cors', cache: 'no-store', signal: controller.signal });
-                clearTimeout(timeoutId);
-
-                setIsCheckingPlay(false);
-                setIsPlaying(true);
-            } catch (error) {
-                setIsCheckingPlay(false);
-                setShowOfflineNotice(true);
-                toast.error("Original Server PC Anda sedang Offline. Mengalihkan ke Server 1...");
-
-                // Fallback cerdas jika mati
-                if (hasMain) setActiveServer('main');
-                else if (hasAlternativeServer) setActiveServer('alt');
-                else if (hasAlternativeServer2) setActiveServer('alt2');
-            }
-        } else {
-            setIsPlaying(true);
-        }
-    };
-
     return (
         <>
             <Toaster position="top-center" reverseOrder={false} />
@@ -471,18 +439,11 @@ export default function Streaming({ supabase }) {
                             ) : currentVideoUrl ? (
                                 <div className="relative w-full h-full border-none">
                                     {!isPlaying ? (
-                                        <div className="relative w-full h-full cursor-pointer group flex items-center justify-center bg-black border-none" onClick={handlePlayClick}>
+                                        <div className="relative w-full h-full cursor-pointer group flex items-center justify-center bg-black border-none" onClick={() => setIsPlaying(true)}>
                                             <img src={coverImage} alt="Video Cover" className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-60 transition-opacity border-none" loading="lazy" />
                                             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors border-none z-10"></div>
                                             <div className="absolute inset-0 flex items-center justify-center z-20 border-none">
-                                                {isCheckingPlay ? (
-                                                    <div className="flex flex-col items-center justify-center gap-2 border-none">
-                                                        <Loader2 className="w-12 h-12 sm:w-16 sm:h-16 text-white animate-spin border-none drop-shadow-xl" />
-                                                        <span className="text-white text-[11px] sm:text-xs font-bold tracking-wide drop-shadow-md border-none">Memeriksa Server...</span>
-                                                    </div>
-                                                ) : (
-                                                    <Play className="w-16 h-16 sm:w-20 sm:h-20 text-white/90 fill-current drop-shadow-2xl scale-90 group-hover:scale-110 transition-transform border-none" />
-                                                )}
+                                                <Play className="w-16 h-16 sm:w-20 sm:h-20 text-white/90 fill-current drop-shadow-2xl scale-90 group-hover:scale-110 transition-transform border-none" />
                                             </div>
                                         </div>
                                     ) : (
