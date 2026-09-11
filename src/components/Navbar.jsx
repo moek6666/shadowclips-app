@@ -60,35 +60,42 @@ export default function Navbar({ isScrolled, supabase }) {
         return () => subscription?.unsubscribe();
     }, [supabase]);
 
-    // REAL-TIME LISTENER STATUS SERVER (DIOPTIMALKAN)
+    // REAL-TIME LISTENER STATUS SERVER (ANTI-GAGAL & DEBUGGING)
     useEffect(() => {
         if (!supabase) return;
 
         const fetchInitialServerStatus = async () => {
             try {
-                const { data, error } = await supabase.from('server_status').select('status').eq('id', 1).maybeSingle();
+                const { data, error } = await supabase.from('server_status').select('status').limit(1).maybeSingle();
                 if (data) setPcServerStatus(data.status);
             } catch (err) {
-                console.error('Error fetching initial server status:', err);
+                console.error('Error fetch awal:', err);
             }
         };
         fetchInitialServerStatus();
 
-        // Menggunakan event '*' agar menangkap semua jenis perubahan (UPDATE/INSERT)
-        const channel = supabase.channel('realtime:server_status_channel')
+        // Gunakan nama channel yang sederhana dan tambahkan pelacak status (subscribe status)
+        const channel = supabase.channel('public-server-status')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'server_status' }, (payload) => {
-                console.log("Realtime Payload Terdeteksi:", payload); // Log untuk memantau di console browser
-                if (payload.new && payload.new.status) {
+                console.log("🔔 DATA MASUK DARI SUPABASE:", payload);
+
+                // Terkadang payload.new kosong pada UPDATE jika Replica Identity belum FULL
+                const newStatus = payload.new?.status;
+
+                if (newStatus) {
                     setPcServerStatus((prevStatus) => {
-                        // Hanya tambah notifikasi jika status BENAR-BENAR berubah (offline -> online, atau sebaliknya)
-                        if (prevStatus !== payload.new.status) {
+                        if (prevStatus !== newStatus) {
                             setUnreadCount(prev => prev + 1);
                         }
-                        return payload.new.status;
+                        return newStatus;
                     });
                 }
             })
-            .subscribe();
+            .subscribe((status, err) => {
+                // INI SANGAT PENTING UNTUK MENGETAHUI PENYEBABNYA
+                console.log("📡 STATUS KONEKSI REALTIME:", status);
+                if (err) console.error("Error Koneksi Realtime:", err);
+            });
 
         return () => {
             supabase.removeChannel(channel);
@@ -268,7 +275,6 @@ export default function Navbar({ isScrolled, supabase }) {
                         </div>
                     </div>
 
-                    {/* KANAN (DESKTOP & MOBILE MENU) */}
                     <div className="flex items-center gap-3 sm:gap-4 border-none relative">
 
                         <div className="hidden md:flex relative group cursor-text z-50" onClick={() => setShowSearchModal(true)}>
@@ -278,7 +284,6 @@ export default function Navbar({ isScrolled, supabase }) {
                             </div>
                         </div>
 
-                        {/* TOMBOL NOTIFIKASI */}
                         <div className="relative border-none z-50" ref={notificationRef}>
                             <button onClick={handleToggleNotification} className="p-2 sm:p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none cursor-pointer relative flex items-center justify-center bg-zinc-100 dark:bg-zinc-900/80 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-full shadow-sm sm:shadow-none">
                                 <Bell className="w-5 h-5 border-none" />
@@ -287,7 +292,6 @@ export default function Navbar({ isScrolled, supabase }) {
                                 )}
                             </button>
 
-                            {/* DROPDOWN NOTIFIKASI */}
                             {isNotificationOpen && (
                                 <div className="absolute top-[calc(100%+0.5rem)] right-[-3rem] sm:right-0 w-[90vw] max-w-[320px] sm:w-80 bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-none overflow-hidden z-[110] flex flex-col">
                                     <div className="px-4 py-3.5 bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center border-none shrink-0">
@@ -317,7 +321,6 @@ export default function Navbar({ isScrolled, supabase }) {
                             )}
                         </div>
 
-                        {/* DESKTOP PROFILE / LOGIN */}
                         <div className="hidden md:flex items-center gap-4 border-none z-50 ml-1">
                             <div className="w-[1px] h-5 bg-zinc-200 dark:bg-zinc-800 border-none"></div>
 
@@ -364,7 +367,6 @@ export default function Navbar({ isScrolled, supabase }) {
                             )}
                         </div>
 
-                        {/* TOMBOL BURGER MOBILE */}
                         <div className="flex items-center md:hidden z-50 border-none">
                             <button
                                 onClick={() => setIsMobileMenuOpen(true)}
@@ -377,7 +379,6 @@ export default function Navbar({ isScrolled, supabase }) {
                 </div>
             </nav>
 
-            {/* MOBILE MENU DRAWER */}
             <div className={`md:hidden fixed inset-0 z-[100] transition-all duration-300 ${isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
                 <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
 
@@ -458,7 +459,6 @@ export default function Navbar({ isScrolled, supabase }) {
                 </div>
             </div>
 
-            {/* FULLSCREEN SEARCH MODAL */}
             {showSearchModal && (
                 <div className="fixed inset-0 z-[100] bg-white/95 dark:bg-zinc-950/95 backdrop-blur-3xl overflow-y-auto custom-scrollbar animate-in fade-in duration-300 border-none">
                     <div className="min-h-screen px-4 sm:px-8 py-10 md:py-16 flex flex-col items-center border-none">
