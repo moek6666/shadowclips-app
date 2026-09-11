@@ -262,9 +262,10 @@ export default function Navbar({ isScrolled, supabase }) {
                         </div>
                     </div>
 
-                    {/* KANAN DESKTOP */}
-                    <div className="flex items-center gap-3 sm:gap-4 border-none">
+                    {/* KANAN (DESKTOP & MOBILE MENU) */}
+                    <div className="flex items-center gap-3 sm:gap-4 border-none relative">
 
+                        {/* Search Desktop */}
                         <div className="hidden md:flex relative group cursor-text z-50" onClick={() => setShowSearchModal(true)}>
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors w-4 h-4 border-none" />
                             <div className="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900/80 dark:hover:bg-zinc-900 rounded-full py-2 pl-11 pr-5 w-56 lg:w-64 transition-colors duration-300 text-sm text-zinc-500 flex items-center select-none border-none outline-none">
@@ -272,17 +273,18 @@ export default function Navbar({ isScrolled, supabase }) {
                             </div>
                         </div>
 
-                        {/* TOMBOL NOTIFIKASI DESKTOP */}
-                        <div className="hidden md:block relative border-none z-50" ref={notificationRef}>
-                            <button onClick={handleToggleNotification} className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none cursor-pointer relative flex items-center justify-center bg-zinc-100 dark:bg-zinc-900/80 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-full">
+                        {/* TOMBOL NOTIFIKASI (MUNCUL DI MOBILE & DESKTOP) */}
+                        <div className="relative border-none z-50" ref={notificationRef}>
+                            <button onClick={handleToggleNotification} className="p-2 sm:p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none cursor-pointer relative flex items-center justify-center bg-zinc-100 dark:bg-zinc-900/80 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-full shadow-sm sm:shadow-none">
                                 <Bell className="w-5 h-5 border-none" />
                                 {unreadCount > 0 && (
                                     <span className="absolute top-1 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-zinc-950 border-none shadow-sm animate-pulse"></span>
                                 )}
                             </button>
 
+                            {/* DROPDOWN NOTIFIKASI */}
                             {isNotificationOpen && (
-                                <div className="absolute top-[calc(100%+0.5rem)] right-0 w-80 bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-none overflow-hidden z-50 flex flex-col">
+                                <div className="absolute top-[calc(100%+0.5rem)] right-[-3rem] sm:right-0 w-[90vw] max-w-[320px] sm:w-80 bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-none overflow-hidden z-[110] flex flex-col">
                                     <div className="px-4 py-3.5 bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center border-none shrink-0">
                                         <h3 className="text-sm font-black text-zinc-900 dark:text-white border-none">Notifikasi</h3>
                                         {unreadCount > 0 && <span className="text-[10px] bg-[#106EBE]/10 text-[#106EBE] px-2 py-1 rounded-full font-bold border-none">{unreadCount} Baru</span>}
@@ -310,6 +312,7 @@ export default function Navbar({ isScrolled, supabase }) {
                             )}
                         </div>
 
+                        {/* DESKTOP PROFILE / LOGIN */}
                         <div className="hidden md:flex items-center gap-4 border-none z-50 ml-1">
                             <div className="w-[1px] h-5 bg-zinc-200 dark:bg-zinc-800 border-none"></div>
 
@@ -356,7 +359,7 @@ export default function Navbar({ isScrolled, supabase }) {
                             )}
                         </div>
 
-                        {/* TOMBOL BURGER MOBILE SAJA (BERSIH DARI TUMPANG TINDIH) */}
+                        {/* TOMBOL BURGER MOBILE */}
                         <div className="flex items-center md:hidden z-50 border-none">
                             <button
                                 onClick={() => setIsMobileMenuOpen(true)}
@@ -369,7 +372,7 @@ export default function Navbar({ isScrolled, supabase }) {
                 </div>
             </nav>
 
-            {/* MOBILE MENU DRAWER (TERINTEGRASI SEARCH & NOTIFIKASI) */}
+            {/* MOBILE MENU DRAWER (BERSIH DARI NOTIFIKASI) */}
             <div className={`md:hidden fixed inset-0 z-[100] transition-all duration-300 ${isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
                 <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
 
@@ -451,33 +454,6 @@ export default function Navbar({ isScrolled, supabase }) {
                         <a href="/download-apk" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors mt-1">
                             <Download className="w-4 h-4 text-[#106EBE]" /> APK
                         </a>
-
-                        <div className="h-px w-full bg-zinc-100 dark:bg-zinc-800/60 my-2"></div>
-
-                        {/* BAGIAN NOTIFIKASI DI DALAM MENU BURGER MOBILE */}
-                        <div className="flex flex-col gap-2">
-                            <div className="flex items-center justify-between px-4 py-2">
-                                <span className="text-xs font-black uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-                                    <Bell className="w-3.5 h-3.5 text-[#106EBE]" /> Notifikasi & Status
-                                </span>
-                                {unreadCount > 0 && <span className="text-[10px] bg-[#106EBE]/10 text-[#106EBE] px-2 py-0.5 rounded-full font-bold">{unreadCount} Baru</span>}
-                            </div>
-
-                            <div className="flex flex-col gap-2 max-h-[240px] overflow-y-auto px-1">
-                                {displayNotifications.length > 0 ? displayNotifications.map((notif, index) => (
-                                    <div key={notif.id || index} className={`p-3 rounded-xl border border-zinc-100 dark:border-zinc-800/60 ${notif.isServerStatus ? (pcServerStatus === 'online' ? 'bg-emerald-500/10' : 'bg-red-500/10') : 'bg-zinc-50 dark:bg-zinc-900/50'}`}>
-                                        <h4 className={`text-[12px] font-bold mb-1 flex items-center gap-1.5 ${notif.isServerStatus ? (pcServerStatus === 'online' ? 'text-emerald-500' : 'text-red-500') : 'text-zinc-800 dark:text-zinc-200'}`}>
-                                            {notif.isServerStatus && <Activity className="w-3 h-3" />}
-                                            {notif.title}
-                                        </h4>
-                                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-2">{notif.message}</p>
-                                    </div>
-                                )) : (
-                                    <span className="text-xs text-zinc-400 px-4 italic">Belum ada notifikasi</span>
-                                )}
-                            </div>
-                        </div>
-
                     </div>
                 </div>
             </div>
