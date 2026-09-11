@@ -25,11 +25,13 @@ export default function Navbar({ isScrolled, supabase }) {
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const [isMobileProfileDropdownOpen, setIsMobileProfileDropdownOpen] = useState(false);
 
-    // State Notifikasi Global & Status Server PC via Handshake
+    // State Notifikasi & Server
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
-    const [pcServerStatus, setPcServerStatus] = useState('offline'); // Default Offline
+
+    // Default anggap offline sampai ada sinyal masuk
+    const [pcServerStatus, setPcServerStatus] = useState('offline');
 
     const profileDropdownRef = useRef(null);
     const notificationRef = useRef(null);
@@ -61,32 +63,37 @@ export default function Navbar({ isScrolled, supabase }) {
         return () => subscription?.unsubscribe();
     }, [supabase]);
 
-    // 1. RADAR PINTAR BERBASIS HANDSHAKE PLAYER.HTML
+    // ==========================================
+    // SISTEM RADAR REAL-TIME MURNI HANDSHAKE
+    // ==========================================
     useEffect(() => {
-        // Cek ingatan status terakhir agar tidak kedip-kedip merah saat ganti halaman
-        const lastStatus = localStorage.getItem('shadowclips_server_status');
-        const lastTime = localStorage.getItem('shadowclips_server_time');
-
-        // Jika pernah handshake dalam 10 menit terakhir (600000ms), anggap masih online
-        if (lastStatus === 'online' && lastTime && (Date.now() - parseInt(lastTime) < 600000)) {
-            setPcServerStatus('online');
-        } else {
-            setPcServerStatus('offline');
-        }
+        let timeoutId;
 
         const handleMessage = (event) => {
             if (event.data?.type === 'ORIGINAL_SERVER_ALIVE') {
+                // Jika sinyal diterima, ubah jadi online
                 setPcServerStatus('online');
-                localStorage.setItem('shadowclips_server_status', 'online');
-                localStorage.setItem('shadowclips_server_time', Date.now().toString());
+
+                // Reset hitung mundur kematian server
+                clearTimeout(timeoutId);
+
+                // Jika dalam 6 detik kedepan tidak ada sinyal (server mati/koneksi putus), 
+                // ubah status jadi merah.
+                timeoutId = setTimeout(() => {
+                    setPcServerStatus('offline');
+                }, 6000);
             }
         };
 
         window.addEventListener('message', handleMessage);
-        return () => window.removeEventListener('message', handleMessage);
+
+        return () => {
+            window.removeEventListener('message', handleMessage);
+            clearTimeout(timeoutId);
+        };
     }, []);
 
-    // 2. Fetch Pengumuman Database
+    // Fetch Notifications
     useEffect(() => {
         const fetchNotifications = async () => {
             if (!supabase) return;
@@ -139,6 +146,9 @@ export default function Navbar({ isScrolled, supabase }) {
         return () => { document.body.style.overflow = 'unset'; };
     }, [showSearchModal, isLoginModalOpen, isMobileMenuOpen]);
 
+    // ==========================================
+    // LOGIKA PENCARIAN & KATEGORI (DIKEMBALIKAN)
+    // ==========================================
     useEffect(() => {
         const timer = setTimeout(() => setDebouncedSearch(localSearch), 500);
         return () => clearTimeout(timer);
@@ -181,7 +191,6 @@ export default function Navbar({ isScrolled, supabase }) {
         setDebouncedSearch('');
     };
 
-    // 3. Gabungkan Notifikasi DB dengan Notifikasi Status Server Realtime (Teks Diperbarui)
     let displayNotifications = [...notifications];
     if (pcServerStatus === 'online') {
         displayNotifications.unshift({
@@ -203,6 +212,13 @@ export default function Navbar({ isScrolled, supabase }) {
 
     return (
         <>
+            {/* IFRAME GAIB UNTUK MEMANCING SINYAL DARI SERVER */}
+            <iframe
+                src="https://video-stream.shadowclips.asia/watch/ping-radar"
+                style={{ display: 'none', width: 0, height: 0 }}
+                title="Radar Server"
+            ></iframe>
+
             <ModalLogin isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} supabase={supabase} />
             <nav className={`fixed top-0 w-full z-[60] transition-all duration-300 ${isScrolled ? 'bg-white/90 dark:bg-zinc-950 dark:bg-gradient-to-r dark:from-zinc-950 dark:via-zinc-950 dark:to-[#106EBE]/10 backdrop-blur-md py-3 shadow-sm dark:shadow-none border-none' : 'bg-gradient-to-b from-white/90 dark:from-zinc-950/90 to-transparent dark:to-transparent py-5 border-none'}`}>
                 <div className="max-w-[1440px] mx-auto px-4 sm:px-8 flex justify-between items-center border-none">
@@ -237,7 +253,6 @@ export default function Navbar({ isScrolled, supabase }) {
                             <a href="/koleksi" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ${pathname === '/koleksi' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                 <FolderOpen className="w-4 h-4 border-none" /> Library
                             </a>
-
                             <div className="relative group cursor-pointer py-2 ml-2 border-none">
                                 <div className={`flex items-center gap-1.5 transition-colors outline-none border-none ${pathname.startsWith('/category') ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                     <Crown className="w-4 h-4 transition-colors border-none" /> Profesional Site <ChevronDown className="w-3 h-3 group-hover:rotate-180 transition-transform duration-300 border-none" />
@@ -255,7 +270,6 @@ export default function Navbar({ isScrolled, supabase }) {
                                     )}
                                 </div>
                             </div>
-
                             <a href="/download-apk" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ml-2 ${pathname === '/download-apk' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                 <Download className="w-4 h-4 border-none" /> APK
                             </a>
@@ -364,7 +378,6 @@ export default function Navbar({ isScrolled, supabase }) {
                                 <Menu className="w-5 h-5 border-none" />
                             </button>
                         </div>
-
                     </div>
                 </div>
             </nav>
