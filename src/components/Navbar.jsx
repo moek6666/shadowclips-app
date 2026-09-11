@@ -67,7 +67,6 @@ export default function Navbar({ isScrolled, supabase }) {
     useEffect(() => {
         if (!supabase) return;
 
-        // 1. Ambil status awal saat halaman dimuat
         const fetchInitialServerStatus = async () => {
             try {
                 const { data, error } = await supabase.from('server_status').select('status').eq('id', 1).maybeSingle();
@@ -78,7 +77,6 @@ export default function Navbar({ isScrolled, supabase }) {
         };
         fetchInitialServerStatus();
 
-        // 2. Berlangganan perubahan data secara real-time via WebSocket Supabase
         const channel = supabase.channel('public:server_status')
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'server_status', filter: 'id=eq.1' }, (payload) => {
                 if (payload.new && payload.new.status) {
@@ -372,7 +370,51 @@ export default function Navbar({ isScrolled, supabase }) {
                 </div>
             </nav>
 
-            {/* Menu Mobile & Search Modal tetap seperti sebelumnya */}
+            {/* FULLSCREEN SEARCH MODAL (Gaya Backup Asli Anda) */}
+            {showSearchModal && (
+                <div className="fixed inset-0 z-[100] bg-white/95 dark:bg-zinc-950/95 backdrop-blur-3xl overflow-y-auto custom-scrollbar animate-in fade-in duration-300 border-none">
+                    <div className="min-h-screen px-4 sm:px-8 py-10 md:py-16 flex flex-col items-center border-none">
+                        <button onClick={closeAndClearSearch} className="fixed top-6 right-6 md:top-10 md:right-10 p-2.5 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors bg-zinc-100 dark:bg-zinc-900 rounded-full z-50 shadow-md outline-none border-none cursor-pointer">
+                            <X className="w-6 h-6 md:w-8 md:h-8 border-none" />
+                        </button>
+                        <div className="w-full max-w-4xl relative animate-in slide-in-from-top-8 duration-500 mb-10 sticky top-0 z-40 pt-4 border-none">
+                            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 md:w-8 md:h-8 text-zinc-400 dark:text-zinc-500 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] mt-2 border-none" />
+                            <input autoFocus type="text" value={localSearch} onChange={(e) => setLocalSearch(e.target.value)} placeholder="Type keywords to search..." className="w-full bg-white dark:bg-zinc-900 rounded-full py-5 md:py-6 pl-16 md:pl-20 pr-8 text-lg md:text-2xl text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-0 shadow-lg dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all border-none outline-none group" />
+                        </div>
+                        <div className="w-full max-w-[1440px] animate-in fade-in duration-700 border-none">
+                            {isSearching ? (
+                                <div className="flex justify-center py-32 border-none">
+                                    <div className="w-14 h-14 border-4 border-zinc-200 dark:border-zinc-800 border-t-[#106EBE] rounded-full animate-spin shadow-md"></div>
+                                </div>
+                            ) : debouncedSearch && searchResults.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-y-8 md:gap-x-6 pb-20 border-none">
+                                    {searchResults.map((video) => (
+                                        <div key={video.id} onClick={() => { window.location.href = `/streaming/${video.slug || video.id}`; closeAndClearSearch(); }} className="group cursor-pointer flex flex-col gap-2 border-none">
+                                            <div className="relative aspect-video rounded-[4px] overflow-hidden bg-zinc-200 dark:bg-zinc-900 border-none">
+                                                <img src={getImageUrl(video.thumbnail_url || video.img)} alt={video.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 border-none" loading="lazy" />
+                                            </div>
+                                            <div className="px-1 text-center border-none">
+                                                <h3 className="font-bold text-[13px] md:text-[14px] text-zinc-800 dark:text-zinc-300 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors line-clamp-2 leading-snug border-none" title={video.title}>
+                                                    {video.title}
+                                                </h3>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : debouncedSearch && searchResults.length === 0 ? (
+                                <div className="text-center py-32 text-zinc-400 dark:text-zinc-500 border-none">
+                                    <Search className="w-16 h-16 mx-auto mb-4 opacity-30 dark:opacity-20 border-none" />
+                                    <p className="text-xl border-none">No results found for "{debouncedSearch}"</p>
+                                </div>
+                            ) : (
+                                <div className="text-center py-32 text-zinc-500 dark:text-zinc-600 border-none">
+                                    <p className="text-lg border-none">Type something to start searching for videos.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
