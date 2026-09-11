@@ -208,33 +208,24 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                 className="relative w-full max-w-[1000px] bg-white dark:bg-[#0E1116] rounded-2xl md:rounded-[1.5rem] shadow-2xl shadow-slate-300/50 dark:shadow-[0_20px_60px_rgba(0,0,0,0.9)] animate-in zoom-in-95 duration-300 border-none overflow-hidden flex flex-col md:flex-row min-h-[600px] transition-colors"
                 onClick={(e) => e.stopPropagation()}
             >
+                {/* BAGIAN KIRI DENGAN BACKGROUND BARU */}
                 <div className="hidden md:flex flex-col w-[55%] p-10 lg:p-12 relative overflow-hidden bg-slate-100 dark:bg-[#07090D] border-none transition-colors">
+
+                    {/* Efek Cahaya (Blur) Latar Belakang */}
                     <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500/10 dark:bg-blue-600/20 blur-[100px] rounded-full pointer-events-none z-0"></div>
                     <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-500/10 dark:bg-blue-600/15 blur-[100px] rounded-full pointer-events-none z-0"></div>
 
-                    <div className="absolute inset-[-25%] z-0 transform -rotate-[8deg] scale-[1.15] pointer-events-none flex gap-3 opacity-40 dark:opacity-30">
-                        {[0, 1, 2, 3].map((colIdx) => (
-                            <div key={colIdx} className={`flex flex-col gap-3 w-1/4 ${colIdx % 2 === 0 ? 'translate-y-[-15%]' : 'translate-y-[5%]'}`}>
-                                {[...Array(6)].map((_, rowIdx) => {
-                                    const imgList = [
-                                        "https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/Login%20BG/Cia.webp",
-                                        "https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/Login%20BG/Rizkysuryai.webp",
-                                        "https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/shadowclips/Login%20BG/Khofifah.webp"
-                                    ];
-                                    return (
-                                        <img
-                                            key={rowIdx}
-                                            src={imgList[(colIdx + rowIdx) % 3]}
-                                            alt="Poster"
-                                            className="w-full aspect-[2/3] object-cover rounded-md shadow-lg"
-                                        />
-                                    );
-                                })}
-                            </div>
-                        ))}
+                    {/* Gambar Full Background Baru */}
+                    <div className="absolute inset-0 z-0 pointer-events-none">
+                        <img
+                            src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/Original%20Shadowclips/Bg%20Modal%20Login%20.webp"
+                            alt="Background Modal"
+                            className="w-full h-full object-cover opacity-90 dark:opacity-80"
+                        />
                     </div>
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-100 via-slate-100/70 to-transparent dark:from-[#07090D] dark:via-[#07090D]/80 dark:to-transparent z-0 pointer-events-none"></div>
+                    {/* Efek Gradasi (Agar Teks Tetap Jelas dan Terbaca) */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-100 via-slate-100/40 to-transparent dark:from-[#07090D] dark:via-[#07090D]/50 dark:to-transparent z-0 pointer-events-none"></div>
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-white dark:to-[#0E1116] z-0 pointer-events-none"></div>
 
                     <div className="relative z-10 flex flex-col h-full justify-end pb-2 lg:pb-4">
@@ -249,7 +240,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                     Shadow<span className="text-[#3b82f6]">Clips</span>
                                 </h3>
                             </div>
-                            <p className="text-slate-700 dark:text-zinc-200 text-[13px] lg:text-[14px] leading-relaxed font-semibold">
+                            <p className="text-slate-800 dark:text-zinc-200 text-[13px] lg:text-[14px] leading-relaxed font-semibold">
                                 Nikmati konten-konten exclusive setiap hari dan selamat bergabung di shadowclips.asia.
                             </p>
                         </div>
@@ -258,22 +249,22 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                             <div className="flex flex-col gap-1">
                                 <MonitorPlay className="w-5 h-5 lg:w-6 lg:h-6 text-[#3b82f6] mb-0.5" strokeWidth={2} />
                                 <h4 className="text-[12px] lg:text-[13px] font-bold text-slate-900 dark:text-zinc-100 leading-none">Exclusive</h4>
-                                <p className="text-[11px] text-slate-500 dark:text-zinc-400 leading-snug font-medium">Premium access only</p>
+                                <p className="text-[11px] text-slate-600 dark:text-zinc-300 leading-snug font-medium">Premium access only</p>
                             </div>
                             <div className="flex flex-col gap-1">
                                 <Zap className="w-5 h-5 lg:w-6 lg:h-6 text-[#3b82f6] mb-0.5" strokeWidth={2} />
                                 <h4 className="text-[12px] lg:text-[13px] font-bold text-slate-900 dark:text-zinc-100 leading-none">Viral</h4>
-                                <p className="text-[11px] text-slate-500 dark:text-zinc-400 leading-snug font-medium">Trending content</p>
+                                <p className="text-[11px] text-slate-600 dark:text-zinc-300 leading-snug font-medium">Trending content</p>
                             </div>
                             <div className="flex flex-col gap-1">
                                 <Eye className="w-5 h-5 lg:w-6 lg:h-6 text-[#3b82f6] mb-0.5" strokeWidth={2} />
                                 <h4 className="text-[12px] lg:text-[13px] font-bold text-slate-900 dark:text-zinc-100 leading-none">DeepFake</h4>
-                                <p className="text-[11px] text-slate-500 dark:text-zinc-400 leading-snug font-medium">AI-generated realistic content</p>
+                                <p className="text-[11px] text-slate-600 dark:text-zinc-300 leading-snug font-medium">AI-generated realistic content</p>
                             </div>
                             <div className="flex flex-col gap-1">
                                 <Radio className="w-5 h-5 lg:w-6 lg:h-6 text-[#3b82f6] mb-0.5" strokeWidth={2} />
                                 <h4 className="text-[12px] lg:text-[13px] font-bold text-slate-900 dark:text-zinc-100 leading-none">Live</h4>
-                                <p className="text-[11px] text-slate-500 dark:text-zinc-400 leading-snug font-medium">Record or replay streaming</p>
+                                <p className="text-[11px] text-slate-600 dark:text-zinc-300 leading-snug font-medium">Record or replay streaming</p>
                             </div>
                         </div>
                     </div>
@@ -355,7 +346,6 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                         )}
                                     </div>
 
-                                    {/* Progress bar disembunyikan jika tidak ada input password */}
                                     {!isLogin && password.length > 0 && (
                                         <div className="w-full h-1 bg-slate-200 dark:bg-[#272A35] rounded-full overflow-hidden mb-1.5">
                                             <div

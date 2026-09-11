@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import useSWR from 'swr';
-import { Search, Menu, X, Home, Compass, Flame, FolderOpen, Crown, ChevronDown, Sun, Moon, LogIn, LogOut, User, Settings, Download } from 'lucide-react';
+import { Search, Menu, X, Home, Compass, Flame, FolderOpen, Crown, ChevronDown, Sun, Moon, LogIn, LogOut, User, Settings, Download, Bell, Activity } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
 import ModalLogin from './ModalLogin';
 import Avatar from './Avatar';
@@ -25,7 +25,14 @@ export default function Navbar({ isScrolled, supabase }) {
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const [isMobileProfileDropdownOpen, setIsMobileProfileDropdownOpen] = useState(false);
 
+    // State Notifikasi Global & Status Server PC via Handshake
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [pcServerStatus, setPcServerStatus] = useState('offline'); // Default Offline
+
     const profileDropdownRef = useRef(null);
+    const notificationRef = useRef(null);
 
     const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
     const getImageUrl = (url) => url || '';
@@ -36,14 +43,11 @@ export default function Navbar({ isScrolled, supabase }) {
             const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
             if (error) throw error;
             if (data) setProfile(data);
-        } catch (err) {
-            console.error('Error fetching profile:', err.message);
-        }
+        } catch (err) { console.error('Error fetching profile:', err.message); }
     };
 
     useEffect(() => {
         if (!supabase) return;
-
         supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
             setSession(currentSession);
             if (currentSession?.user) fetchProfile(currentSession.user.id);
@@ -54,41 +58,84 @@ export default function Navbar({ isScrolled, supabase }) {
             if (currentSession?.user) fetchProfile(currentSession.user.id);
             else setProfile(null);
         });
-
         return () => subscription?.unsubscribe();
+    }, [supabase]);
+
+    // 1. RADAR PINTAR BERBASIS HANDSHAKE PLAYER.HTML
+    useEffect(() => {
+        // Cek ingatan status terakhir agar tidak kedip-kedip merah saat ganti halaman
+        const lastStatus = localStorage.getItem('shadowclips_server_status');
+        const lastTime = localStorage.getItem('shadowclips_server_time');
+
+        // Jika pernah handshake dalam 10 menit terakhir (600000ms), anggap masih online
+        if (lastStatus === 'online' && lastTime && (Date.now() - parseInt(lastTime) < 600000)) {
+            setPcServerStatus('online');
+        } else {
+            setPcServerStatus('offline');
+        }
+
+        const handleMessage = (event) => {
+            if (event.data?.type === 'ORIGINAL_SERVER_ALIVE') {
+                setPcServerStatus('online');
+                localStorage.setItem('shadowclips_server_status', 'online');
+                localStorage.setItem('shadowclips_server_time', Date.now().toString());
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, []);
+
+    // 2. Fetch Pengumuman Database
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            if (!supabase) return;
+            try {
+                const { data, error } = await supabase.from('global_notifications').select('*').order('created_at', { ascending: false }).limit(10);
+                if (error && error.code !== '42P01') throw error;
+                if (data) {
+                    setNotifications(data);
+                    const readNotifs = JSON.parse(localStorage.getItem('shadowclips_read_notifs') || '[]');
+                    const unread = data.filter(n => !readNotifs.includes(n.id)).length;
+                    setUnreadCount(unread);
+                }
+            } catch (err) { console.error('Error fetching notifications:', err.message); }
+        };
+        fetchNotifications();
     }, [supabase]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
-                setIsProfileDropdownOpen(false);
-            }
+            if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) setIsProfileDropdownOpen(false);
+            if (notificationRef.current && !notificationRef.current.contains(event.target)) setIsNotificationOpen(false);
         };
-
         document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     const handleLogout = async () => {
-        if (supabase) {
-            await supabase.auth.signOut();
-        }
+        if (supabase) await supabase.auth.signOut();
         setIsProfileDropdownOpen(false);
         setIsMobileProfileDropdownOpen(false);
         setIsMobileMenuOpen(false);
-        if (typeof window !== 'undefined') {
-            window.location.reload();
+        if (typeof window !== 'undefined') window.location.reload();
+    };
+
+    const handleToggleNotification = () => {
+        setIsNotificationOpen(!isNotificationOpen);
+        setIsProfileDropdownOpen(false);
+
+        if (!isNotificationOpen && unreadCount > 0) {
+            const readNotifs = JSON.parse(localStorage.getItem('shadowclips_read_notifs') || '[]');
+            const newReads = [...new Set([...readNotifs, ...notifications.map(n => n.id)])];
+            localStorage.setItem('shadowclips_read_notifs', JSON.stringify(newReads));
+            setUnreadCount(0);
         }
     };
 
     useEffect(() => {
-        if (showSearchModal || isLoginModalOpen || isMobileMenuOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'unset';
-        }
+        if (showSearchModal || isLoginModalOpen || isMobileMenuOpen) document.body.style.overflow = 'hidden';
+        else document.body.style.overflow = 'unset';
         return () => { document.body.style.overflow = 'unset'; };
     }, [showSearchModal, isLoginModalOpen, isMobileMenuOpen]);
 
@@ -99,9 +146,7 @@ export default function Navbar({ isScrolled, supabase }) {
 
     const fetchSearchResults = async (query) => {
         if (!supabase || !query) return [];
-        const { data, error } = await supabase.from('videos')
-            .select('*').or(`title.ilike.%${query}%,category.ilike.%${query}%`)
-            .order('created_at', { ascending: false }).limit(24);
+        const { data, error } = await supabase.from('videos').select('*').or(`title.ilike.%${query}%,category.ilike.%${query}%`).order('created_at', { ascending: false }).limit(24);
         if (error) throw new Error(error.message);
         return data || [];
     };
@@ -113,23 +158,16 @@ export default function Navbar({ isScrolled, supabase }) {
 
     const fetchCategoriesWithLabel = async () => {
         if (!supabase) return [];
-        const { data, error } = await supabase
-            .from('videos')
-            .select('category, labels')
-            .not('category', 'is', null);
-
+        const { data, error } = await supabase.from('videos').select('category, labels').not('category', 'is', null);
         if (error || !data) return [];
 
         const categories = [];
         data.forEach(item => {
             if (item.category && item.labels) {
                 const labelStr = typeof item.labels === 'string' ? item.labels : JSON.stringify(item.labels);
-                if (labelStr.toLowerCase().includes('profesional site')) {
-                    categories.push(item.category);
-                }
+                if (labelStr.toLowerCase().includes('profesional site')) categories.push(item.category);
             }
         });
-
         return [...new Set(categories)].filter(Boolean);
     };
 
@@ -143,6 +181,26 @@ export default function Navbar({ isScrolled, supabase }) {
         setDebouncedSearch('');
     };
 
+    // 3. Gabungkan Notifikasi DB dengan Notifikasi Status Server Realtime (Teks Diperbarui)
+    let displayNotifications = [...notifications];
+    if (pcServerStatus === 'online') {
+        displayNotifications.unshift({
+            id: 'server-live',
+            title: '🟢 Original Server Online',
+            message: 'Server Utama saat ini sedang aktif. Nikmati pengalaman streaming dengan kualitas maksimal.',
+            created_at: new Date().toISOString(),
+            isServerStatus: true
+        });
+    } else {
+        displayNotifications.unshift({
+            id: 'server-dead',
+            title: '🔴 Original Server Offline',
+            message: 'Saat ini Server Utama sedang offline. Silakan gunakan pilihan server lain yang tersedia.',
+            created_at: new Date().toISOString(),
+            isServerStatus: true
+        });
+    }
+
     return (
         <>
             <ModalLogin isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} supabase={supabase} />
@@ -151,12 +209,11 @@ export default function Navbar({ isScrolled, supabase }) {
 
                     <div className="flex items-center gap-8 lg:gap-12 border-none">
                         <a href="/" className="flex items-center gap-2.5 z-50 outline-none border-none">
-                            <img 
-                                src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/New%20Logo%20Shadowclips.webp" 
-                                alt="ShadowClips Logo" 
-                                className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 border-none drop-shadow-lg object-contain" 
+                            <img
+                                src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/New%20Logo%20Shadowclips.webp"
+                                alt="ShadowClips Logo"
+                                className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 border-none drop-shadow-lg object-contain"
                             />
-
                             <div className="flex flex-col justify-center border-none">
                                 <span className="text-xl sm:text-[22px] font-black tracking-tighter text-zinc-900 dark:text-white leading-none mb-1 transition-colors border-none">
                                     Shadow<span className="text-[#106EBE]">Clips</span>
@@ -205,7 +262,8 @@ export default function Navbar({ isScrolled, supabase }) {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4 border-none">
+                    <div className="flex items-center gap-3 sm:gap-4 border-none">
+
                         <div className="hidden md:flex relative group cursor-text z-50" onClick={() => setShowSearchModal(true)}>
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors w-4 h-4 border-none" />
                             <div className="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900/80 dark:hover:bg-zinc-900 rounded-full py-2 pl-11 pr-5 w-56 lg:w-64 transition-colors duration-300 text-sm text-zinc-500 flex items-center select-none border-none outline-none">
@@ -213,12 +271,51 @@ export default function Navbar({ isScrolled, supabase }) {
                             </div>
                         </div>
 
-                        <div className="hidden md:flex items-center gap-4 border-none z-50 ml-2">
+                        {/* TOMBOL NOTIFIKASI */}
+                        <div className="relative border-none z-50" ref={notificationRef}>
+                            <button onClick={handleToggleNotification} className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none cursor-pointer relative flex items-center justify-center bg-zinc-100 dark:bg-zinc-900/80 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-full md:bg-transparent md:hover:bg-transparent md:dark:bg-transparent md:dark:hover:bg-transparent">
+                                <Bell className="w-5 h-5 border-none" />
+                                {unreadCount > 0 && (
+                                    <span className="absolute top-1 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-zinc-950 border-none shadow-sm animate-pulse"></span>
+                                )}
+                            </button>
+
+                            {isNotificationOpen && (
+                                <div className="absolute top-[calc(100%+0.5rem)] right-0 md:-right-4 w-72 md:w-80 bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-none overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200 flex flex-col">
+                                    <div className="px-4 py-3.5 bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center border-none shrink-0">
+                                        <h3 className="text-sm font-black text-zinc-900 dark:text-white border-none">Notifikasi</h3>
+                                        {unreadCount > 0 && <span className="text-[10px] bg-[#106EBE]/10 text-[#106EBE] px-2 py-1 rounded-full font-bold border-none">{unreadCount} Baru</span>}
+                                    </div>
+                                    <div className="max-h-[320px] overflow-y-auto flex flex-col custom-scrollbar border-none">
+                                        {displayNotifications.length > 0 ? displayNotifications.map((notif, index) => (
+                                            <div key={notif.id || index} className={`p-4 border-b border-zinc-50 dark:border-zinc-800/60 transition-colors border-none cursor-default ${notif.isServerStatus ? (pcServerStatus === 'online' ? 'bg-emerald-500/10 hover:bg-emerald-500/20' : 'bg-red-500/10 hover:bg-red-500/20') : 'hover:bg-zinc-50 dark:hover:bg-white/5'}`}>
+
+                                                <h4 className={`text-[13px] font-bold mb-1 leading-snug border-none flex items-center gap-1.5 ${notif.isServerStatus ? (pcServerStatus === 'online' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400') : 'text-zinc-800 dark:text-zinc-100'}`}>
+                                                    {notif.isServerStatus && <Activity className="w-3.5 h-3.5 border-none" />}
+                                                    {notif.title}
+                                                </h4>
+                                                <p className={`text-[11px] line-clamp-3 leading-relaxed border-none ${notif.isServerStatus ? 'text-zinc-700 dark:text-zinc-300' : 'text-zinc-500 dark:text-zinc-400'}`}>{notif.message}</p>
+                                                {!notif.isServerStatus && (
+                                                    <span className="text-[9px] text-zinc-400 dark:text-zinc-500 font-bold mt-2.5 block border-none">{new Date(notif.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                                )}
+                                            </div>
+                                        )) : (
+                                            <div className="p-8 text-center flex flex-col items-center justify-center border-none">
+                                                <Bell className="w-8 h-8 text-zinc-300 dark:text-zinc-700 mb-2 border-none" />
+                                                <span className="text-zinc-500 dark:text-zinc-400 text-[12px] font-bold border-none">Belum ada pengumuman</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="hidden md:flex items-center gap-4 border-none z-50 ml-1">
                             <div className="w-[1px] h-5 bg-zinc-200 dark:bg-zinc-800 border-none"></div>
 
                             {session ? (
                                 <div className="relative border-none" ref={profileDropdownRef}>
-                                    <button onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)} className="flex items-center gap-2.5 p-1 pl-3 bg-zinc-100 dark:bg-zinc-900/80 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors outline-none border-none cursor-pointer">
+                                    <button onClick={() => { setIsProfileDropdownOpen(!isProfileDropdownOpen); setIsNotificationOpen(false); }} className="flex items-center gap-2.5 p-1 pl-3 bg-zinc-100 dark:bg-zinc-900/80 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors outline-none border-none cursor-pointer">
                                         <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 max-w-[100px] truncate border-none">
                                             {profile?.name || (session?.user?.email || '').split('@')[0] || 'User'}
                                         </span>
@@ -259,11 +356,11 @@ export default function Navbar({ isScrolled, supabase }) {
                             )}
                         </div>
 
-                        <div className="flex items-center gap-1 md:hidden z-50 border-none">
-                            <button onClick={() => setShowSearchModal(true)} className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none cursor-pointer">
+                        <div className="flex items-center gap-1.5 md:hidden z-50 border-none ml-0.5">
+                            <button onClick={() => setShowSearchModal(true)} className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none cursor-pointer bg-zinc-100 dark:bg-zinc-900/80 rounded-full">
                                 <Search className="w-5 h-5 border-none" />
                             </button>
-                            <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 ml-1 text-zinc-900 dark:text-white bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-full border-none outline-none cursor-pointer shadow-sm transition-colors">
+                            <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 text-zinc-900 dark:text-white bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-full border-none outline-none cursor-pointer shadow-sm transition-colors">
                                 <Menu className="w-5 h-5 border-none" />
                             </button>
                         </div>
@@ -272,6 +369,7 @@ export default function Navbar({ isScrolled, supabase }) {
                 </div>
             </nav>
 
+            {/* Menu Mobile */}
             <div className={`md:hidden fixed inset-0 z-[100] transition-all duration-300 ${isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
 
@@ -349,6 +447,7 @@ export default function Navbar({ isScrolled, supabase }) {
                 </div>
             </div>
 
+            {/* Modal Pencarian */}
             {showSearchModal && (
                 <div className="fixed inset-0 z-[100] bg-white/95 dark:bg-zinc-950/95 backdrop-blur-3xl overflow-y-auto custom-scrollbar animate-in fade-in duration-300 border-none">
                     <div className="min-h-screen px-4 sm:px-8 py-10 md:py-16 flex flex-col items-center border-none">
