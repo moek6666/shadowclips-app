@@ -25,7 +25,6 @@ export default function Navbar({ isScrolled, supabase }) {
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const [isMobileProfileDropdownOpen, setIsMobileProfileDropdownOpen] = useState(false);
 
-    // State Notifikasi & Server Real-time dari Supabase
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -61,7 +60,7 @@ export default function Navbar({ isScrolled, supabase }) {
         return () => subscription?.unsubscribe();
     }, [supabase]);
 
-    // REAL-TIME LISTENER STATUS SERVER
+    // REAL-TIME LISTENER STATUS SERVER (DIOPTIMALKAN)
     useEffect(() => {
         if (!supabase) return;
 
@@ -75,10 +74,18 @@ export default function Navbar({ isScrolled, supabase }) {
         };
         fetchInitialServerStatus();
 
-        const channel = supabase.channel('public:server_status')
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'server_status', filter: 'id=eq.1' }, (payload) => {
+        // Menggunakan event '*' agar menangkap semua jenis perubahan (UPDATE/INSERT)
+        const channel = supabase.channel('realtime:server_status_channel')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'server_status' }, (payload) => {
+                console.log("Realtime Payload Terdeteksi:", payload); // Log untuk memantau di console browser
                 if (payload.new && payload.new.status) {
-                    setPcServerStatus(payload.new.status);
+                    setPcServerStatus((prevStatus) => {
+                        // Hanya tambah notifikasi jika status BENAR-BENAR berubah (offline -> online, atau sebaliknya)
+                        if (prevStatus !== payload.new.status) {
+                            setUnreadCount(prev => prev + 1);
+                        }
+                        return payload.new.status;
+                    });
                 }
             })
             .subscribe();
@@ -99,7 +106,7 @@ export default function Navbar({ isScrolled, supabase }) {
                     setNotifications(data);
                     const readNotifs = JSON.parse(localStorage.getItem('shadowclips_read_notifs') || '[]');
                     const unread = data.filter(n => !readNotifs.includes(n.id)).length;
-                    setUnreadCount(unread);
+                    setUnreadCount(prev => prev + unread);
                 }
             } catch (err) { console.error('Error fetching notifications:', err.message); }
         };
@@ -141,7 +148,6 @@ export default function Navbar({ isScrolled, supabase }) {
         return () => { document.body.style.overflow = 'unset'; };
     }, [showSearchModal, isLoginModalOpen, isMobileMenuOpen]);
 
-    // Logika Pencarian & Kategori
     useEffect(() => {
         const timer = setTimeout(() => setDebouncedSearch(localSearch), 500);
         return () => clearTimeout(timer);
@@ -265,7 +271,6 @@ export default function Navbar({ isScrolled, supabase }) {
                     {/* KANAN (DESKTOP & MOBILE MENU) */}
                     <div className="flex items-center gap-3 sm:gap-4 border-none relative">
 
-                        {/* Search Desktop */}
                         <div className="hidden md:flex relative group cursor-text z-50" onClick={() => setShowSearchModal(true)}>
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors w-4 h-4 border-none" />
                             <div className="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900/80 dark:hover:bg-zinc-900 rounded-full py-2 pl-11 pr-5 w-56 lg:w-64 transition-colors duration-300 text-sm text-zinc-500 flex items-center select-none border-none outline-none">
@@ -273,7 +278,7 @@ export default function Navbar({ isScrolled, supabase }) {
                             </div>
                         </div>
 
-                        {/* TOMBOL NOTIFIKASI (MUNCUL DI MOBILE & DESKTOP) */}
+                        {/* TOMBOL NOTIFIKASI */}
                         <div className="relative border-none z-50" ref={notificationRef}>
                             <button onClick={handleToggleNotification} className="p-2 sm:p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none cursor-pointer relative flex items-center justify-center bg-zinc-100 dark:bg-zinc-900/80 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-full shadow-sm sm:shadow-none">
                                 <Bell className="w-5 h-5 border-none" />
@@ -372,13 +377,12 @@ export default function Navbar({ isScrolled, supabase }) {
                 </div>
             </nav>
 
-            {/* MOBILE MENU DRAWER (BERSIH DARI NOTIFIKASI) */}
+            {/* MOBILE MENU DRAWER */}
             <div className={`md:hidden fixed inset-0 z-[100] transition-all duration-300 ${isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
                 <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
 
                 <div className={`absolute top-0 right-0 w-[85%] max-w-[340px] h-full bg-white dark:bg-zinc-950 shadow-2xl transition-transform duration-300 ease-out flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
 
-                    {/* HEADER DRAWER */}
                     <div className="p-4 sm:p-5 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/60 shrink-0">
                         {session ? (
                             <div className="flex flex-col w-full border-none pr-2">
@@ -414,10 +418,7 @@ export default function Navbar({ isScrolled, supabase }) {
                         </button>
                     </div>
 
-                    {/* KONTEN MENU DRAWER */}
                     <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-1.5 custom-scrollbar">
-
-                        {/* TOMBOL PENCARIAN DI DALAM BURGER */}
                         <button
                             onClick={() => { setIsMobileMenuOpen(false); setShowSearchModal(true); }}
                             className="flex items-center gap-3 px-4 py-3 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900/80 dark:hover:bg-zinc-900 text-zinc-500 dark:text-zinc-400 font-bold transition-colors w-full text-left mb-2 outline-none border-none cursor-pointer"
@@ -438,7 +439,6 @@ export default function Navbar({ isScrolled, supabase }) {
                             <FolderOpen className="w-4 h-4 text-[#106EBE]" /> Library
                         </a>
 
-                        {/* DROPDOWN KATEGORI */}
                         <div className="flex flex-col gap-1 mt-1">
                             <button onClick={() => setIsMobilePremiumOpen(!isMobilePremiumOpen)} className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold w-full text-left group">
                                 <div className="flex items-center gap-3"><Crown className="w-4 h-4 text-zinc-500 dark:text-zinc-400 group-hover:text-[#106EBE]" /> Profesional Site</div>
