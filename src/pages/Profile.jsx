@@ -62,7 +62,6 @@ export default function Profile({ supabase }) {
     const [historyVideos, setHistoryVideos] = useState([]);
     const [savedVideos, setSavedVideos] = useState([]);
 
-    // 櫨 REF UNTUK SLIDER SAVED VIDEO 櫨
     const savedScrollRef = useRef(null);
 
     const scrollSaved = (direction) => {
@@ -145,7 +144,7 @@ export default function Profile({ supabase }) {
                     .select('video_id')
                     .eq('user_id', userId)
                     .order('created_at', { ascending: false })
-                    .limit(20); // Ditingkatkan limitnya karena menggunakan slider
+                    .limit(20);
 
                 if (!bookmarkError && bookmarkData && bookmarkData.length > 0) {
                     const bVideoIds = [...new Set(bookmarkData.map((b) => b.video_id))];
@@ -356,12 +355,13 @@ export default function Profile({ supabase }) {
 
                         <div className="bg-white dark:bg-zinc-800 rounded-3xl p-6 sm:p-8 shadow-sm dark:shadow-md flex flex-col items-center text-center transition-colors">
 
+                            {/* PERBAIKAN: Memperbesar Avatar dan Menurunkan Skala Frame agar rapat menyatu */}
                             <div className="relative mb-5 flex items-center justify-center">
                                 <Avatar
                                     url={editAvatarUrl}
                                     frameId={editFrame}
-                                    containerClass="w-32 h-32 sm:w-36 sm:h-36"
-                                    scale={1.45}
+                                    containerClass="w-40 h-40 sm:w-44 sm:h-44" 
+                                    scale={1.15} 
                                 />
                             </div>
 
@@ -731,7 +731,6 @@ export default function Profile({ supabase }) {
                                         )
                                     )}
 
-                                    {/* 櫨 SLIDER KHUSUS TAB SAVED 櫨 */}
                                     {mediaTab === 'saved' && (
                                         savedVideos.length > 0 ? (
                                             <div className="relative group/slider">

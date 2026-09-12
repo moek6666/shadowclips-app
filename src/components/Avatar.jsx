@@ -2,7 +2,7 @@ import React from 'react';
 import { User } from 'lucide-react';
 
 // ==========================================
-// 🚀 DATABASE BINGKAI ANIMASI WEBP (GLOBAL)
+// 🌟 DATABASE BINGKAI ANIMASI WEBP (GLOBAL)
 // ==========================================
 export const FRAME_OPTIONS = [
     { id: 'none', name: 'Classic Member', unlockPoints: 0, imageUrl: null },
@@ -21,7 +21,7 @@ export const FRAME_OPTIONS = [
     { id: 'vip', name: 'Emperor VIP', unlockPoints: 20000, imageUrl: 'https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/china.webp' },
     { id: 'admin', name: 'Supreme Admin', unlockPoints: 25000, imageUrl: 'https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/ss5.webp' },
     
-    // 🔥 BINGKAI BARU DITAMBAHKAN DI SINI 🔥
+    // 🌟 BINGKAI BARU DITAMBAHKAN DI SINI 🌟
     { id: 'astral_aura', name: 'Astral Aura', unlockPoints: 30000, imageUrl: 'https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/astral_aura.webp' },
     { id: 'shenron', name: 'Shenron', unlockPoints: 35000, imageUrl: 'https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/shenron.webp' },
     { id: 'shocked', name: 'Shocked', unlockPoints: 40000, imageUrl: 'https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/shocked.webp' },
@@ -40,15 +40,15 @@ export default function Avatar({ url, frameId, containerClass = "w-12 h-12", sca
             {/* Base Size 100px yang akan membesar/mengecil mengikuti prop 'scale' */}
             <div style={{ transform: `scale(${scale})`, width: '100px', height: '100px' }} className="absolute flex items-center justify-center border-none">
 
-                {/* 🚀 LAYER ANIMASI WEBP 🚀 */}
+                {/* 🌟 LAYER ANIMASI WEBP 🌟 */}
                 {hasFrame && (
                     <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center scale-[1.45] border-none">
                         <img src={selectedFrame.imageUrl} alt="Frame" className="w-full h-full object-contain border-none" />
                     </div>
                 )}
 
-                {/* 📸 FOTO PROFIL (Diperbesar ke 90px agar gambar wajah / karakter jauh lebih jelas dan penuh) 📸 */}
-                <div className="w-[90px] h-[90px] rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center border-none relative z-10 shadow-sm">
+                {/* 🌟 FOTO PROFIL (Sekarang menggunakan ABSOLUTE agar tidak tertekan menjadi elips) 🌟 */}
+                <div className="absolute w-[115px] h-[115px] rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center border-none z-10 shadow-sm shrink-0">
                     {url ? (
                         <img src={url} alt="Profile" className="w-full h-full object-cover border-none" />
                     ) : (

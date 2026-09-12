@@ -60,7 +60,6 @@ export default function Navbar({ isScrolled, supabase }) {
         return () => subscription?.unsubscribe();
     }, [supabase]);
 
-    // REAL-TIME LISTENER STATUS SERVER (PRODUCTION MODE)
     useEffect(() => {
         if (!supabase) return;
 
@@ -68,9 +67,7 @@ export default function Navbar({ isScrolled, supabase }) {
             try {
                 const { data, error } = await supabase.from('server_status').select('status').limit(1).maybeSingle();
                 if (data) setPcServerStatus(data.status);
-            } catch (err) {
-                // Biarkan error fetching awal agar bisa ditangani
-            }
+            } catch (err) {}
         };
         fetchInitialServerStatus();
 
@@ -94,7 +91,6 @@ export default function Navbar({ isScrolled, supabase }) {
         };
     }, [supabase]);
 
-    // Fetch Notifications
     useEffect(() => {
         const fetchNotifications = async () => {
             if (!supabase) return;
@@ -244,8 +240,10 @@ export default function Navbar({ isScrolled, supabase }) {
                             <a href="/koleksi" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ${pathname === '/koleksi' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                 <FolderOpen className="w-4 h-4 border-none" /> Library
                             </a>
+                            
+                            {/* PERBAIKAN: whitespace-nowrap agar "Profesional Site" tidak terpotong ke bawah */}
                             <div className="relative group cursor-pointer py-2 ml-2 border-none">
-                                <div className={`flex items-center gap-1.5 transition-colors outline-none border-none ${pathname.startsWith('/category') ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
+                                <div className={`flex items-center gap-1.5 whitespace-nowrap transition-colors outline-none border-none ${pathname.startsWith('/category') ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                     <Crown className="w-4 h-4 transition-colors border-none" /> Profesional Site <ChevronDown className="w-3 h-3 group-hover:rotate-180 transition-transform duration-300 border-none" />
                                 </div>
                                 <div className="absolute top-full left-0 w-full h-4 bg-transparent border-none"></div>
@@ -267,20 +265,21 @@ export default function Navbar({ isScrolled, supabase }) {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3 sm:gap-4 border-none relative">
+                    <div className="flex items-center gap-3 md:gap-2 lg:gap-4 border-none relative">
 
-                        <div className="hidden md:flex relative group cursor-text z-50" onClick={() => setShowSearchModal(true)}>
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors w-4 h-4 border-none" />
-                            <div className="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900/80 dark:hover:bg-zinc-900 rounded-full py-2 pl-11 pr-5 w-56 lg:w-64 transition-colors duration-300 text-sm text-zinc-500 flex items-center select-none border-none outline-none">
-                                Search videos...
-                            </div>
+                        {/* PERBAIKAN: Tombol Search diubah menjadi icon button bersanding dengan Notifikasi */}
+                        <div className="hidden md:flex relative z-50">
+                            <button onClick={() => setShowSearchModal(true)} className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none cursor-pointer bg-transparent">
+                                <Search className="w-5 h-5 border-none" />
+                            </button>
                         </div>
 
+                        {/* PERBAIKAN: Background Notifikasi Dihilangkan agar menyatu transparan */}
                         <div className="relative border-none z-50" ref={notificationRef}>
-                            <button onClick={handleToggleNotification} className="p-2 sm:p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none cursor-pointer relative flex items-center justify-center bg-zinc-100 dark:bg-zinc-900/80 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-full shadow-sm sm:shadow-none">
+                            <button onClick={handleToggleNotification} className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none cursor-pointer relative flex items-center justify-center bg-transparent">
                                 <Bell className="w-5 h-5 border-none" />
                                 {unreadCount > 0 && (
-                                    <span className="absolute top-1 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-zinc-950 border-none shadow-sm animate-pulse"></span>
+                                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-zinc-950 border-none shadow-sm animate-pulse"></span>
                                 )}
                             </button>
 
@@ -318,11 +317,19 @@ export default function Navbar({ isScrolled, supabase }) {
 
                             {session ? (
                                 <div className="relative border-none" ref={profileDropdownRef}>
-                                    <button onClick={() => { setIsProfileDropdownOpen(!isProfileDropdownOpen); setIsNotificationOpen(false); }} className="flex items-center gap-2.5 p-1 pl-3 bg-zinc-100 dark:bg-zinc-900/80 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors outline-none border-none cursor-pointer">
-                                        <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 max-w-[100px] truncate border-none">
-                                            {profile?.name || (session?.user?.email || '').split('@')[0] || 'User'}
-                                        </span>
-                                        <Avatar url={profile?.avatar_url} frameId={profile?.active_frame} containerClass="w-8 h-8" scale={0.32} />
+                                    
+                                    {/* PERBAIKAN: Posisi Avatar dikiri, background container dihapus, rata teks ke kiri */}
+                                    <button onClick={() => { setIsProfileDropdownOpen(!isProfileDropdownOpen); setIsNotificationOpen(false); }} className="flex items-center gap-2.5 bg-transparent transition-opacity hover:opacity-80 outline-none border-none cursor-pointer">
+                                        <Avatar url={profile?.avatar_url} frameId={profile?.active_frame} containerClass="w-9 h-9" scale={0.35} />
+                                        <div className="flex flex-col items-start justify-center border-none">
+                                            <span className="text-[13px] font-bold text-zinc-800 dark:text-zinc-200 max-w-[120px] truncate leading-tight border-none">
+                                                {profile?.name || (session?.user?.email || '').split('@')[0] || 'User'}
+                                            </span>
+                                            <div className="flex items-center gap-1.5 mt-0.5 border-none">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse border-none"></span>
+                                                <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest border-none">Online</span>
+                                            </div>
+                                        </div>
                                     </button>
 
                                     {isProfileDropdownOpen && (
