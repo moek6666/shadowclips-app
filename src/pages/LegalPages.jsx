@@ -54,7 +54,7 @@ export default function LegalPages() {
                 p1: 'ShadowClips respects the intellectual property of others and expects our users to do the same. In accordance with the Digital Millennium Copyright Act (DMCA), we will respond to notices of alleged copyright infringement promptly and decisively.',
                 h2: 'Reporting Procedure',
                 p2: 'If you believe that any content on ShadowClips violates your copyright, please send a notice including: material identification, specific URL, and your contact information via email to:',
-                note: 'Please note that all video content on ShadowClips is not hosted on our servers. We only provide links (embeds) from third-party sources.'
+                note: 'Please note that most video content on ShadowClips is hosted on independent or third-party servers. While we maintain a limited internal server currently under development, our primary operation relies on external links (embeds) to ensure continuous access.'
             },
             privacy: {
                 title: 'Privacy Policy',
@@ -66,12 +66,12 @@ export default function LegalPages() {
                 title: 'Terms of Service',
                 p1: 'By accessing the ShadowClips website, you agree to be bound by these Terms of Service.',
                 h2: 'Use of Service',
-                p2: 'Our services are provided "as is". You are prohibited from using this site for illegal purposes. Most video links are indexed from external providers, and we are not responsible for the content of such third parties.'
+                p2: 'Our services are provided "as is". You are prohibited from using this site for illegal purposes. We utilize a combination of our own developing servers and external providers; therefore, we are not fully responsible for content hosted on third-party sources.'
             },
             c2257: {
                 title: '18 U.S.C. 2257 Compliance Statement',
                 p1: 'All models, actors, actresses, and other personas appearing in any visual content on ShadowClips were at least 18 (eighteen) years of age at the time the images or videos were produced.',
-                p2: 'In compliance with 18 U.S.C. § 2257 and related regulations (Record-Keeping Requirements), ShadowClips declares that we are not the primary producer of the content on this platform. The content presented is sourced entirely from third-party links (embeds) or independent creators uploaded outside our servers.',
+                p2: 'In compliance with 18 U.S.C. § 2257 and related regulations (Record-Keeping Requirements), ShadowClips declares that we are not the primary producer of the content on this platform. Content is sourced from a combination of third-party links (embeds) and independent uploads, including our own servers currently in development.',
                 p3: 'Nevertheless, we are fully committed to complying with applicable laws. We have a zero-tolerance policy for illegal content. If you find content that violates legal provisions, please contact us at',
                 contactText: 'so we can immediately remove it from our search index.'
             }
@@ -91,7 +91,7 @@ export default function LegalPages() {
                 p1: 'ShadowClips menghormati kekayaan intelektual orang lain dan mengharapkan pengguna kami melakukan hal yang sama. Sesuai dengan Digital Millennium Copyright Act (DMCA), kami akan menanggapi pemberitahuan dugaan pelanggaran hak cipta secara cepat dan tegas.',
                 h2: 'Prosedur Pelaporan',
                 p2: 'Jika Anda yakin bahwa konten apa pun di ShadowClips melanggar hak cipta Anda, silakan kirimkan pemberitahuan yang mencakup: identifikasi materi, URL spesifik, dan informasi kontak Anda melalui email ke:',
-                note: 'Harap dicatat bahwa semua konten video di ShadowClips tidak di-host di server kami. Kami hanya menyediakan tautan (embed) dari sumber pihak ketiga.'
+                note: 'Harap dicatat bahwa sebagian besar konten video di ShadowClips di-host di server independen atau pihak ketiga. Meskipun kami memelihara server internal terbatas yang saat ini sedang dalam pengembangan, operasi utama kami bergantung pada tautan eksternal (embed) untuk memastikan akses berkelanjutan.'
             },
             privacy: {
                 title: 'Kebijakan Privasi',
@@ -103,12 +103,12 @@ export default function LegalPages() {
                 title: 'Ketentuan Layanan',
                 p1: 'Dengan mengakses situs web ShadowClips, Anda setuju untuk terikat oleh Ketentuan Layanan ini.',
                 h2: 'Penggunaan Layanan',
-                p2: 'Layanan kami disediakan "sebagaimana adanya". Anda dilarang menggunakan situs ini untuk tujuan ilegal. Sebagian besar tautan video diindeks dari penyedia eksternal, dan kami tidak bertanggung jawab atas konten dari pihak ketiga tersebut.'
+                p2: 'Layanan kami disediakan "sebagaimana adanya". Anda dilarang menggunakan situs ini untuk tujuan ilegal. Kami menggunakan kombinasi server kami sendiri yang sedang dikembangkan dan penyedia eksternal; oleh karena itu, kami tidak bertanggung jawab penuh atas konten yang di-host di sumber pihak ketiga.'
             },
             c2257: {
                 title: 'Pernyataan Kepatuhan 18 U.S.C. 2257',
                 p1: 'Semua model, aktor, aktris, dan persona lain yang muncul dalam konten visual apa pun di ShadowClips setidaknya berusia 18 (delapan belas) tahun pada saat gambar atau video diproduksi.',
-                p2: 'Sesuai dengan 18 U.S.C. § 2257 dan peraturan terkait (Persyaratan Penyimpanan Catatan), ShadowClips menyatakan bahwa kami bukanlah produsen utama konten di platform ini. Konten yang disajikan bersumber sepenuhnya dari tautan pihak ketiga (embed) atau kreator independen yang diunggah di luar server kami.',
+                p2: 'Sesuai dengan 18 U.S.C. § 2257 dan peraturan terkait (Persyaratan Penyimpanan Catatan), ShadowClips menyatakan bahwa kami bukanlah produsen utama konten di platform ini. Konten bersumber dari kombinasi tautan pihak ketiga (embed) dan unggahan independen, termasuk server kami sendiri yang sedang dalam pengembangan.',
                 p3: 'Meskipun demikian, kami berkomitmen penuh untuk mematuhi hukum yang berlaku. Kami memiliki kebijakan tanpa toleransi terhadap konten ilegal. Jika Anda menemukan konten yang melanggar ketentuan hukum, silakan hubungi kami di',
                 contactText: 'agar kami dapat segera menghapusnya dari indeks pencarian kami.'
             }
@@ -238,9 +238,9 @@ export default function LegalPages() {
                                 <div className="space-y-6 text-sm sm:text-base">
                                     <p>{text.c2257.p1}</p>
                                     <p>
-                                        {text.lang === 'en'
-                                            ? <>In compliance with <strong className="text-zinc-900 dark:text-white transition-colors">18 U.S.C. § 2257</strong> and related regulations (Record-Keeping Requirements), ShadowClips declares that we are <strong className="text-zinc-900 dark:text-white transition-colors">not the primary producer</strong> of the content on this platform. The content presented is sourced entirely from third-party links (embeds) or independent creators uploaded outside our servers.</>
-                                            : <>Sesuai dengan <strong className="text-zinc-900 dark:text-white transition-colors">18 U.S.C. § 2257</strong> dan peraturan terkait (Persyaratan Penyimpanan Catatan), ShadowClips menyatakan bahwa kami <strong className="text-zinc-900 dark:text-white transition-colors">bukanlah produsen utama</strong> konten di platform ini. Konten yang disajikan bersumber sepenuhnya dari tautan pihak ketiga (embed) atau kreator independen yang diunggah di luar server kami.</>}
+                                        {lang === 'en'
+                                            ? <>In compliance with <strong className="text-zinc-900 dark:text-white transition-colors">18 U.S.C. § 2257</strong> and related regulations (Record-Keeping Requirements), ShadowClips declares that we are <strong className="text-zinc-900 dark:text-white transition-colors">not the primary producer</strong> of the content on this platform. Content is sourced from a combination of third-party links (embeds) and independent uploads, including our own servers currently in development.</>
+                                            : <>Sesuai dengan <strong className="text-zinc-900 dark:text-white transition-colors">18 U.S.C. § 2257</strong> dan peraturan terkait (Persyaratan Penyimpanan Catatan), ShadowClips menyatakan bahwa kami <strong className="text-zinc-900 dark:text-white transition-colors">bukanlah produsen utama</strong> konten di platform ini. Konten bersumber dari kombinasi tautan pihak ketiga (embed) dan unggahan independen, termasuk server kami sendiri yang sedang dalam pengembangan.</>}
                                     </p>
 
                                     <p>{text.c2257.p3} <a href="mailto:shadowclips666@outlook.com" className="text-[#106EBE] dark:hover:text-[#106EBE] font-bold hover:underline transition-all">shadowclips666@outlook.com</a> {text.c2257.contactText}</p>
