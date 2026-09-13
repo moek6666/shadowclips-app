@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Shield, FileText, AlertTriangle, ChevronRight, Scale, Mail, Globe } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { supabase } from '../supabaseClient'; 
 
 export default function LegalPages() {
     const [activeTab, setActiveTab] = useState('dmca');
     const [isScrolled, setIsScrolled] = useState(false);
     const [searchInput, setSearchInput] = useState('');
 
-    // STATE UNTUK DUA BAHASA
-    const [lang, setLang] = useState('en'); // 'en' untuk English, 'id' untuk Indonesia
+    const [lang, setLang] = useState('en'); 
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -35,9 +35,6 @@ export default function LegalPages() {
         setLang(prev => prev === 'en' ? 'id' : 'en');
     };
 
-    // ==========================================
-    // 📚 KAMUS DATA DUA BAHASA (DICTIONARY)
-    // ==========================================
     const dict = {
         en: {
             title: 'Legal & Policies',
@@ -126,18 +123,14 @@ export default function LegalPages() {
 
     return (
         <>
-            <Navbar searchInput={searchInput} setSearchInput={setSearchInput} isScrolled={isScrolled} />
+            <Navbar searchInput={searchInput} setSearchInput={setSearchInput} isScrolled={isScrolled} supabase={supabase} />
 
             <div className="pt-32 pb-20 max-w-[1440px] mx-auto px-4 sm:px-8 min-h-screen transition-colors font-sans">
-
-                {/* Header dengan Tombol Toggle Bahasa */}
                 <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
                         <h1 className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white mb-2 transition-colors">{text.title}</h1>
                         <p className="text-zinc-600 dark:text-zinc-400 transition-colors">{text.subtitle}</p>
                     </div>
-
-                    {/* Tombol Dwibahasa */}
                     <button
                         onClick={toggleLanguage}
                         className="flex items-center gap-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-[#106EBE] dark:hover:border-[#106EBE] text-zinc-700 dark:text-zinc-300 px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm shrink-0"
@@ -150,8 +143,6 @@ export default function LegalPages() {
                 <div className="w-full h-px bg-gradient-to-r from-zinc-200 dark:from-zinc-800 to-transparent mb-8 transition-colors"></div>
 
                 <div className="flex flex-col md:flex-row gap-8 lg:gap-12">
-
-                    {/* Sidebar Menu */}
                     <div className="w-full md:w-64 flex-shrink-0 md:border-r md:border-zinc-200 dark:md:border-zinc-800/80 md:pr-8 transition-colors">
                         <div className="flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible custom-scrollbar sticky top-28 pb-4 md:pb-0">
                             {menuItems.map((item) => (
@@ -173,9 +164,7 @@ export default function LegalPages() {
                         </div>
                     </div>
 
-                    {/* Konten Utama Dinamis */}
                     <div className="flex-1 text-zinc-700 dark:text-zinc-300 leading-relaxed relative overflow-hidden md:pl-2 transition-colors">
-
                         {activeTab === 'dmca' && (
                             <div className="animate-in fade-in duration-500 relative z-10">
                                 <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-6 flex items-center gap-3 border-b border-zinc-200 dark:border-zinc-800/80 pb-4 transition-colors">
@@ -183,10 +172,8 @@ export default function LegalPages() {
                                 </h2>
                                 <div className="space-y-6 text-sm sm:text-base">
                                     <p>{text.dmca.p1}</p>
-
                                     <h3 className="text-lg font-bold text-zinc-900 dark:text-white mt-8 mb-3 transition-colors">{text.dmca.h2}</h3>
                                     <p>{text.dmca.p2}</p>
-
                                     <div className="inline-block mt-2">
                                         <a
                                             href="mailto:shadowclips666@outlook.com"
@@ -196,7 +183,6 @@ export default function LegalPages() {
                                             shadowclips666@outlook.com
                                         </a>
                                     </div>
-
                                     <div className="bg-[#106EBE]/5 dark:bg-[#106EBE]/10 border border-[#106EBE]/20 dark:border-[#106EBE]/30 rounded-xl p-5 mt-6 transition-colors">
                                         <p className="text-[#106EBE] font-medium">{text.dmca.note}</p>
                                     </div>
@@ -242,7 +228,6 @@ export default function LegalPages() {
                                             ? <>In compliance with <strong className="text-zinc-900 dark:text-white transition-colors">18 U.S.C. § 2257</strong> and related regulations (Record-Keeping Requirements), ShadowClips declares that we are <strong className="text-zinc-900 dark:text-white transition-colors">not the primary producer</strong> of the content on this platform. Content is sourced from a combination of third-party links (embeds) and independent uploads, including our own servers currently in development.</>
                                             : <>Sesuai dengan <strong className="text-zinc-900 dark:text-white transition-colors">18 U.S.C. § 2257</strong> dan peraturan terkait (Persyaratan Penyimpanan Catatan), ShadowClips menyatakan bahwa kami <strong className="text-zinc-900 dark:text-white transition-colors">bukanlah produsen utama</strong> konten di platform ini. Konten bersumber dari kombinasi tautan pihak ketiga (embed) dan unggahan independen, termasuk server kami sendiri yang sedang dalam pengembangan.</>}
                                     </p>
-
                                     <p>{text.c2257.p3} <a href="mailto:shadowclips666@outlook.com" className="text-[#106EBE] dark:hover:text-[#106EBE] font-bold hover:underline transition-all">shadowclips666@outlook.com</a> {text.c2257.contactText}</p>
                                 </div>
                             </div>
