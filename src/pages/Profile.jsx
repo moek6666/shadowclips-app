@@ -9,7 +9,7 @@ import {
     Lock,
     Check,
     Play,
-    Image as ImageIcon,
+    ImageIcon, // Removed conflicting import
     User,
     Heart,
     Clock,
@@ -26,6 +26,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Avatar, { FRAME_OPTIONS } from '../components/Avatar';
+import CharacterSelector from '../components/CharacterSelector'; // ADDED CharacterSelector IMPORT
 
 const getImageUrl = (imgString) => (imgString ? imgString.split(',')[0].trim() : '');
 
@@ -279,6 +280,11 @@ export default function Profile({ supabase }) {
         }
     };
 
+    // ADDED handleSelectAvatar FUNCTION
+    const handleSelectAvatar = (url) => {
+        setEditAvatarUrl(url);
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-zinc-100 dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 flex flex-col items-center justify-center transition-colors">
@@ -355,7 +361,6 @@ export default function Profile({ supabase }) {
 
                         <div className="bg-white dark:bg-zinc-800 rounded-3xl p-6 sm:p-8 shadow-sm dark:shadow-md flex flex-col items-center text-center transition-colors">
 
-                            {/* PERBAIKAN: Memperbesar Avatar dan Menurunkan Skala Frame agar rapat menyatu */}
                             <div className="relative mb-5 flex items-center justify-center">
                                 <Avatar
                                     url={editAvatarUrl}
@@ -597,17 +602,23 @@ export default function Profile({ supabase }) {
                                                     <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">Goonbox, ImgBB, dll</span>
                                                 </div>
                                                 <div className="relative">
-                                                    <ImageIcon className="w-4 h-4 text-zinc-400 dark:text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                                                     <input
                                                         type="url"
                                                         value={editAvatarUrl}
                                                         onChange={(e) => setEditAvatarUrl(e.target.value)}
                                                         placeholder="https://example.com/avatar.jpg"
-                                                        className="w-full bg-zinc-100 focus:bg-zinc-200/70 dark:bg-zinc-700/40 dark:focus:bg-zinc-700/70 rounded-2xl pl-11 pr-4 py-3.5 text-sm text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-400 outline-none transition-colors shadow-sm dark:shadow-none"
+                                                        className="w-full bg-zinc-100 focus:bg-zinc-200/70 dark:bg-zinc-700/40 dark:focus:bg-zinc-700/70 rounded-2xl pl-4 pr-4 py-3.5 text-sm text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-400 outline-none transition-colors shadow-sm dark:shadow-none"
                                                     />
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {/* ADDED CharacterSelector COMPONENT */}
+                                        <CharacterSelector 
+                                            currentAvatar={editAvatarUrl} 
+                                            onSelectAvatar={handleSelectAvatar}
+                                            isSaving={isSaving}
+                                        />
 
                                         <div className="pt-3 flex items-center justify-between">
                                             <div className="text-xs">
