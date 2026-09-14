@@ -102,7 +102,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                     if (uniqueEmails.length > 0) {
                         const { data: profilesData } = await supabase
                             .from('profiles')
-                            .select('email, is_admin, is_premium, active_frame, avatar_url')
+                            .select('email, name, is_admin, is_premium, active_frame, avatar_url') // PERBAIKAN: pastikan kolom 'name' diambil
                             .in('email', uniqueEmails);
 
                         if (profilesData) {
@@ -278,9 +278,9 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
 
         const newCommentPayload = {
             video_id: String(videoId),
-            name: userName,
+            name: userName, // PERBAIKAN: ini untuk fallback saja
             email: userEmail,
-            avatar_url: currentUserAvatar,
+            avatar_url: currentUserAvatar, // PERBAIKAN: ini untuk fallback saja
             content: content,
             parent_id: targetParentId,
             status: statusKomentar
@@ -303,6 +303,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                 ...prev,
                 [userEmail]: {
                     email: userEmail,
+                    name: userName, // PERBAIKAN: memastikan state lokal diupdate dgn nama terbaru
                     is_admin: profile?.is_admin || false,
                     is_premium: profile?.is_premium || false,
                     active_frame: profile?.active_frame || 'none',
@@ -454,6 +455,8 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                         const isPremium = userProfile.is_premium;
                         const frameId = userProfile.active_frame || 'none';
 
+                        // PERBAIKAN: Selalu gunakan nama dari profile (jika ada) untuk komentar lama maupun baru secara real-time
+                        const currentDisplayName = userProfile.name || comment.name;
                         const avatarUrl = getValidAvatar(userProfile.avatar_url, comment.avatar_url);
 
                         return (
@@ -467,7 +470,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                                     <div className={`flex-1 min-w-0 flex flex-col p-4 sm:p-5 rounded-[1.2rem] sm:rounded-[1.5rem] border-none transition-colors ${isAdmin ? 'bg-[#106EBE]/5 dark:bg-[#106EBE]/10 border border-[#106EBE]/20 dark:border-transparent shadow-sm dark:shadow-[0_5px_20px_rgba(16,110,190,0.15)]' : isPremium ? 'bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 dark:border-transparent shadow-sm dark:shadow-[0_5px_15px_rgba(245,158,11,0.1)]' : 'bg-white dark:bg-zinc-800/60 shadow-sm dark:shadow-none border border-transparent'}`}>
                                         <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
                                             <span className={`text-[13px] sm:text-[15px] font-bold flex items-center flex-wrap gap-1.5 border-none ${isAdmin ? 'text-[#106EBE] dark:text-[#0FFCBE]' : isPremium ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-white'}`}>
-                                                {comment.name}
+                                                {currentDisplayName}
                                                 {isAdmin && (
                                                     <span className="flex items-center gap-1 bg-[#106EBE] text-white text-[9px] font-black pl-1.5 pr-1 py-0.5 rounded uppercase tracking-widest shrink-0 shadow-sm border-none">
                                                         ADMIN <BadgeCheck className="w-[11px] h-[11px] text-[#106EBE] fill-white border-none" />
@@ -500,6 +503,9 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                                             const isReplyAdmin = replyProfile.is_admin;
                                             const isReplyPremium = replyProfile.is_premium;
                                             const replyFrameId = replyProfile.active_frame || 'none';
+                                            
+                                            // PERBAIKAN: Selalu gunakan nama dari profile (jika ada) untuk balasan komentar secara real-time
+                                            const currentReplyDisplayName = replyProfile.name || reply.name;
                                             const replyAvatarUrl = getValidAvatar(replyProfile.avatar_url, reply.avatar_url);
 
                                             return (
@@ -513,7 +519,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                                                         <div className={`flex-1 min-w-0 flex flex-col p-3 sm:p-4 rounded-xl sm:rounded-[1.2rem] border-none transition-colors ${isReplyAdmin ? 'bg-[#106EBE]/5 dark:bg-[#106EBE]/10 border border-[#106EBE]/20 dark:border-transparent shadow-sm dark:shadow-[0_5px_15px_rgba(16,110,190,0.1)]' : isReplyPremium ? 'bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 dark:border-transparent shadow-sm' : 'bg-zinc-50 dark:bg-zinc-800/40 shadow-sm dark:shadow-none border border-transparent'}`}>
                                                             <div className="flex items-center flex-wrap gap-2 mb-2 border-none">
                                                                 <span className={`text-[11px] sm:text-[14px] font-bold flex items-center flex-wrap gap-1.5 border-none ${isReplyAdmin ? 'text-[#106EBE] dark:text-[#0FFCBE]' : isReplyPremium ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-white'}`}>
-                                                                    {reply.name}
+                                                                    {currentReplyDisplayName}
                                                                     {isReplyAdmin && (
                                                                         <span className="flex items-center gap-1 bg-[#106EBE] text-white text-[9px] font-black pl-1.5 pr-1 py-0.5 rounded uppercase tracking-widest shrink-0 shadow-sm border-none">
                                                                             ADMIN <BadgeCheck className="w-[11px] h-[11px] text-[#106EBE] fill-white border-none" />
@@ -531,7 +537,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                                                             </div>
 
                                                             <div className="text-[11px] sm:text-[13px] text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none transition-colors">
-                                                                <span className="text-[#106EBE] font-bold mr-1 border-none">@{comment.name}</span> <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(parseMarkdown(reply.content)) }} />
+                                                                <span className="text-[#106EBE] font-bold mr-1 border-none">@{currentDisplayName}</span> <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(parseMarkdown(reply.content)) }} />
                                                             </div>
 
                                                             <div className="flex items-center gap-4 mt-3 pt-2 border-none"><button onClick={() => handleReplyClick(reply)} className="text-[9px] sm:text-[10px] text-zinc-500 dark:text-zinc-400 font-bold hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors outline-none border-none cursor-pointer">Reply</button></div>
