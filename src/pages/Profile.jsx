@@ -45,6 +45,32 @@ const HEADER_PRESETS = [
 
 const DEFAULT_HEADER_BG = HEADER_PRESETS[0].url;
 
+// Komponen Iklan Outstream
+const OutstreamAd = () => {
+    useEffect(() => {
+        const script1 = document.createElement('script');
+        script1.src = 'https://a.magsrv.com/ad-provider.js';
+        script1.async = true;
+        script1.type = 'application/javascript';
+        document.head.appendChild(script1);
+
+        const script2 = document.createElement('script');
+        script2.innerHTML = `(window.AdProvider = window.AdProvider || []).push({"serve": {}});`;
+        document.body.appendChild(script2);
+
+        return () => {
+            if (document.head.contains(script1)) document.head.removeChild(script1);
+            if (document.body.contains(script2)) document.body.removeChild(script2);
+        };
+    }, []);
+
+    return (
+        <div className="w-full max-w-[1400px] mx-auto flex justify-center py-6 border-none overflow-hidden">
+            <ins className="eas6a97888e20" data-zoneid="6002934" data-sub="123450000"></ins>
+        </div>
+    );
+};
+
 export default function Profile({ supabase }) {
     const [session, setSession] = useState(null);
     const [profile, setProfile] = useState(null);
@@ -79,7 +105,6 @@ export default function Profile({ supabase }) {
     const [likedVideos, setLikedVideos] = useState([]);
     const [historyVideos, setHistoryVideos] = useState([]);
     const [savedVideos, setSavedVideos] = useState([]);
-    
     const [activeUsers, setActiveUsers] = useState([]);
 
     useEffect(() => {
@@ -89,7 +114,7 @@ export default function Profile({ supabase }) {
                 const { data, error } = await supabase
                     .from('profiles')
                     .select('id, name, avatar_url, active_frame, is_admin, is_premium')
-                    .limit(50); 
+                    .limit(50);
                     
                 if (!error && data) {
                     setActiveUsers(data);
@@ -399,13 +424,13 @@ export default function Profile({ supabase }) {
             <Toaster position="top-center" reverseOrder={false} />
             <Navbar isScrolled={true} supabase={supabase} />
 
-            <main className="flex-1 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-24">
+            <main className="flex-1 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-10">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start border-none">
                     
                     {/* --- KIRI: SIDEBAR ACTIVE USERS --- */}
-                    <aside className="hidden lg:flex flex-col lg:col-span-3 sticky top-28 space-y-6 border-none">
-                        <div className="w-full bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.3)] border-none">
-                            <div className="bg-[#106EBE] px-5 py-4 flex items-center gap-3 border-none">
+                    <aside className="hidden lg:flex flex-col lg:col-span-3 sticky top-28 h-[calc(100vh-140px)] border-none">
+                        <div className="w-full h-full flex flex-col bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.3)] border-none">
+                            <div className="bg-[#106EBE] px-5 py-4 flex items-center gap-3 border-none shrink-0">
                                 <Users className="w-6 h-6 text-white shrink-0 border-none" strokeWidth={2.5}/>
                                 <div className="border-none">
                                     <h2 className="text-base font-black text-white leading-tight border-none">Active Users</h2>
@@ -414,8 +439,7 @@ export default function Profile({ supabase }) {
                             </div>
                             
                             <div 
-                                // PERBAIKAN: Mengganti logika overflow agar selalu menggunakan overflow-y-auto yang dinamis (calc viewport), sehingga tidak ada yang terpotong
-                                className="flex flex-col gap-3 border-none p-4 max-h-[calc(100vh-250px)] overflow-y-auto outline-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                                className="flex-1 flex flex-col gap-3 border-none p-4 overflow-y-auto outline-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                                 tabIndex={0}
                             >
                                 {activeUsers.length > 0 ? (
@@ -423,7 +447,7 @@ export default function Profile({ supabase }) {
                                         const userAvatarFallback = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=random&color=fff&bold=true`;
                                         
                                         return (
-                                            <div key={user.id} className="flex items-center gap-3 p-2 rounded-2xl hover:bg-zinc-50 dark:hover:bg-[#1E242D] transition-colors border-none group cursor-pointer">
+                                            <div key={user.id} className="flex items-center gap-3 p-2 rounded-2xl hover:bg-zinc-50 dark:hover:bg-[#1E242D] transition-colors border-none group cursor-pointer shrink-0">
                                                 <div className="relative shrink-0 flex items-center justify-center border-none">
                                                     <Avatar 
                                                         url={userAvatarFallback} 
@@ -743,6 +767,10 @@ export default function Profile({ supabase }) {
 
                     </div>
                 </div>
+
+                {/* Komponen Iklan Outstream tepat di bawah konten profil */}
+                <OutstreamAd />
+
             </main>
 
             <Footer />
