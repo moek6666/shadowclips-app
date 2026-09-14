@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import useSWR from 'swr';
-import { Search, Menu, X, Home, Compass, Flame, FolderOpen, Crown, ChevronDown, Sun, Moon, LogIn, LogOut, User, Settings, Download, Bell, Activity } from 'lucide-react';
+import { Search, Menu, X, Home, Compass, Flame, FolderOpen, Crown, ChevronDown, Sun, Moon, LogIn, LogOut, User, Settings, Download, Bell, Activity, Bot } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
 import ModalLogin from './ModalLogin';
 import Avatar from './Avatar';
@@ -241,7 +241,6 @@ export default function Navbar({ isScrolled, supabase }) {
                                 <FolderOpen className="w-4 h-4 border-none" /> Library
                             </a>
                             
-                            {/* PERBAIKAN: whitespace-nowrap agar "Profesional Site" tidak terpotong ke bawah */}
                             <div className="relative group cursor-pointer py-2 ml-2 border-none">
                                 <div className={`flex items-center gap-1.5 whitespace-nowrap transition-colors outline-none border-none ${pathname.startsWith('/category') ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                     <Crown className="w-4 h-4 transition-colors border-none" /> Profesional Site <ChevronDown className="w-3 h-3 group-hover:rotate-180 transition-transform duration-300 border-none" />
@@ -259,6 +258,13 @@ export default function Navbar({ isScrolled, supabase }) {
                                     )}
                                 </div>
                             </div>
+
+                            {/* MENU AI SHORTS PADA POSISI SETELAH PROFESIONAL SITE */}
+                            <a href="/ai" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ml-2 ${pathname === '/ai' ? 'text-indigo-500' : 'text-zinc-600 dark:text-zinc-400 hover:text-indigo-500'}`}>
+                                <Bot className="w-4 h-4 border-none" /> 
+                                <span className="font-bold border-none">AI Shorts</span>
+                            </a>
+
                             <a href="/download-apk" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ml-2 ${pathname === '/download-apk' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                 <Download className="w-4 h-4 border-none" /> APK
                             </a>
@@ -266,15 +272,12 @@ export default function Navbar({ isScrolled, supabase }) {
                     </div>
 
                     <div className="flex items-center gap-3 md:gap-2 lg:gap-4 border-none relative">
-
-                        {/* PERBAIKAN: Tombol Search diubah menjadi icon button bersanding dengan Notifikasi */}
                         <div className="hidden md:flex relative z-50">
                             <button onClick={() => setShowSearchModal(true)} className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none cursor-pointer bg-transparent">
                                 <Search className="w-5 h-5 border-none" />
                             </button>
                         </div>
 
-                        {/* PERBAIKAN: Background Notifikasi Dihilangkan agar menyatu transparan */}
                         <div className="relative border-none z-50" ref={notificationRef}>
                             <button onClick={handleToggleNotification} className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none cursor-pointer relative flex items-center justify-center bg-transparent">
                                 <Bell className="w-5 h-5 border-none" />
@@ -317,8 +320,6 @@ export default function Navbar({ isScrolled, supabase }) {
 
                             {session ? (
                                 <div className="relative border-none" ref={profileDropdownRef}>
-                                    
-                                    {/* PERBAIKAN: Posisi Avatar dikiri, background container dihapus, rata teks ke kiri */}
                                     <button onClick={() => { setIsProfileDropdownOpen(!isProfileDropdownOpen); setIsNotificationOpen(false); }} className="flex items-center gap-2.5 bg-transparent transition-opacity hover:opacity-80 outline-none border-none cursor-pointer">
                                         <Avatar url={profile?.avatar_url} frameId={profile?.active_frame} containerClass="w-9 h-9" scale={0.35} />
                                         <div className="flex flex-col items-start justify-center border-none">
@@ -450,6 +451,12 @@ export default function Navbar({ isScrolled, supabase }) {
                                 ))}
                             </div>
                         </div>
+
+                        {/* MENU AI SHORTS PADA POSISI SETELAH PROFESIONAL SITE */}
+                        <a href="/ai" className={`flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors mt-1 ${pathname === '/ai' ? 'text-indigo-500 font-bold' : 'text-zinc-900 dark:text-white font-bold hover:text-indigo-500'}`}>
+                            <Bot className="w-4 h-4" /> 
+                            <span>AI Shorts</span>
+                        </a>
 
                         <a href="/download-apk" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors mt-1">
                             <Download className="w-4 h-4 text-[#106EBE]" /> APK

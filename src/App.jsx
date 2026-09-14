@@ -12,6 +12,7 @@ const Populer = lazy(() => import('./pages/Populer'));
 const LegalPages = lazy(() => import('./pages/LegalPages'));
 const Koleksi = lazy(() => import('./pages/Koleksi'));
 const Jelajahi = lazy(() => import('./pages/Jelajahi'));
+const Ai = lazy(() => import('./pages/Ai')); // Routing halaman AI baru
 const Tutorial = lazy(() => import('./pages/Tutorial'));
 const Profile = lazy(() => import('./pages/Profile'));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
@@ -86,6 +87,8 @@ export default function App() {
                     <DetailCategory supabase={supabase} />
                 ) : pathname === '/jelajahi' ? (
                     <Jelajahi supabase={supabase} />
+                ) : pathname === '/ai' ? (                     
+                    <Ai supabase={supabase} />                 
                 ) : pathname === '/profile' ? (
                     <Profile supabase={supabase} />
                 ) : pathname === '/verify-email' ? (

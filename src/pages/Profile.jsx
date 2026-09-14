@@ -45,6 +45,7 @@ const HEADER_PRESETS = [
 
 const DEFAULT_HEADER_BG = HEADER_PRESETS[0].url;
 
+// Komponen Iklan Outstream
 const OutstreamAd = () => {
     useEffect(() => {
         const script1 = document.createElement('script');
@@ -635,8 +636,7 @@ export default function Profile({ supabase }) {
                                         />
                                     </div>
 
-                                    {/* PERBAIKAN: Penambahan min-w-0 agar box tidak over-expand dan memotong tombol */}
-                                    <div className="flex-1 min-w-0 w-full space-y-6 border-none">
+                                    <div className="flex-1 w-full space-y-6 border-none">
                                         
                                         {/* Header Wallpaper Selector */}
                                         <div className="border-none">
@@ -687,14 +687,13 @@ export default function Profile({ supabase }) {
                                             />
                                         </div>
                                         
-                                        {/* PERBAIKAN: Penambahan flex-wrap dan whitespace-nowrap agar teks tidak terpotong */}
-                                        <div className="w-full flex justify-end pt-2 pb-2 border-none">
-                                            <div className="flex flex-wrap items-center justify-end gap-3 sm:gap-4 text-xs font-bold text-zinc-500 border-none">
-                                                <button onClick={handleLogout} className="flex items-center gap-1.5 hover:text-red-500 transition-colors border-none cursor-pointer bg-transparent whitespace-nowrap">
+                                        <div className="w-full flex justify-end pt-2 border-none">
+                                            <div className="flex items-center gap-4 text-xs font-bold text-zinc-500 border-none">
+                                                <button onClick={handleLogout} className="flex items-center gap-1.5 hover:text-red-500 transition-colors border-none cursor-pointer bg-transparent">
                                                     <LogOut className="w-4 h-4 border-none"/> Logout
                                                 </button>
-                                                <div className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700 border-none hidden sm:block"></div>
-                                                <button onClick={() => setShowDeleteConfirm(true)} className="flex items-center gap-1.5 hover:text-red-500 transition-colors border-none cursor-pointer bg-transparent whitespace-nowrap">
+                                                <div className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700 border-none"></div>
+                                                <button onClick={() => setShowDeleteConfirm(true)} className="flex items-center gap-1.5 hover:text-red-500 transition-colors border-none cursor-pointer bg-transparent">
                                                     <Trash2 className="w-4 h-4 border-none"/> Hapus Akun
                                                 </button>
                                             </div>
@@ -769,6 +768,7 @@ export default function Profile({ supabase }) {
                     </div>
                 </div>
 
+                {/* Komponen Iklan Outstream tepat di bawah konten profil */}
                 <OutstreamAd />
 
             </main>

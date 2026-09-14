@@ -50,6 +50,7 @@ export default function Home({ supabase }) {
         const { data, count, error } = await supabase
             .from('videos')
             .select('*', { count: 'exact' })
+            .not('category', 'ilike', '%AI%') // Filter untuk mengecualikan video dengan kategori AI
             .order('created_at', { ascending: false })
             .range(from, to);
 
