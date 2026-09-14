@@ -78,11 +78,9 @@ export default function Streaming({ supabase }) {
         return () => window.removeEventListener('message', handleMessage);
     }, []);
 
-    // PERBAIKAN BUG PERINGATAN MERAH
     useEffect(() => {
         let timer;
         
-        // Cek apakah URL original adalah format video langsung (CustomPlayer)
         const originalUrl = secureUrls.original || '';
         const isDirectVideoFormat = typeof originalUrl === 'string' && (
             originalUrl.toLowerCase().includes('.mp4') || 
@@ -90,7 +88,6 @@ export default function Streaming({ supabase }) {
             originalUrl.toLowerCase().includes('.m3u8')
         );
 
-        // Jika menggunakan Iframe HTML (bukan direct video) dan sinyal belum masuk, tampilkan notif
         if (activeServer === 'original' && isPlaying && !isOriginalOnline && !isDirectVideoFormat) {
             timer = setTimeout(() => {
                 setShowOfflineNotice(true);
@@ -381,7 +378,8 @@ export default function Streaming({ supabase }) {
     const coverImage = imageList[0] || '';
     const showGallery = isDeepFake && !hasMain && !hasAlternativeServer && !hasAlternativeServer2 && galleryImages.length > 0;
 
-    const hasDownloadLink = video.embed_url && video.embed_url.trim() !== '' && video.embed_url !== 'EMPTY';
+    // PERBAIKAN BUG DOWNLOAD VIP: Tombol download hanya muncul jika VIP Terbuka DAN ada URL
+    const hasDownloadLink = isVipUnlocked && video.embed_url && video.embed_url.trim() !== '' && video.embed_url !== 'EMPTY';
 
     const serverOptions = [];
     if (hasOriginal) serverOptions.push({ id: 'original', label: 'Original Server' });
@@ -401,7 +399,6 @@ export default function Streaming({ supabase }) {
                     {/* KIRI - PLAYER */}
                     <div className="lg:col-span-8 flex flex-col gap-0 sm:gap-4 border-none">
 
-                        {/* PERBAIKAN: sm:rounded-[1.5rem] diubah menjadi sm:rounded-xl agar tidak terlalu bulat (ala YouTube) */}
                         <div className={`w-full ${!isVipUnlocked ? 'aspect-auto min-h-[250px] sm:min-h-0 sm:aspect-video' : (currentVideoUrl || showGallery ? 'aspect-video' : 'min-h-[250px] sm:min-h-[400px] max-h-[80vh]')} bg-zinc-100 dark:bg-black sm:dark:bg-zinc-950 rounded-none sm:rounded-xl overflow-hidden relative flex items-center justify-center shadow-none border-none transition-colors`}>
 
                             {effectiveServer === 'original' && showOfflineNotice && (

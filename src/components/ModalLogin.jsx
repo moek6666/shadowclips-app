@@ -401,8 +401,9 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                 </div>
                             )}
 
-                            <div className="flex justify-center w-full overflow-hidden">
-                                <div className="transform scale-[0.90] origin-center flex justify-center w-full">
+                            {/* PERBAIKAN: Mengunci tinggi container secara absolut (h-[65px] shrink-0) agar layout benar-benar kaku dan tidak memantul ke atas/bawah */}
+                            <div className="w-full h-[65px] shrink-0 flex items-center justify-center mt-1 mb-1 relative border-none">
+                                <div className="transform scale-[0.90] origin-center w-full flex justify-center border-none">
                                     <Turnstile
                                         siteKey="0x4AAAAAAEI8owBAGHjSd7E5"
                                         onSuccess={(token) => setCaptchaToken(token)}
