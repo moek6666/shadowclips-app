@@ -9,7 +9,6 @@ import {
     Lock,
     Check,
     Play,
-    ImageIcon, // Removed conflicting import
     User,
     Heart,
     Clock,
@@ -20,15 +19,31 @@ import {
     CheckCircle2,
     ChevronDown,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Shirt,
+    Smile,
+    ThumbsUp,
+    Star,
+    Eye
 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Avatar, { FRAME_OPTIONS } from '../components/Avatar';
-import CharacterSelector from '../components/CharacterSelector'; // ADDED CharacterSelector IMPORT
+import CharacterSelector from '../components/CharacterSelector'; 
 
 const getImageUrl = (imgString) => (imgString ? imgString.split(',')[0].trim() : '');
+
+// Preset untuk Header Wallpaper
+const HEADER_PRESETS = [
+    { id: 'neon', name: 'Neon Blur', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&auto=format&fit=crop' },
+    { id: 'dark', name: 'Dark Tech', url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1200&auto=format&fit=crop' },
+    { id: 'light', name: 'Light Flow', url: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=1200&auto=format&fit=crop' },
+    { id: 'cyber', name: 'Cyberpunk', url: 'https://images.unsplash.com/photo-1555680202-c86f0e12f086?q=80&w=1200&auto=format&fit=crop' },
+    { id: 'nature', name: 'Deep Space', url: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=1200&auto=format&fit=crop' }
+];
+
+const DEFAULT_HEADER_BG = HEADER_PRESETS[0].url;
 
 export default function Profile({ supabase }) {
     const [session, setSession] = useState(null);
@@ -37,10 +52,11 @@ export default function Profile({ supabase }) {
     const [isSaving, setIsSaving] = useState(false);
     const [notification, setNotification] = useState(null);
 
+    // Default semua accordion tertutup
     const [openSections, setOpenSections] = useState({
         wardrobe: false,
         customize: false,
-        activity: true,
+        activity: false,
     });
 
     const toggleSection = (sectionKey) => {
@@ -52,9 +68,10 @@ export default function Profile({ supabase }) {
 
     const [editName, setEditName] = useState('');
     const [editAvatarUrl, setEditAvatarUrl] = useState('');
+    const [editHeaderBgUrl, setEditHeaderBgUrl] = useState(DEFAULT_HEADER_BG);
     const [editFrame, setEditFrame] = useState('none');
 
-    const [mediaTab, setMediaTab] = useState('likes');
+    const [mediaTab, setMediaTab] = useState('history');
 
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -62,15 +79,6 @@ export default function Profile({ supabase }) {
     const [likedVideos, setLikedVideos] = useState([]);
     const [historyVideos, setHistoryVideos] = useState([]);
     const [savedVideos, setSavedVideos] = useState([]);
-
-    const savedScrollRef = useRef(null);
-
-    const scrollSaved = (direction) => {
-        if (savedScrollRef.current) {
-            const scrollAmount = direction === 'left' ? -300 : 300;
-            savedScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-        }
-    };
 
     const fetchActivityData = useCallback(async (currentSession) => {
         if (!supabase) return;
@@ -108,7 +116,7 @@ export default function Profile({ supabase }) {
                     const videoIds = [...new Set(likesData.map((l) => l.video_id))];
                     const { data: vids, error: vidsError } = await supabase
                         .from('videos')
-                        .select('id, title, slug, img')
+                        .select('id, title, slug, img, created_at')
                         .in('id', videoIds);
 
                     if (!vidsError && vids) {
@@ -127,7 +135,7 @@ export default function Profile({ supabase }) {
                 const limitedHistory = localHistory.slice(0, 12);
                 const { data: histVids, error: histError } = await supabase
                     .from('videos')
-                    .select('id, title, slug, img')
+                    .select('id, title, slug, img, created_at')
                     .in('id', limitedHistory);
 
                 if (!histError && histVids) {
@@ -151,7 +159,7 @@ export default function Profile({ supabase }) {
                     const bVideoIds = [...new Set(bookmarkData.map((b) => b.video_id))];
                     const { data: bVids, error: bVidsError } = await supabase
                         .from('videos')
-                        .select('id, title, slug, img')
+                        .select('id, title, slug, img, created_at')
                         .in('id', bVideoIds);
 
                     if (!bVidsError && bVids) {
@@ -197,6 +205,7 @@ export default function Profile({ supabase }) {
                         setProfile(profileData);
                         setEditName(profileData.name || '');
                         setEditAvatarUrl(profileData.avatar_url || '');
+                        setEditHeaderBgUrl(profileData.header_bg_url || DEFAULT_HEADER_BG);
 
                         const currentFrame = FRAME_OPTIONS.find((f) => f.id === profileData.active_frame);
                         if (currentFrame && (profileData.points || 0) < currentFrame.unlockPoints) {
@@ -243,15 +252,26 @@ export default function Profile({ supabase }) {
         try {
             const { error } = await supabase
                 .from('profiles')
-                .update({ name: editName, avatar_url: editAvatarUrl, active_frame: editFrame })
+                .update({ 
+                    name: editName, 
+                    avatar_url: editAvatarUrl, 
+                    active_frame: editFrame,
+                    header_bg_url: editHeaderBgUrl
+                })
                 .eq('id', session.user.id);
 
             if (error) throw error;
-            setProfile((prev) => ({ ...prev, name: editName, avatar_url: editAvatarUrl, active_frame: editFrame }));
+            setProfile((prev) => ({ 
+                ...prev, 
+                name: editName, 
+                avatar_url: editAvatarUrl, 
+                active_frame: editFrame,
+                header_bg_url: editHeaderBgUrl 
+            }));
 
             toast.success('Profil berhasil diperbarui.');
         } catch (err) {
-            toast.error('Gagal memperbarui profil.');
+            toast.error('Gagal memperbarui profil. Pastikan kolom header_bg_url tersedia di Supabase.');
         } finally {
             setIsSaving(false);
         }
@@ -280,14 +300,23 @@ export default function Profile({ supabase }) {
         }
     };
 
-    // ADDED handleSelectAvatar FUNCTION
     const handleSelectAvatar = (url) => {
         setEditAvatarUrl(url);
     };
 
+    const timeAgo = (dateString) => {
+        if (!dateString) return 'Baru saja';
+        const date = new Date(dateString);
+        const diffInSeconds = Math.floor((new Date() - date) / 1000);
+        if (diffInSeconds < 60) return 'Baru saja';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} menit yang lalu`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} jam yang lalu`;
+        return `${Math.floor(diffInSeconds / 86400)} hari yang lalu`;
+    };
+
     if (loading) {
         return (
-            <div className="min-h-screen bg-zinc-100 dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 flex flex-col items-center justify-center transition-colors">
+            <div className="min-h-screen bg-[#F0F4F8] dark:bg-[#0E1116] text-zinc-500 dark:text-zinc-400 flex flex-col items-center justify-center transition-colors">
                 <Loader2 className="w-8 h-8 text-[#106EBE] animate-spin mb-3" />
                 <p className="text-xs uppercase tracking-widest font-bold text-zinc-600 dark:text-zinc-400">
                     Memuat Profil...
@@ -298,7 +327,7 @@ export default function Profile({ supabase }) {
 
     if (!profile) {
         return (
-            <div className="min-h-screen bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-200 flex flex-col items-center justify-center px-4 text-center font-sans transition-colors">
+            <div className="min-h-screen bg-[#F0F4F8] dark:bg-[#0E1116] text-zinc-900 dark:text-zinc-200 flex flex-col items-center justify-center px-4 text-center font-sans transition-colors">
                 <Navbar isScrolled={true} supabase={supabase} />
                 <div className="w-16 h-16 bg-white dark:bg-zinc-800 rounded-3xl flex items-center justify-center mb-6 text-red-500 shadow-sm dark:shadow-md">
                     <AlertTriangle className="w-8 h-8" />
@@ -309,7 +338,7 @@ export default function Profile({ supabase }) {
                 </p>
                 <button
                     onClick={handleLogout}
-                    className="px-6 py-3.5 bg-zinc-800 hover:bg-zinc-700 dark:bg-zinc-750 dark:hover:bg-zinc-700 text-white rounded-2xl text-sm font-bold transition-colors flex items-center gap-2 cursor-pointer shadow-md"
+                    className="px-6 py-3.5 bg-[#106EBE] hover:bg-[#0e5c9f] text-white rounded-2xl text-sm font-bold transition-colors flex items-center gap-2 cursor-pointer shadow-md"
                 >
                     <LogOut className="w-4 h-4" /> Keluar & Sinkronisasi Ulang
                 </button>
@@ -318,555 +347,379 @@ export default function Profile({ supabase }) {
     }
 
     const currentPoints = profile.points || 0;
-    const sortedFrames = [...FRAME_OPTIONS].sort((a, b) => a.unlockPoints - b.unlockPoints);
-    const nextFrame = sortedFrames.find((f) => f.unlockPoints > currentPoints);
-    const progressPercentage = nextFrame
-        ? Math.min(100, Math.max(0, (currentPoints / nextFrame.unlockPoints) * 100))
-        : 100;
-
     const displayName = editName || (session?.user?.email ? session.user.email.split('@')[0] : 'User');
-    const selectedFrameData = FRAME_OPTIONS.find((f) => f.id === editFrame) || FRAME_OPTIONS[0];
-
+    
     const hasUnsavedChanges =
         editName !== (profile.name || '') ||
         editAvatarUrl !== (profile.avatar_url || '') ||
+        editHeaderBgUrl !== (profile.header_bg_url || DEFAULT_HEADER_BG) ||
         editFrame !== (profile.active_frame || 'none');
 
+    // Data List Mapping
+    let activeMediaList = [];
+    if (mediaTab === 'history') activeMediaList = historyVideos;
+    else if (mediaTab === 'likes') activeMediaList = likedVideos;
+    else if (mediaTab === 'saved') activeMediaList = savedVideos;
+
     return (
-        <div className="min-h-screen flex flex-col bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-200 font-sans antialiased transition-colors duration-200">
+        <div className="min-h-screen flex flex-col bg-[#F0F4F8] dark:bg-[#0E1116] text-zinc-900 dark:text-zinc-200 font-sans antialiased transition-colors duration-200">
             <Toaster position="top-center" reverseOrder={false} />
             <Navbar isScrolled={true} supabase={supabase} />
 
-            {notification && (
-                <div className="fixed top-24 right-6 z-[100] animate-in fade-in slide-in-from-top-4 duration-200">
-                    <div
-                        className={`px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-3 shadow-xl ${notification.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'
-                            }`}
-                    >
-                        {notification.type === 'success' ? (
-                            <CheckCircle2 className="w-4 h-4 text-white shrink-0" />
-                        ) : (
-                            <AlertTriangle className="w-4 h-4 text-white shrink-0" />
-                        )}
-                        <span>{notification.message}</span>
+            <main className="flex-1 w-full max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-24 flex flex-col gap-6">
+
+                {/* --- 1. HERO BANNER --- */}
+                <div className="relative w-full rounded-[24px] sm:rounded-[32px] overflow-hidden bg-gradient-to-r from-[#0f4b81] to-[#106EBE] dark:from-[#0a2e54] dark:to-[#094880] p-6 sm:p-10 flex flex-col md:flex-row items-center md:items-center gap-6 sm:gap-10 shadow-[0_8px_30px_rgb(16,110,190,0.15)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] border-none">
+                    {/* Background Pattern */}
+                    <div className="absolute inset-0 opacity-[0.25] dark:opacity-[0.35] pointer-events-none mix-blend-overlay border-none">
+                        <img src={editHeaderBgUrl} className="w-full h-full object-cover border-none" alt="bg" />
+                    </div>
+                    
+                    {/* Avatar Group */}
+                    <div className="relative z-10 shrink-0 flex items-center justify-center border-none">
+                       <div className="relative rounded-full bg-white/10 p-2 backdrop-blur-sm border-none shadow-2xl">
+                           <Avatar
+                               url={editAvatarUrl}
+                               frameId={editFrame}
+                               containerClass="w-32 h-32 sm:w-40 sm:h-40 border-none" 
+                               scale={1.2} 
+                           />
+                       </div>
+                    </div>
+
+                    {/* User Info & Stats */}
+                    <div className="relative z-10 flex flex-col items-center md:items-start text-white w-full border-none">
+                        <div className="flex items-center gap-3 mb-1 border-none">
+                            <h1 className="text-3xl sm:text-4xl font-black tracking-tight border-none">{displayName}</h1>
+                            {profile.is_premium && <Crown className="w-6 h-6 text-amber-400 fill-amber-400 border-none drop-shadow-md" />}
+                            {profile.is_admin && <Shield className="w-6 h-6 text-emerald-400 fill-emerald-400 border-none drop-shadow-md" />}
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-blue-200 dark:text-blue-300 text-sm font-medium mb-3 border-none">
+                            <span className="truncate max-w-[200px] sm:max-w-md border-none">{session?.user?.email}</span>
+                        </div>
+                        
+                        <p className="text-sm text-blue-50 dark:text-blue-100 font-medium mb-6 sm:mb-8 text-center md:text-left border-none">
+                            Keep watching, keep enjoying.
+                        </p>
+
+                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-8 sm:gap-12 border-none">
+                           <div className="flex items-center gap-3.5 border-none">
+                              <div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center shadow-lg border-none">
+                                 <Star className="w-6 h-6 text-amber-950 fill-current border-none"/>
+                              </div>
+                              <div className="flex flex-col border-none">
+                                 <span className="text-xl sm:text-2xl font-black leading-none tracking-tight border-none">{currentPoints.toLocaleString()}</span>
+                                 <span className="text-xs text-blue-200 font-bold mt-1 border-none">Pts</span>
+                              </div>
+                           </div>
+                           
+                           {/* Divider */}
+                           <div className="w-px h-10 bg-white/20 hidden sm:block border-none"></div>
+
+                           <div className="flex items-center gap-3.5 border-none">
+                              <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg border-none">
+                                 <ThumbsUp className="w-6 h-6 text-white fill-current border-none"/>
+                              </div>
+                              <div className="flex flex-col border-none">
+                                 <span className="text-xl sm:text-2xl font-black leading-none tracking-tight border-none">{likedVideos.length.toLocaleString()}</span>
+                                 <span className="text-xs text-blue-200 font-bold mt-1 border-none">Likes (Video)</span>
+                              </div>
+                           </div>
+                        </div>
                     </div>
                 </div>
-            )}
 
-            <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 pt-28 sm:pt-32 pb-24">
+                {/* --- 2. WARDROBE SECTION --- */}
+                <div className="w-full bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.3)] border-none">
+                    {/* Blue Header */}
+                    <div className="bg-[#106EBE] px-5 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-none cursor-pointer select-none" onClick={() => toggleSection('wardrobe')}>
+                        <div className="flex items-center gap-4 border-none">
+                            <Shirt className="w-7 h-7 text-white shrink-0 border-none" strokeWidth={2.5}/>
+                            <div className="border-none">
+                                <h2 className="text-lg sm:text-xl font-black text-white leading-tight border-none">Wardrobe</h2>
+                                <p className="text-[11px] sm:text-xs text-blue-100 font-medium mt-0.5 border-none">Kumpulkan Point untuk membuka border avatar eksklusif.</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 self-end sm:self-auto border-none">
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/20 backdrop-blur-sm border-none shadow-inner text-white">
+                                <div className="w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center shrink-0 border-none">
+                                    <Star className="w-2.5 h-2.5 text-amber-950 fill-current border-none"/>
+                                </div>
+                                <div className="flex flex-col border-none">
+                                    <span className="text-[11px] font-black leading-none border-none">{currentPoints.toLocaleString()} Pts</span>
+                                </div>
+                            </div>
+                            <ChevronDown className={`w-5 h-5 text-white transition-transform duration-300 border-none ${openSections.wardrobe ? 'rotate-180' : ''}`} />
+                        </div>
+                    </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    {/* Wardrobe Content */}
+                    {openSections.wardrobe && (
+                        <div className="p-5 sm:p-8 animate-in fade-in slide-in-from-top-2 duration-300 border-none bg-slate-50/50 dark:bg-transparent">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-5 border-none">
+                                {FRAME_OPTIONS.map((frame) => {
+                                    const isLocked = currentPoints < frame.unlockPoints;
+                                    const isEquipped = editFrame === frame.id;
 
-                    <aside className="lg:col-span-4 space-y-6">
+                                    return (
+                                        <div
+                                            key={frame.id}
+                                            onClick={() => { if (!isLocked) { setEditFrame(frame.id); handleUpdateProfile(); } }}
+                                            className={`relative rounded-2xl p-4 sm:p-5 flex flex-col items-center text-center transition-all cursor-pointer border-none shadow-sm dark:shadow-none ${isEquipped
+                                                ? 'bg-[#106EBE] text-white ring-4 ring-[#106EBE]/20 dark:ring-[#106EBE]/40'
+                                                : 'bg-white dark:bg-[#1E242D] hover:shadow-md dark:hover:bg-[#252C36]'
+                                            }`}
+                                        >
+                                            <div className={`w-16 h-16 sm:w-20 sm:h-20 relative flex items-center justify-center mb-4 transition-opacity border-none ${isLocked ? 'opacity-50 grayscale' : 'opacity-100'}`}>
+                                                <Avatar
+                                                    url={editAvatarUrl}
+                                                    frameId={frame.id}
+                                                    containerClass="w-full h-full pointer-events-none border-none"
+                                                    scale={0.65}
+                                                />
+                                            </div>
 
-                        <div className="bg-white dark:bg-zinc-800 rounded-3xl p-6 sm:p-8 shadow-sm dark:shadow-md flex flex-col items-center text-center transition-colors">
+                                            <span className={`text-[13px] font-bold truncate w-full mb-3 border-none ${isEquipped ? 'text-white' : 'text-zinc-800 dark:text-zinc-200'}`}>
+                                                {frame.name}
+                                            </span>
 
-                            <div className="relative mb-5 flex items-center justify-center">
+                                            {isEquipped ? (
+                                                <div className="w-full py-1.5 rounded-lg bg-white/20 text-white flex items-center justify-center gap-1.5 text-[11px] font-bold border-none shadow-inner">
+                                                    <Check className="w-3.5 h-3.5 border-none stroke-[3]" /> Selected
+                                                </div>
+                                            ) : (
+                                                <div className={`w-full py-1.5 rounded-lg flex items-center justify-center gap-1.5 text-[11px] font-bold border-none ${isLocked ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400' : 'bg-blue-50 dark:bg-blue-900/30 text-[#106EBE] dark:text-[#32ADFF]'}`}>
+                                                    {isLocked ? <Lock className="w-3.5 h-3.5 border-none" /> : null}
+                                                    <span className="border-none">{frame.unlockPoints === 0 ? 'Free' : `${frame.unlockPoints.toLocaleString()} Pts`}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* --- 3. COSTUME PROFILE SECTION --- */}
+                <div className="w-full bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.3)] border-none">
+                    {/* Blue Header */}
+                    <div className="bg-[#106EBE] px-5 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-none cursor-pointer select-none" onClick={() => toggleSection('customize')}>
+                        <div className="flex items-center gap-4 border-none">
+                            <Smile className="w-7 h-7 text-white shrink-0 border-none" strokeWidth={2.5}/>
+                            <div className="border-none">
+                                <h2 className="text-lg sm:text-xl font-black text-white leading-tight border-none">Costume Profile</h2>
+                                <p className="text-[11px] sm:text-xs text-blue-100 font-medium mt-0.5 border-none">Ubah latar belakang, karakter, dan nama profil kamu.</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 self-end sm:self-auto border-none">
+                            {hasUnsavedChanges && (
+                                <button onClick={(e) => { e.stopPropagation(); handleUpdateProfile(); }} disabled={isSaving} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-[#106EBE] text-xs font-bold shadow-sm border-none cursor-pointer hover:bg-zinc-50">
+                                    {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin border-none" /> : <Save className="w-3.5 h-3.5 border-none" />}
+                                    Simpan
+                                </button>
+                            )}
+                            <ChevronDown className={`w-5 h-5 text-white transition-transform duration-300 border-none ${openSections.customize ? 'rotate-180' : ''}`} />
+                        </div>
+                    </div>
+
+                    {/* Costume Content */}
+                    {openSections.customize && (
+                        <div className="p-6 sm:p-8 flex flex-col md:flex-row items-center md:items-start gap-8 lg:gap-12 animate-in fade-in slide-in-from-top-2 duration-300 border-none bg-slate-50/50 dark:bg-transparent">
+                            {/* Left: Avatar Preview */}
+                            <div className="relative shrink-0 flex items-center justify-center border-none bg-white dark:bg-[#1E242D] p-6 rounded-[2rem] shadow-sm">
                                 <Avatar
                                     url={editAvatarUrl}
                                     frameId={editFrame}
-                                    containerClass="w-40 h-40 sm:w-44 sm:h-44" 
-                                    scale={1.15} 
+                                    containerClass="w-36 h-36 sm:w-48 sm:h-48 border-none"
+                                    scale={1.3}
                                 />
                             </div>
 
-                            <h1 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight mb-1">
-                                {displayName}
-                            </h1>
-                            <p className="text-xs text-zinc-600 dark:text-zinc-400 font-medium mb-4 truncate max-w-full">
-                                {session.user.email}
-                            </p>
-
-                            <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
-                                {profile.is_admin && (
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black bg-[#106EBE] text-white shadow-sm">
-                                        <Shield className="w-3.5 h-3.5" /> ADMIN
-                                    </span>
-                                )}
-                                {profile.is_premium && (
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black bg-amber-500 text-zinc-950 shadow-sm">
-                                        <Crown className="w-3.5 h-3.5 fill-current" /> PREMIUM
-                                    </span>
-                                )}
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-emerald-600 text-white shadow-sm">
-                                    <Sparkles className="w-3.5 h-3.5" /> {selectedFrameData.name}
-                                </span>
-                            </div>
-
-                            <div className="w-full grid grid-cols-3 gap-2 p-3.5 rounded-2xl bg-zinc-100 dark:bg-zinc-700/40 mb-6 transition-colors">
-                                <div className="flex flex-col items-center">
-                                    <span className="text-xs font-black text-zinc-900 dark:text-white font-mono">{currentPoints.toLocaleString()}</span>
-                                    <span className="text-[10px] text-zinc-600 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5">Points</span>
-                                </div>
-                                <div className="flex flex-col items-center">
-                                    <span className="text-xs font-black text-zinc-900 dark:text-white font-mono">{likedVideos.length}</span>
-                                    <span className="text-[10px] text-zinc-600 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5">Likes</span>
-                                </div>
-                                <div className="flex flex-col items-center">
-                                    <span className="text-xs font-black text-zinc-900 dark:text-white font-mono">{savedVideos.length}</span>
-                                    <span className="text-[10px] text-zinc-600 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5">Saved</span>
-                                </div>
-                            </div>
-
-                            <div className="w-full bg-zinc-100 dark:bg-zinc-700/40 rounded-2xl p-4 text-left space-y-2.5 transition-colors">
-                                <div className="flex items-center justify-between text-xs">
-                                    <span className="font-bold text-zinc-800 dark:text-zinc-300 flex items-center gap-1.5">
-                                        <Trophy className="w-3.5 h-3.5 text-amber-500" /> Next Milestone
-                                    </span>
-                                    <span className="font-mono font-black text-zinc-900 dark:text-white">
-                                        {nextFrame ? `${nextFrame.unlockPoints.toLocaleString()} Pts` : 'MAX TIER'}
-                                    </span>
-                                </div>
-
-                                <div className="h-2 w-full bg-zinc-200 dark:bg-zinc-600/60 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-[#106EBE] transition-all duration-700 ease-out rounded-full"
-                                        style={{ width: `${progressPercentage}%` }}
-                                    />
-                                </div>
-
-                                <div className="flex items-center justify-between text-[11px] text-zinc-600 dark:text-zinc-400 pt-0.5 font-medium">
-                                    <span>Target: <strong className="text-zinc-900 dark:text-zinc-200 font-bold">{nextFrame ? nextFrame.name : 'All Unlocked'}</strong></span>
-                                    <a href="/tutorial" className="text-[#106EBE] dark:text-[#32ADFF] hover:underline font-bold transition-colors">
-                                        Tutorial
-                                    </a>
-                                </div>
-                            </div>
-
-                            <div className="w-full flex items-center gap-2 mt-6 pt-2">
-                                <button
-                                    onClick={handleLogout}
-                                    className="flex-1 py-3 px-4 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-700/40 dark:hover:bg-zinc-700/70 text-zinc-800 dark:text-zinc-200 text-xs font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm dark:shadow-none"
-                                >
-                                    <LogOut className="w-3.5 h-3.5" /> Keluar
-                                </button>
-                                <button
-                                    onClick={() => setShowDeleteConfirm(true)}
-                                    className="py-3 px-4 rounded-xl bg-zinc-100 hover:bg-red-600 hover:text-white dark:bg-zinc-700/40 dark:hover:bg-red-600 dark:hover:text-white text-zinc-600 dark:text-zinc-400 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm dark:shadow-none"
-                                    title="Hapus Akun Permanen"
-                                >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                            </div>
-
-                        </div>
-                    </aside>
-
-                    <div className="lg:col-span-8 space-y-6">
-
-                        <section className="bg-white dark:bg-zinc-800 rounded-3xl p-6 sm:p-8 shadow-sm dark:shadow-md transition-colors">
-                            <div
-                                onClick={() => toggleSection('wardrobe')}
-                                className="flex items-center justify-between cursor-pointer select-none group"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <Sparkles className="w-5 h-5 text-zinc-900 dark:text-zinc-300 shrink-0" />
-                                    <div>
-                                        <h2 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white group-hover:text-[#106EBE] dark:group-hover:text-[#32ADFF] transition-colors">
-                                            Frame Wardrobe
-                                        </h2>
-                                        <p className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
-                                            Pilih bingkai avatar berdasarkan poin reward akun Anda.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                    <span className="text-xs font-mono font-bold px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-700/50 text-zinc-800 dark:text-zinc-200 hidden sm:inline-block shadow-sm dark:shadow-none">
-                                        {FRAME_OPTIONS.filter((f) => currentPoints >= f.unlockPoints).length} / {FRAME_OPTIONS.length} Unlocked
-                                    </span>
-                                    <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-700/50 flex items-center justify-center text-zinc-500 dark:text-zinc-400">
-                                        <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${openSections.wardrobe ? 'rotate-180' : ''}`} />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {openSections.wardrobe && (
-                                <div className="pt-6 mt-6 border-t border-zinc-100 dark:border-zinc-700/30 animate-in fade-in slide-in-from-top-2 duration-200">
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
-                                        {FRAME_OPTIONS.map((frame) => {
-                                            const isLocked = currentPoints < frame.unlockPoints;
-                                            const isEquipped = editFrame === frame.id;
-
+                            {/* Right: Inputs */}
+                            <div className="flex-1 w-full space-y-6 border-none">
+                                
+                                {/* Header Wallpaper Selector */}
+                                <div className="border-none">
+                                    <label className="block text-[13px] font-bold text-[#106EBE] dark:text-[#32ADFF] mb-3 border-none">Header Wallpaper</label>
+                                    <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar border-none">
+                                        {HEADER_PRESETS.map((preset) => {
+                                            const isSelected = editHeaderBgUrl === preset.url;
                                             return (
-                                                <button
-                                                    key={frame.id}
-                                                    type="button"
-                                                    disabled={isLocked}
-                                                    onClick={() => {
-                                                        if (!isLocked) setEditFrame(frame.id);
-                                                    }}
-                                                    className={`relative rounded-2xl p-4 flex flex-col items-center text-center transition-all cursor-pointer ${isEquipped
-                                                        ? 'bg-zinc-200/90 text-zinc-900 dark:bg-zinc-700 dark:text-white shadow-sm'
-                                                        : isLocked
-                                                            ? 'bg-zinc-100 dark:bg-zinc-700/20 opacity-40 cursor-not-allowed'
-                                                            : 'bg-zinc-100 hover:bg-zinc-200/70 dark:bg-zinc-700/30 dark:hover:bg-zinc-700/60 shadow-sm dark:shadow-none'
-                                                        }`}
+                                                <div 
+                                                    key={preset.id} 
+                                                    onClick={() => setEditHeaderBgUrl(preset.url)}
+                                                    className={`relative shrink-0 w-32 h-16 rounded-xl overflow-hidden cursor-pointer transition-all border-none ${isSelected ? 'ring-2 ring-[#106EBE] shadow-md scale-105' : 'hover:scale-105'}`}
                                                 >
-                                                    <div className="w-14 h-14 relative flex items-center justify-center mb-2.5">
-                                                        <Avatar
-                                                            url={editAvatarUrl}
-                                                            frameId={frame.id}
-                                                            containerClass="w-full h-full pointer-events-none"
-                                                            scale={0.45}
-                                                        />
+                                                    <img src={preset.url} alt={preset.name} className="w-full h-full object-cover border-none" />
+                                                    {isSelected && (
+                                                        <div className="absolute top-1 right-1 bg-[#106EBE] rounded-full p-0.5 border-none shadow-sm">
+                                                            <Check className="w-3 h-3 text-white border-none stroke-[3]" />
+                                                        </div>
+                                                    )}
+                                                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] font-bold text-center py-0.5 border-none backdrop-blur-sm">
+                                                        {preset.name}
                                                     </div>
-
-                                                    <span className="text-xs font-black truncate w-full mb-1 text-zinc-900 dark:text-zinc-100">
-                                                        {frame.name}
-                                                    </span>
-
-                                                    <span
-                                                        className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded shadow-sm ${isLocked
-                                                            ? 'bg-zinc-200 dark:bg-zinc-600 text-zinc-500 dark:text-zinc-300'
-                                                            : 'bg-emerald-600 text-white'
-                                                            }`}
-                                                    >
-                                                        {frame.unlockPoints === 0 ? 'FREE' : `${frame.unlockPoints.toLocaleString()} PTS`}
-                                                    </span>
-
-                                                    {isEquipped && (
-                                                        <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-[#106EBE] text-white flex items-center justify-center shadow-md">
-                                                            <Check className="w-3 h-3 stroke-[3]" />
-                                                        </div>
-                                                    )}
-                                                    {isLocked && (
-                                                        <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400 flex items-center justify-center">
-                                                            <Lock className="w-3 h-3" />
-                                                        </div>
-                                                    )}
-                                                </button>
-                                            );
+                                                </div>
+                                            )
                                         })}
                                     </div>
                                 </div>
-                            )}
-                        </section>
 
-                        <section className="bg-white dark:bg-zinc-800 rounded-3xl p-6 sm:p-8 shadow-sm dark:shadow-md transition-colors">
-                            <div
-                                onClick={() => toggleSection('customize')}
-                                className="flex items-center justify-between cursor-pointer select-none group"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <User className="w-5 h-5 text-zinc-900 dark:text-zinc-300 shrink-0" />
-                                    <div>
-                                        <h2 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white group-hover:text-[#106EBE] dark:group-hover:text-[#32ADFF] transition-colors">
-                                            Profile Customization
-                                        </h2>
-                                        <p className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
-                                            Ubah identitas publik dan tautan foto avatar Anda.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                    {hasUnsavedChanges && (
-                                        <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-amber-500 text-zinc-950">
-                                            Belum Disimpan
-                                        </span>
-                                    )}
-                                    <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-700/50 flex items-center justify-center text-zinc-500 dark:text-zinc-400">
-                                        <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${openSections.customize ? 'rotate-180' : ''}`} />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {openSections.customize && (
-                                <div className="pt-6 mt-6 border-t border-zinc-100 dark:border-zinc-700/30 animate-in fade-in slide-in-from-top-2 duration-200">
-                                    <form onSubmit={handleUpdateProfile} className="space-y-5">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-
-                                            <div className="space-y-2">
-                                                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-800 dark:text-zinc-300">
-                                                    Username
-                                                </label>
-                                                <div className="relative">
-                                                    <User className="w-4 h-4 text-zinc-400 dark:text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                                                    <input
-                                                        type="text"
-                                                        value={editName}
-                                                        onChange={(e) => setEditName(e.target.value)}
-                                                        required
-                                                        placeholder="Nama tampilan Anda..."
-                                                        className="w-full bg-zinc-100 focus:bg-zinc-200/70 dark:bg-zinc-700/40 dark:focus:bg-zinc-700/70 rounded-2xl pl-11 pr-4 py-3.5 text-sm text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-400 outline-none transition-colors shadow-sm dark:shadow-none"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <div className="flex items-center justify-between">
-                                                    <label className="block text-xs font-bold uppercase tracking-wider text-zinc-800 dark:text-zinc-300">
-                                                        Avatar URL
-                                                    </label>
-                                                    <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">Goonbox, ImgBB, dll</span>
-                                                </div>
-                                                <div className="relative">
-                                                    <input
-                                                        type="url"
-                                                        value={editAvatarUrl}
-                                                        onChange={(e) => setEditAvatarUrl(e.target.value)}
-                                                        placeholder="https://example.com/avatar.jpg"
-                                                        className="w-full bg-zinc-100 focus:bg-zinc-200/70 dark:bg-zinc-700/40 dark:focus:bg-zinc-700/70 rounded-2xl pl-4 pr-4 py-3.5 text-sm text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-400 outline-none transition-colors shadow-sm dark:shadow-none"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* ADDED CharacterSelector COMPONENT */}
-                                        <CharacterSelector 
-                                            currentAvatar={editAvatarUrl} 
-                                            onSelectAvatar={handleSelectAvatar}
-                                            isSaving={isSaving}
+                                <div className="border-none">
+                                    <label className="block text-[13px] font-bold text-[#106EBE] dark:text-[#32ADFF] mb-2 border-none">Nama Profil</label>
+                                    <div className="flex items-center bg-white dark:bg-[#1E242D] border border-zinc-200 dark:border-zinc-700/50 rounded-xl px-4 py-3 shadow-sm focus-within:ring-2 ring-[#106EBE]/20 transition-all border-none">
+                                        <input
+                                            type="text"
+                                            value={editName}
+                                            onChange={(e) => setEditName(e.target.value)}
+                                            className="bg-transparent flex-1 text-zinc-900 dark:text-white font-semibold text-[14px] outline-none border-none placeholder-zinc-400"
+                                            placeholder="Masukkan nama keren kamu..."
                                         />
-
-                                        <div className="pt-3 flex items-center justify-between">
-                                            <div className="text-xs">
-                                                {hasUnsavedChanges ? (
-                                                    <span className="text-amber-600 dark:text-amber-400 font-bold">
-                                                        Ada perubahan yang belum disimpan
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-zinc-500 dark:text-zinc-400 font-medium">Profil tersinkronisasi</span>
-                                                )}
-                                            </div>
-
-                                            <button
-                                                type="submit"
-                                                disabled={isSaving}
-                                                className="px-7 py-3.5 bg-[#106EBE] hover:bg-[#0e5c9f] text-white text-xs sm:text-sm font-bold rounded-2xl transition-all flex items-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
-                                            >
-                                                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                                                Simpan Perubahan
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            )}
-                        </section>
-
-                        <section className="bg-white dark:bg-zinc-800 rounded-3xl p-6 sm:p-8 shadow-sm dark:shadow-md transition-colors">
-                            <div
-                                onClick={() => toggleSection('activity')}
-                                className="flex items-center justify-between cursor-pointer select-none group"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <Heart className="w-5 h-5 text-zinc-900 dark:text-zinc-300 shrink-0" />
-                                    <div>
-                                        <h2 className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white group-hover:text-[#106EBE] dark:group-hover:text-[#32ADFF] transition-colors">
-                                            Activity & Media Reels
-                                        </h2>
-                                        <p className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
-                                            Koleksi video favorit, tersimpan, dan riwayat Anda.
-                                        </p>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-3">
-                                    <span className="text-xs font-mono font-bold px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-700/50 text-zinc-800 dark:text-zinc-200 hidden sm:inline-block shadow-sm dark:shadow-none">
-                                        {likedVideos.length + historyVideos.length + savedVideos.length} Items
-                                    </span>
-                                    <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-700/50 flex items-center justify-center text-zinc-500 dark:text-zinc-400">
-                                        <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${openSections.activity ? 'rotate-180' : ''}`} />
+                                <div className="border-none">
+                                    <label className="block text-[13px] font-bold text-[#106EBE] dark:text-[#32ADFF] mb-2 border-none">Pilih Karakter</label>
+                                    <CharacterSelector 
+                                        currentAvatar={editAvatarUrl} 
+                                        onSelectAvatar={handleSelectAvatar}
+                                        isSaving={isSaving}
+                                    />
+                                </div>
+                                
+                                <div className="w-full flex justify-end pt-2 border-none">
+                                    <div className="flex items-center gap-4 text-xs font-bold text-zinc-500 border-none">
+                                        <button onClick={handleLogout} className="flex items-center gap-1.5 hover:text-red-500 transition-colors border-none cursor-pointer bg-transparent">
+                                            <LogOut className="w-4 h-4 border-none"/> Logout
+                                        </button>
+                                        <div className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700 border-none"></div>
+                                        <button onClick={() => setShowDeleteConfirm(true)} className="flex items-center gap-1.5 hover:text-red-500 transition-colors border-none cursor-pointer bg-transparent">
+                                            <Trash2 className="w-4 h-4 border-none"/> Hapus Akun
+                                        </button>
                                     </div>
                                 </div>
                             </div>
-
-                            {openSections.activity && (
-                                <div className="pt-6 mt-6 border-t border-zinc-100 dark:border-zinc-700/30 animate-in fade-in slide-in-from-top-2 duration-200">
-                                    <div className="flex flex-wrap items-center gap-2 mb-6">
-                                        <button
-                                            type="button"
-                                            onClick={() => setMediaTab('likes')}
-                                            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${mediaTab === 'likes'
-                                                ? 'bg-zinc-200 text-zinc-900 dark:bg-zinc-700 dark:text-white shadow-sm'
-                                                : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 dark:bg-zinc-700/30 dark:text-zinc-400 dark:hover:bg-zinc-700/60 dark:hover:text-zinc-200'
-                                                }`}
-                                        >
-                                            <Heart className={`w-4 h-4 ${mediaTab === 'likes' ? 'text-rose-500' : 'text-zinc-400'}`} /> Disukai ({likedVideos.length})
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setMediaTab('saved')}
-                                            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${mediaTab === 'saved'
-                                                ? 'bg-zinc-200 text-zinc-900 dark:bg-zinc-700 dark:text-white shadow-sm'
-                                                : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 dark:bg-zinc-700/30 dark:text-zinc-400 dark:hover:bg-zinc-700/60 dark:hover:text-zinc-200'
-                                                }`}
-                                        >
-                                            <Bookmark className={`w-4 h-4 ${mediaTab === 'saved' ? 'text-[#106EBE] dark:text-[#32ADFF]' : 'text-zinc-400'}`} /> Tersimpan ({savedVideos.length})
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setMediaTab('history')}
-                                            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${mediaTab === 'history'
-                                                ? 'bg-zinc-200 text-zinc-900 dark:bg-zinc-700 dark:text-white shadow-sm'
-                                                : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 dark:bg-zinc-700/30 dark:text-zinc-400 dark:hover:bg-zinc-700/60 dark:hover:text-zinc-200'
-                                                }`}
-                                        >
-                                            <Clock className={`w-4 h-4 ${mediaTab === 'history' ? 'text-[#106EBE] dark:text-[#32ADFF]' : 'text-zinc-400'}`} /> Riwayat ({historyVideos.length})
-                                        </button>
-                                    </div>
-
-                                    {mediaTab === 'likes' && (
-                                        likedVideos.length > 0 ? (
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
-                                                {likedVideos.map((vid) => (
-                                                    <a
-                                                        key={vid.id}
-                                                        href={`/streaming/${vid.slug || vid.id}`}
-                                                        className="group flex flex-col gap-2 outline-none"
-                                                        title={vid.title}
-                                                    >
-                                                        <div className="relative aspect-video rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-700/30 shadow-sm">
-                                                            <img
-                                                                src={getImageUrl(vid.img)}
-                                                                loading="lazy"
-                                                                alt={vid.title}
-                                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                            />
-                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                                <Play className="w-7 h-7 text-white fill-white drop-shadow-lg" />
-                                                            </div>
-                                                        </div>
-                                                        <h3 className="text-xs font-bold text-zinc-800 dark:text-zinc-300 group-hover:text-[#106EBE] dark:group-hover:text-white truncate px-0.5 transition-colors">
-                                                            {vid.title}
-                                                        </h3>
-                                                    </a>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="py-12 flex flex-col items-center justify-center text-center text-zinc-500 dark:text-zinc-400 space-y-2 bg-zinc-100 dark:bg-zinc-700/20 rounded-2xl transition-colors">
-                                                <Heart className="w-8 h-8 opacity-40 text-zinc-400 dark:text-zinc-500" />
-                                                <p className="text-xs font-bold">Belum ada video yang Anda sukai.</p>
-                                            </div>
-                                        )
-                                    )}
-
-                                    {mediaTab === 'saved' && (
-                                        savedVideos.length > 0 ? (
-                                            <div className="relative group/slider">
-
-                                                <button
-                                                    onClick={() => scrollSaved('left')}
-                                                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/80 dark:bg-zinc-800/80 backdrop-blur-md shadow-md flex items-center justify-center text-zinc-600 dark:text-zinc-300 opacity-0 group-hover/slider:opacity-100 hover:bg-white dark:hover:bg-zinc-700 transition-all outline-none border-none pointer-events-auto"
-                                                >
-                                                    <ChevronLeft className="w-5 h-5" />
-                                                </button>
-
-                                                <div
-                                                    ref={savedScrollRef}
-                                                    className="flex overflow-x-auto gap-3.5 pb-2 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
-                                                    style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}
-                                                >
-                                                    {savedVideos.map((vid) => (
-                                                        <a
-                                                            key={vid.id}
-                                                            href={`/streaming/${vid.slug || vid.id}`}
-                                                            className="shrink-0 w-[150px] sm:w-[180px] snap-start group flex flex-col gap-2 outline-none"
-                                                            title={vid.title}
-                                                        >
-                                                            <div className="relative aspect-video rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-700/30 shadow-sm">
-                                                                <img
-                                                                    src={getImageUrl(vid.img)}
-                                                                    loading="lazy"
-                                                                    alt={vid.title}
-                                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                                />
-                                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                                    <Play className="w-7 h-7 text-white fill-white drop-shadow-lg" />
-                                                                </div>
-                                                            </div>
-                                                            <h3 className="text-xs font-bold text-zinc-800 dark:text-zinc-300 group-hover:text-[#106EBE] dark:group-hover:text-white truncate px-0.5 transition-colors">
-                                                                {vid.title}
-                                                            </h3>
-                                                        </a>
-                                                    ))}
-                                                </div>
-
-                                                <button
-                                                    onClick={() => scrollSaved('right')}
-                                                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/80 dark:bg-zinc-800/80 backdrop-blur-md shadow-md flex items-center justify-center text-zinc-600 dark:text-zinc-300 opacity-0 group-hover/slider:opacity-100 hover:bg-white dark:hover:bg-zinc-700 transition-all outline-none border-none pointer-events-auto"
-                                                >
-                                                    <ChevronRight className="w-5 h-5" />
-                                                </button>
-
-                                            </div>
-                                        ) : (
-                                            <div className="py-12 flex flex-col items-center justify-center text-center text-zinc-500 dark:text-zinc-400 space-y-2 bg-zinc-100 dark:bg-zinc-700/20 rounded-2xl transition-colors">
-                                                <Bookmark className="w-8 h-8 opacity-40 text-zinc-400 dark:text-zinc-500" />
-                                                <p className="text-xs font-bold">Belum ada video yang Anda simpan.</p>
-                                            </div>
-                                        )
-                                    )}
-
-                                    {mediaTab === 'history' && (
-                                        historyVideos.length > 0 ? (
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
-                                                {historyVideos.map((vid) => (
-                                                    <a
-                                                        key={vid.id}
-                                                        href={`/streaming/${vid.slug || vid.id}`}
-                                                        className="group flex flex-col gap-2 outline-none"
-                                                        title={vid.title}
-                                                    >
-                                                        <div className="relative aspect-video rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-700/30 shadow-sm">
-                                                            <img
-                                                                src={getImageUrl(vid.img)}
-                                                                loading="lazy"
-                                                                alt={vid.title}
-                                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                            />
-                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                                <Play className="w-7 h-7 text-white fill-white drop-shadow-lg" />
-                                                            </div>
-                                                        </div>
-                                                        <h3 className="text-xs font-bold text-zinc-800 dark:text-zinc-300 group-hover:text-[#106EBE] dark:group-hover:text-white truncate px-0.5 transition-colors">
-                                                            {vid.title}
-                                                        </h3>
-                                                    </a>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="py-12 flex flex-col items-center justify-center text-center text-zinc-500 dark:text-zinc-400 space-y-2 bg-zinc-100 dark:bg-zinc-700/20 rounded-2xl transition-colors">
-                                                <Clock className="w-8 h-8 opacity-40 text-zinc-400 dark:text-zinc-500" />
-                                                <p className="text-xs font-bold">Belum ada riwayat tontonan terbaru.</p>
-                                            </div>
-                                        )
-                                    )}
-                                </div>
-                            )}
-                        </section>
-
-                    </div>
+                        </div>
+                    )}
                 </div>
+
+                {/* --- 4. ACTIVITY SECTION --- */}
+                <div className="w-full bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.3)] border-none">
+                    {/* Blue Header */}
+                    <div className="bg-[#106EBE] px-5 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-none cursor-pointer select-none" onClick={() => toggleSection('activity')}>
+                        <div className="flex items-center gap-4 border-none">
+                            <Clock className="w-7 h-7 text-white shrink-0 border-none" strokeWidth={2.5}/>
+                            <div className="border-none">
+                                <h2 className="text-lg sm:text-xl font-black text-white leading-tight border-none">Activity</h2>
+                                <p className="text-[11px] sm:text-xs text-blue-100 font-medium mt-0.5 border-none">Lihat riwayat aktivitas kamu di sini.</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 self-end sm:self-auto border-none">
+                            <ChevronDown className={`w-5 h-5 text-white transition-transform duration-300 border-none ${openSections.activity ? 'rotate-180' : ''}`} />
+                        </div>
+                    </div>
+
+                    {/* Activity Content */}
+                    {openSections.activity && (
+                        <div className="p-5 sm:p-8 animate-in fade-in slide-in-from-top-2 duration-300 border-none bg-slate-50/50 dark:bg-transparent flex flex-col gap-6">
+                            
+                            {/* Tabs Pill */}
+                            <div className="w-full flex flex-col sm:flex-row items-center bg-white dark:bg-[#1E242D] rounded-xl sm:rounded-full p-1.5 shadow-sm border border-zinc-100 dark:border-zinc-800/50">
+                                <button
+                                    onClick={() => setMediaTab('history')}
+                                    className={`flex-1 w-full sm:w-auto py-2.5 px-4 rounded-lg sm:rounded-full text-[13px] font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border-none ${mediaTab === 'history' ? 'bg-[#106EBE] text-white shadow-md' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white bg-transparent'}`}
+                                >
+                                    <User className="w-4 h-4 border-none" /> User History
+                                </button>
+                                <button
+                                    onClick={() => setMediaTab('likes')}
+                                    className={`flex-1 w-full sm:w-auto py-2.5 px-4 rounded-lg sm:rounded-full text-[13px] font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border-none ${mediaTab === 'likes' ? 'bg-[#106EBE] text-white shadow-md' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white bg-transparent'}`}
+                                >
+                                    <ThumbsUp className="w-4 h-4 border-none" /> Like History
+                                </button>
+                                <button
+                                    onClick={() => setMediaTab('saved')}
+                                    className={`flex-1 w-full sm:w-auto py-2.5 px-4 rounded-lg sm:rounded-full text-[13px] font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border-none ${mediaTab === 'saved' ? 'bg-[#106EBE] text-white shadow-md' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white bg-transparent'}`}
+                                >
+                                    <Bookmark className="w-4 h-4 border-none" /> Saved History
+                                </button>
+                            </div>
+
+                            {/* List Content */}
+                            <div className="flex flex-col gap-3 border-none">
+                                {activeMediaList.length > 0 ? (
+                                    activeMediaList.map((vid) => (
+                                        <a
+                                            key={vid.id}
+                                            href={`/streaming/${vid.slug || vid.id}`}
+                                            className="group flex items-center gap-4 bg-white dark:bg-[#1E242D] p-3 rounded-2xl hover:shadow-md transition-all border border-zinc-100 dark:border-zinc-800/50 cursor-pointer outline-none"
+                                        >
+                                            <div className="w-[100px] sm:w-[140px] aspect-video rounded-xl overflow-hidden shrink-0 relative border-none bg-zinc-200 dark:bg-zinc-800">
+                                                <img src={getImageUrl(vid.img)} alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" loading="lazy" />
+                                                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center border-none">
+                                                    <Play className="w-6 h-6 text-white fill-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md border-none" />
+                                                </div>
+                                            </div>
+                                            <div className="flex-1 min-w-0 border-none">
+                                                <h3 className="text-[13px] sm:text-[14px] font-bold text-zinc-900 dark:text-white truncate mb-1 border-none group-hover:text-[#106EBE] transition-colors">{vid.title}</h3>
+                                                <p className="text-[11px] sm:text-[12px] text-zinc-500 dark:text-zinc-400 font-medium border-none truncate">Diperbarui {timeAgo(vid.created_at)}</p>
+                                            </div>
+                                            <div className="hidden sm:flex items-center gap-2 text-zinc-400 dark:text-zinc-500 shrink-0 border-none">
+                                                <Eye className="w-4 h-4 border-none"/>
+                                                <span className="text-[12px] font-medium border-none">{timeAgo(vid.created_at)}</span>
+                                                <ChevronRight className="w-4 h-4 ml-2 border-none" />
+                                            </div>
+                                        </a>
+                                    ))
+                                ) : (
+                                    <div className="py-10 flex flex-col items-center justify-center text-center text-zinc-400 dark:text-zinc-500 border-none">
+                                        <Eye className="w-8 h-8 opacity-40 mb-2 border-none" />
+                                        <p className="text-[13px] font-bold border-none">Tidak ada riwayat aktivitas ditemukan.</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Lihat Semua Button */}
+                            {activeMediaList.length > 0 && (
+                                <button className="w-full py-3.5 rounded-xl bg-blue-50 dark:bg-[#1E242D] hover:bg-blue-100 dark:hover:bg-[#252C36] text-[#106EBE] dark:text-[#32ADFF] text-[13px] font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer border-none outline-none">
+                                    Lihat Semua <ChevronRight className="w-4 h-4 border-none" />
+                                </button>
+                            )}
+
+                        </div>
+                    )}
+                </div>
+
             </main>
 
             <Footer />
 
             {showDeleteConfirm && (
-                <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-zinc-800 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-200 transition-colors">
-                        <div className="w-14 h-14 bg-zinc-100 dark:bg-zinc-700/40 rounded-full flex items-center justify-center mb-4 text-red-500">
-                            <AlertTriangle className="w-7 h-7" />
+                <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200 border-none">
+                    <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-200 transition-colors border-none">
+                        <div className="w-14 h-14 bg-red-50 dark:bg-red-500/10 rounded-full flex items-center justify-center mb-4 text-red-600 border-none">
+                            <AlertTriangle className="w-7 h-7 border-none" />
                         </div>
-                        <h3 className="text-lg font-black text-zinc-900 dark:text-white mb-2">Hapus Akun Permanen?</h3>
-                        <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">
-                            Semua data profil, poin, bingkai avatar, dan riwayat tontonan akan dihapus dari server secara permanen. Tindakan ini tidak bisa dibatalkan.
+                        <h3 className="text-lg font-black text-zinc-900 dark:text-white mb-2 border-none">Hapus Akun Permanen?</h3>
+                        <p className="text-[13px] text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed border-none">
+                            Semua data profil, poin, bingkai avatar, dan riwayat tontonan akan dihapus secara permanen.
                         </p>
-                        <div className="flex w-full gap-3">
+                        <div className="flex w-full gap-3 border-none">
                             <button
                                 onClick={() => setShowDeleteConfirm(false)}
                                 disabled={isDeleting}
-                                className="flex-1 py-3 rounded-2xl font-bold text-xs bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-700/40 dark:hover:bg-zinc-700/70 text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+                                className="flex-1 py-3 rounded-2xl font-bold text-[13px] bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer border-none"
                             >
                                 Batal
                             </button>
                             <button
                                 onClick={executeDeleteAccount}
                                 disabled={isDeleting}
-                                className="flex-1 py-3 rounded-2xl font-bold text-xs bg-red-600 hover:bg-red-500 text-white transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-md"
+                                className="flex-1 py-3 rounded-2xl font-bold text-[13px] bg-red-600 hover:bg-red-700 text-white transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-md border-none"
                             >
-                                {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                                {isDeleting ? <Loader2 className="w-4 h-4 animate-spin border-none" /> : null}
                                 Ya, Hapus
                             </button>
                         </div>
