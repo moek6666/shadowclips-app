@@ -104,12 +104,13 @@ export default function Streaming({ supabase }) {
         const titleStr = String(vidData.title || '').toLowerCase().trim();
         const labelsStr = Array.isArray(vidData.labels) ? vidData.labels.join(' ').toLowerCase() : String(vidData.labels || '').toLowerCase();
 
-        const isPaidContent = categoryStr.includes('payment') || labelsStr.includes('payment');
+        const isPaidContent = categoryStr.includes('payment') || labelsStr.includes('lock payment') || labelsStr.includes('payment');
         const isExclusiveContent = (
             categoryStr.includes('exclusive') ||
             titleStr.includes('exclusive') ||
             labelsStr.includes('exclusive') ||
-            labelsStr.includes('premium')
+            labelsStr.includes('premium') ||
+            labelsStr.includes('lock') 
         ) && !isPaidContent;
 
         let isUserPremium = false;
@@ -378,7 +379,6 @@ export default function Streaming({ supabase }) {
     const coverImage = imageList[0] || '';
     const showGallery = isDeepFake && !hasMain && !hasAlternativeServer && !hasAlternativeServer2 && galleryImages.length > 0;
 
-    // PERBAIKAN BUG DOWNLOAD VIP: Tombol download hanya muncul jika VIP Terbuka DAN ada URL
     const hasDownloadLink = isVipUnlocked && video.embed_url && video.embed_url.trim() !== '' && video.embed_url !== 'EMPTY';
 
     const serverOptions = [];
@@ -429,6 +429,9 @@ export default function Streaming({ supabase }) {
                                         <p className="text-zinc-600 dark:text-zinc-400 text-[11px] sm:text-base max-w-lg mb-4 px-2 border-none">
                                             Video eksklusif ini terkunci. Dukung admin memberikan <strong className="text-zinc-900 dark:text-white border-none">Donasi</strong> via Saweria untuk akses penuh.
                                         </p>
+                                        <a href="/tutorial" className="mt-2 px-5 py-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[13px] font-bold rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-700 hover:text-zinc-900 dark:hover:text-white transition-colors border-none flex items-center gap-2 cursor-pointer shadow-sm">
+                                            <Info className="w-4 h-4 border-none" /> Baca Tutorial
+                                        </a>
                                     </div>
                                 ) : (
                                     <div className="absolute inset-0 flex flex-col items-center justify-center p-4 sm:p-8 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-3xl z-50 text-center transition-colors border-none">
@@ -442,6 +445,9 @@ export default function Streaming({ supabase }) {
                                         <p className="text-zinc-600 dark:text-zinc-400 text-[11px] sm:text-base max-w-lg px-2 border-none">
                                             This premium content is locked. Please <strong className="text-zinc-900 dark:text-white border-none">Like</strong> and leave a <strong className="text-zinc-900 dark:text-white border-none">Comment</strong> below to unlock full access.
                                         </p>
+                                        <a href="/tutorial" className="mt-4 px-5 py-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[13px] font-bold rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-700 hover:text-zinc-900 dark:hover:text-white transition-colors border-none flex items-center gap-2 cursor-pointer shadow-sm">
+                                            <Info className="w-4 h-4 border-none" /> Baca Tutorial
+                                        </a>
                                     </div>
                                 )
                             ) : currentVideoUrl ? (
