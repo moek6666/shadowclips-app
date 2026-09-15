@@ -6,7 +6,7 @@ import Footer from '../components/Footer';
 
 const getImageUrl = (imgString) => imgString ? imgString.split(',')[0].trim() : '';
 
-// 🔥 PEMBARUAN: Hanya mengekstrak index pertama secara paksa, sisa label diabaikan 🔥
+// 🔥 Hanya mengekstrak index pertama secara paksa, sisa label diabaikan 🔥
 const extractFirstLabel = (rawLabels) => {
     if (!rawLabels) return '';
     let firstLabel = '';
@@ -59,7 +59,9 @@ export default function Koleksi({ supabase }) {
         const grouped = {};
         (data || []).forEach(video => {
             const cleanLabel = extractFirstLabel(video.labels);
-            if (cleanLabel) {
+            
+            // 🔥 PERBAIKAN: Abaikan label jika itu adalah "AI Generated" (tidak peduli huruf besar/kecil)
+            if (cleanLabel && cleanLabel.toLowerCase() !== 'ai generated') {
                 const existingKey = Object.keys(grouped).find(k => k.toLowerCase() === cleanLabel.toLowerCase());
                 if (existingKey) {
                     grouped[existingKey].count += 1;
