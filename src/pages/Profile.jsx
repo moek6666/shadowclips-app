@@ -394,7 +394,6 @@ export default function Profile({ supabase }) {
     else if (mediaTab === 'likes') activeMediaList = likedVideos;
     else if (mediaTab === 'saved') activeMediaList = savedVideos;
 
-    // Persiapan Data untuk Statistik Sidebar
     const activeFrameName = FRAME_OPTIONS.find((f) => f.id === profile.active_frame)?.name || 'Tanpa Frame';
     const activeModelName = MODEL_PRESETS.find((m) => m.url === profile.header_bg_url)?.name || 'Tanpa Model';
     const joinDate = session?.user?.created_at 
@@ -411,7 +410,7 @@ export default function Profile({ supabase }) {
                     
                     {/* --- KIRI: SIDEBAR STATISTIK USER --- */}
                     <aside className="hidden lg:flex flex-col lg:col-span-3 sticky top-28 h-[calc(100vh-140px)] border-none">
-                        <div className="w-full h-full flex flex-col bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.3)] border-none">
+                        <div className="w-full h-full flex flex-col bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-none">
                             <div className="bg-[#106EBE] px-5 py-4 flex items-center gap-3 border-none shrink-0">
                                 <BarChart2 className="w-6 h-6 text-white shrink-0 border-none" strokeWidth={2.5}/>
                                 <div className="border-none">
@@ -422,7 +421,6 @@ export default function Profile({ supabase }) {
                             
                             <div className="flex-1 flex flex-col gap-6 border-none p-5 overflow-y-auto custom-scrollbar">
                                 
-                                {/* Status Akun (Diperbarui tanpa background) */}
                                 <div className="flex flex-col gap-2 border-none">
                                     <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider border-none">Status Akun</span>
                                     <div className="flex flex-wrap items-center gap-4 border-none">
@@ -443,7 +441,6 @@ export default function Profile({ supabase }) {
                                     </div>
                                 </div>
 
-                                {/* Informasi Dasar */}
                                 <div className="flex flex-col gap-3.5 border-none">
                                     <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider border-none">Informasi Dasar</span>
                                     
@@ -478,7 +475,6 @@ export default function Profile({ supabase }) {
                                     </div>
                                 </div>
 
-                                {/* Statistik Interaksi */}
                                 <div className="flex flex-col gap-3 border-none mt-2">
                                     <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider border-none">Aktivitas Interaksi</span>
                                     
@@ -503,7 +499,7 @@ export default function Profile({ supabase }) {
                     {/* --- KANAN: MAIN CONTENT --- */}
                     <div className="lg:col-span-9 flex flex-col gap-6 border-none">
                         
-                        <div className="relative w-full h-auto min-h-[200px] sm:min-h-[250px] rounded-[24px] sm:rounded-[32px] bg-gradient-to-r from-[#0f4b81] to-[#106EBE] dark:from-[#0a2e54] dark:to-[#094880] p-6 sm:p-10 flex flex-col md:flex-row items-center md:items-center gap-6 sm:gap-10 shadow-[0_8px_30px_rgb(16,110,190,0.15)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] border-none mt-6 sm:mt-10">
+                        <div className="relative w-full h-auto min-h-[200px] sm:min-h-[250px] rounded-[24px] sm:rounded-[32px] bg-gradient-to-r from-[#0f4b81] to-[#106EBE] dark:from-[#0a2e54] dark:to-[#094880] p-6 sm:p-10 flex flex-col md:flex-row items-center md:items-center gap-6 sm:gap-10 shadow-[0_8px_30px_rgba(16,110,190,0.15)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)] border-none mt-6 sm:mt-10">
                             
                             {editHeaderBgUrl && editHeaderBgUrl !== 'none' && (
                                 <div className="absolute bottom-0 right-0 sm:right-6 md:right-12 w-[65%] sm:w-[50%] lg:w-[45%] h-[125%] sm:h-[145%] pointer-events-none z-0 border-none flex justify-end items-end">
@@ -568,7 +564,7 @@ export default function Profile({ supabase }) {
                         </div>
 
                         {/* 2. WARDROBE SECTION */}
-                        <div className="w-full bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.3)] border-none">
+                        <div className="w-full bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-none">
                             <div 
                                 role="button"
                                 tabIndex={0}
@@ -638,7 +634,7 @@ export default function Profile({ supabase }) {
                         </div>
 
                         {/* 3. COSTUME PROFILE SECTION */}
-                        <div className="w-full bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.3)] border-none">
+                        <div className="w-full bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-none">
                             <div 
                                 role="button"
                                 tabIndex={0}
@@ -724,7 +720,7 @@ export default function Profile({ supabase }) {
                         </div>
 
                         {/* 4. ACTIVITY SECTION */}
-                        <div className="w-full bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.3)] border-none">
+                        <div className="w-full bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-none">
                             <div 
                                 role="button"
                                 tabIndex={0}
