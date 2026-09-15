@@ -33,7 +33,6 @@ import Footer from '../components/Footer';
 import Avatar, { FRAME_OPTIONS } from '../components/Avatar';
 import CharacterSelector from '../components/CharacterSelector'; 
 
-// PERBAIKAN: Import MODEL_PRESETS untuk mengecek apakah URL di database valid
 import ModelHeader, { MODEL_PRESETS, DEFAULT_HEADER_MODEL } from '../components/ModelHeader'; 
 
 const getImageUrl = (imgString) => (imgString ? imgString.split(',')[0].trim() : '');
@@ -70,9 +69,10 @@ export default function Profile({ supabase }) {
     const [isSaving, setIsSaving] = useState(false);
     const [notification, setNotification] = useState(null);
 
+    // PERBAIKAN: Semua menu disetel ke 'false' agar tertutup secara default
     const [openSections, setOpenSections] = useState({
         wardrobe: false,
-        customize: true,
+        customize: false, 
         activity: false,
     });
 
@@ -253,8 +253,6 @@ export default function Profile({ supabase }) {
                         const googleAvatar = currentSession.user.user_metadata?.avatar_url;
                         setEditAvatarUrl(profileData.avatar_url || googleAvatar || '');
                         
-                        // PERBAIKAN: Cek apakah URL yang tersimpan di DB valid di MODEL_PRESETS
-                        // Jika URL-nya adalah sisa wallpaper lama, kita paksa reset ke DEFAULT
                         const savedUrl = profileData.header_bg_url || '';
                         const isValidModel = MODEL_PRESETS.some(preset => preset.url === savedUrl);
                         
