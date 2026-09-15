@@ -33,19 +33,11 @@ import Footer from '../components/Footer';
 import Avatar, { FRAME_OPTIONS } from '../components/Avatar';
 import CharacterSelector from '../components/CharacterSelector'; 
 
+// PERBAIKAN: Import MODEL_PRESETS untuk mengecek apakah URL di database valid
+import ModelHeader, { MODEL_PRESETS, DEFAULT_HEADER_MODEL } from '../components/ModelHeader'; 
+
 const getImageUrl = (imgString) => (imgString ? imgString.split(',')[0].trim() : '');
 
-const HEADER_PRESETS = [
-    { id: 'neon', name: 'Neon Blur', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&auto=format&fit=crop' },
-    { id: 'dark', name: 'Dark Tech', url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1200&auto=format&fit=crop' },
-    { id: 'light', name: 'Light Flow', url: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=1200&auto=format&fit=crop' },
-    { id: 'cyber', name: 'Cyberpunk', url: 'https://images.unsplash.com/photo-1555680202-c86f0e12f086?q=80&w=1200&auto=format&fit=crop' },
-    { id: 'nature', name: 'Deep Space', url: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=1200&auto=format&fit=crop' }
-];
-
-const DEFAULT_HEADER_BG = HEADER_PRESETS[0].url;
-
-// Komponen Iklan Outstream
 const OutstreamAd = () => {
     useEffect(() => {
         const script1 = document.createElement('script');
@@ -80,7 +72,7 @@ export default function Profile({ supabase }) {
 
     const [openSections, setOpenSections] = useState({
         wardrobe: false,
-        customize: false,
+        customize: true,
         activity: false,
     });
 
@@ -93,7 +85,7 @@ export default function Profile({ supabase }) {
 
     const [editName, setEditName] = useState('');
     const [editAvatarUrl, setEditAvatarUrl] = useState('');
-    const [editHeaderBgUrl, setEditHeaderBgUrl] = useState(DEFAULT_HEADER_BG);
+    const [editHeaderBgUrl, setEditHeaderBgUrl] = useState(DEFAULT_HEADER_MODEL);
     const [editFrame, setEditFrame] = useState('none');
 
     const [mediaTab, setMediaTab] = useState('history');
@@ -261,7 +253,12 @@ export default function Profile({ supabase }) {
                         const googleAvatar = currentSession.user.user_metadata?.avatar_url;
                         setEditAvatarUrl(profileData.avatar_url || googleAvatar || '');
                         
-                        setEditHeaderBgUrl(profileData.header_bg_url || DEFAULT_HEADER_BG);
+                        // PERBAIKAN: Cek apakah URL yang tersimpan di DB valid di MODEL_PRESETS
+                        // Jika URL-nya adalah sisa wallpaper lama, kita paksa reset ke DEFAULT
+                        const savedUrl = profileData.header_bg_url || '';
+                        const isValidModel = MODEL_PRESETS.some(preset => preset.url === savedUrl);
+                        
+                        setEditHeaderBgUrl(isValidModel ? savedUrl : DEFAULT_HEADER_MODEL);
 
                         const currentFrame = FRAME_OPTIONS.find((f) => f.id === profileData.active_frame);
                         if (currentFrame && (profileData.points || 0) < currentFrame.unlockPoints) {
@@ -411,7 +408,7 @@ export default function Profile({ supabase }) {
     const hasUnsavedChanges =
         editName !== (profile.name || '') ||
         editAvatarUrl !== (profile.avatar_url || googleAvatar || '') ||
-        editHeaderBgUrl !== (profile.header_bg_url || DEFAULT_HEADER_BG) ||
+        editHeaderBgUrl !== (profile.header_bg_url || DEFAULT_HEADER_MODEL) ||
         editFrame !== (profile.active_frame || 'none');
 
     let activeMediaList = [];
@@ -481,11 +478,17 @@ export default function Profile({ supabase }) {
                     {/* --- KANAN: MAIN CONTENT --- */}
                     <div className="lg:col-span-9 flex flex-col gap-6 border-none">
                         
-                        {/* 1. HERO BANNER */}
-                        <div className="relative w-full rounded-[24px] sm:rounded-[32px] overflow-hidden bg-gradient-to-r from-[#0f4b81] to-[#106EBE] dark:from-[#0a2e54] dark:to-[#094880] p-6 sm:p-10 flex flex-col md:flex-row items-center md:items-center gap-6 sm:gap-10 shadow-[0_8px_30px_rgb(16,110,190,0.15)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] border-none">
-                            <div className="absolute inset-0 opacity-[0.25] dark:opacity-[0.35] pointer-events-none mix-blend-overlay border-none">
-                                <img src={editHeaderBgUrl} className="w-full h-full object-cover border-none" alt="bg" />
-                            </div>
+                        <div className="relative w-full h-auto min-h-[200px] sm:min-h-[250px] rounded-[24px] sm:rounded-[32px] bg-gradient-to-r from-[#0f4b81] to-[#106EBE] dark:from-[#0a2e54] dark:to-[#094880] p-6 sm:p-10 flex flex-col md:flex-row items-center md:items-center gap-6 sm:gap-10 shadow-[0_8px_30px_rgb(16,110,190,0.15)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] border-none mt-6 sm:mt-10">
+                            
+                            {editHeaderBgUrl && editHeaderBgUrl !== 'none' && (
+                                <div className="absolute bottom-0 right-0 sm:right-6 md:right-12 w-[65%] sm:w-[50%] lg:w-[45%] h-[125%] sm:h-[145%] pointer-events-none z-0 border-none flex justify-end items-end">
+                                    <img 
+                                        src={editHeaderBgUrl} 
+                                        className="w-auto h-full max-w-full object-contain object-bottom drop-shadow-[0_10px_20px_rgba(0,0,0,0.4)] dark:drop-shadow-[0_10px_20px_rgba(0,0,0,0.7)] border-none" 
+                                        alt="header model" 
+                                    />
+                                </div>
+                            )}
                             
                             <div className="relative z-10 shrink-0 flex items-center justify-center border-none">
                                <div className="relative rounded-full bg-white/10 p-2 backdrop-blur-sm border-none shadow-2xl">
@@ -498,14 +501,14 @@ export default function Profile({ supabase }) {
                                </div>
                             </div>
 
-                            <div className="relative z-10 flex flex-col items-center md:items-start text-white w-full border-none">
+                            <div className="relative z-10 flex flex-col items-center md:items-start text-white w-full md:w-[60%] border-none drop-shadow-md">
                                 <div className="flex items-center gap-3 mb-1 border-none">
                                     <h1 className="text-3xl sm:text-4xl font-black tracking-tight border-none">{displayName}</h1>
                                     {profile.is_premium && <Crown className="w-6 h-6 text-amber-400 fill-amber-400 border-none drop-shadow-md" />}
                                     {profile.is_admin && <Shield className="w-6 h-6 text-emerald-400 fill-emerald-400 border-none drop-shadow-md" />}
                                 </div>
                                 
-                                <div className="flex items-center gap-2 text-blue-200 dark:text-blue-300 text-sm font-medium mb-3 border-none">
+                                <div className="flex items-center gap-2 text-blue-100 dark:text-blue-200 text-sm font-medium mb-3 border-none">
                                     <span className="truncate max-w-[200px] sm:max-w-md border-none">{session?.user?.email}</span>
                                 </div>
                                 
@@ -520,7 +523,7 @@ export default function Profile({ supabase }) {
                                       </div>
                                       <div className="flex flex-col border-none">
                                          <span className="text-xl sm:text-2xl font-black leading-none tracking-tight border-none">{currentPoints.toLocaleString()}</span>
-                                         <span className="text-xs text-blue-200 font-bold mt-1 border-none">Pts</span>
+                                         <span className="text-xs text-blue-100 font-bold mt-1 border-none">Pts</span>
                                       </div>
                                    </div>
                                    
@@ -532,7 +535,7 @@ export default function Profile({ supabase }) {
                                       </div>
                                       <div className="flex flex-col border-none">
                                          <span className="text-xl sm:text-2xl font-black leading-none tracking-tight border-none">{totalLikes.toLocaleString()}</span>
-                                         <span className="text-xs text-blue-200 font-bold mt-1 border-none">Likes (Video)</span>
+                                         <span className="text-xs text-blue-100 font-bold mt-1 border-none">Likes (Video)</span>
                                       </div>
                                    </div>
                                 </div>
@@ -541,15 +544,20 @@ export default function Profile({ supabase }) {
 
                         {/* 2. WARDROBE SECTION */}
                         <div className="w-full bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.3)] border-none">
-                            <div className="bg-[#106EBE] px-5 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-none cursor-pointer select-none" onClick={() => toggleSection('wardrobe')}>
-                                <div className="flex items-center gap-4 border-none">
+                            <div 
+                                role="button"
+                                tabIndex={0}
+                                className="bg-[#106EBE] hover:bg-[#0e5c9f] transition-colors px-5 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-none cursor-pointer select-none" 
+                                onClick={() => toggleSection('wardrobe')}
+                            >
+                                <div className="flex items-center gap-4 border-none pointer-events-none">
                                     <Shirt className="w-7 h-7 text-white shrink-0 border-none" strokeWidth={2.5}/>
                                     <div className="border-none">
                                         <h2 className="text-lg sm:text-xl font-black text-white leading-tight border-none">Wardrobe</h2>
                                         <p className="text-[11px] sm:text-xs text-blue-100 font-medium mt-0.5 border-none">Kumpulkan Point untuk membuka border avatar eksklusif.</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3 self-end sm:self-auto border-none">
+                                <div className="flex items-center gap-3 self-end sm:self-auto border-none pointer-events-none">
                                     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/20 backdrop-blur-sm border-none shadow-inner text-white">
                                         <div className="w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center shrink-0 border-none">
                                             <Star className="w-2.5 h-2.5 text-amber-950 fill-current border-none"/>
@@ -606,27 +614,32 @@ export default function Profile({ supabase }) {
 
                         {/* 3. COSTUME PROFILE SECTION */}
                         <div className="w-full bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.3)] border-none">
-                            <div className="bg-[#106EBE] px-5 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-none cursor-pointer select-none" onClick={() => toggleSection('customize')}>
-                                <div className="flex items-center gap-4 border-none">
+                            <div 
+                                role="button"
+                                tabIndex={0}
+                                className="bg-[#106EBE] hover:bg-[#0e5c9f] transition-colors px-5 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-none cursor-pointer select-none" 
+                                onClick={() => toggleSection('customize')}
+                            >
+                                <div className="flex items-center gap-4 border-none pointer-events-none">
                                     <Smile className="w-7 h-7 text-white shrink-0 border-none" strokeWidth={2.5}/>
                                     <div className="border-none">
                                         <h2 className="text-lg sm:text-xl font-black text-white leading-tight border-none">Costume Profile</h2>
-                                        <p className="text-[11px] sm:text-xs text-blue-100 font-medium mt-0.5 border-none">Ubah latar belakang, karakter, dan nama profil kamu.</p>
+                                        <p className="text-[11px] sm:text-xs text-blue-100 font-medium mt-0.5 border-none">Ubah latar belakang, model karakter, dan nama profil kamu.</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3 self-end sm:self-auto border-none">
                                     {hasUnsavedChanges && (
-                                        <button onClick={(e) => { e.stopPropagation(); handleUpdateProfile(); }} disabled={isSaving} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-[#106EBE] text-xs font-bold shadow-sm border-none cursor-pointer hover:bg-zinc-50">
+                                        <button onClick={(e) => { e.stopPropagation(); handleUpdateProfile(); }} disabled={isSaving} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-[#106EBE] text-xs font-bold shadow-sm border-none cursor-pointer hover:bg-zinc-50 z-10">
                                             {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin border-none" /> : <Save className="w-3.5 h-3.5 border-none" />}
                                             Simpan
                                         </button>
                                     )}
-                                    <ChevronDown className={`w-5 h-5 text-white transition-transform duration-300 border-none ${openSections.customize ? 'rotate-180' : ''}`} />
+                                    <ChevronDown className={`w-5 h-5 text-white transition-transform duration-300 border-none pointer-events-none ${openSections.customize ? 'rotate-180' : ''}`} />
                                 </div>
                             </div>
 
                             {openSections.customize && (
-                                <div className="p-6 sm:p-8 flex flex-col md:flex-row items-center md:items-start gap-8 lg:gap-12 animate-in fade-in slide-in-from-top-2 duration-300 border-none bg-slate-50/50 dark:bg-transparent">
+                                <div className="p-6 sm:p-8 flex flex-col md:flex-row items-center md:items-start gap-8 lg:gap-12 animate-in fade-in slide-in-from-top-2 duration-300 border-none bg-slate-50/50 dark:bg-transparent pb-8">
                                     <div className="relative shrink-0 flex items-center justify-center border-none bg-white dark:bg-[#1E242D] p-6 rounded-[2rem] shadow-sm">
                                         <Avatar
                                             url={currentAvatarToDisplay}
@@ -636,33 +649,15 @@ export default function Profile({ supabase }) {
                                         />
                                     </div>
 
-                                    <div className="flex-1 w-full space-y-6 border-none">
+                                    <div className="flex-1 min-w-0 w-full space-y-6 border-none">
                                         
-                                        {/* Header Wallpaper Selector */}
                                         <div className="border-none">
-                                            <label className="block text-[13px] font-bold text-[#106EBE] dark:text-[#32ADFF] mb-3 border-none">Header Wallpaper</label>
-                                            <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar border-none">
-                                                {HEADER_PRESETS.map((preset) => {
-                                                    const isSelected = editHeaderBgUrl === preset.url;
-                                                    return (
-                                                        <div 
-                                                            key={preset.id} 
-                                                            onClick={() => setEditHeaderBgUrl(preset.url)}
-                                                            className={`relative shrink-0 w-32 h-16 rounded-xl overflow-hidden cursor-pointer transition-all border-none ${isSelected ? 'ring-2 ring-[#106EBE] shadow-md scale-105' : 'hover:scale-105'}`}
-                                                        >
-                                                            <img src={preset.url} alt={preset.name} className="w-full h-full object-cover border-none" />
-                                                            {isSelected && (
-                                                                <div className="absolute top-1 right-1 bg-[#106EBE] rounded-full p-0.5 border-none shadow-sm">
-                                                                    <Check className="w-3 h-3 text-white border-none stroke-[3]" />
-                                                                </div>
-                                                            )}
-                                                            <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] font-bold text-center py-0.5 border-none backdrop-blur-sm">
-                                                                {preset.name}
-                                                            </div>
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
+                                            <label className="block text-[13px] font-bold text-[#106EBE] dark:text-[#32ADFF] mb-3 border-none">Model Karakter (Header)</label>
+                                            <ModelHeader 
+                                                currentModel={editHeaderBgUrl} 
+                                                onSelectModel={setEditHeaderBgUrl} 
+                                                isSaving={isSaving} 
+                                            />
                                         </div>
 
                                         <div className="border-none">
@@ -679,7 +674,7 @@ export default function Profile({ supabase }) {
                                         </div>
 
                                         <div className="border-none">
-                                            <label className="block text-[13px] font-bold text-[#106EBE] dark:text-[#32ADFF] mb-2 border-none">Pilih Karakter</label>
+                                            <label className="block text-[13px] font-bold text-[#106EBE] dark:text-[#32ADFF] mb-2 border-none">Pilih Karakter Avatar</label>
                                             <CharacterSelector 
                                                 currentAvatar={editAvatarUrl} 
                                                 onSelectAvatar={handleSelectAvatar}
@@ -687,13 +682,13 @@ export default function Profile({ supabase }) {
                                             />
                                         </div>
                                         
-                                        <div className="w-full flex justify-end pt-2 border-none">
-                                            <div className="flex items-center gap-4 text-xs font-bold text-zinc-500 border-none">
-                                                <button onClick={handleLogout} className="flex items-center gap-1.5 hover:text-red-500 transition-colors border-none cursor-pointer bg-transparent">
+                                        <div className="w-full mt-6 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                                            <div className="flex flex-wrap items-center justify-end gap-4 text-xs font-bold text-zinc-500 border-none">
+                                                <button onClick={handleLogout} className="flex items-center gap-1.5 hover:text-red-500 transition-colors border-none cursor-pointer bg-transparent whitespace-nowrap">
                                                     <LogOut className="w-4 h-4 border-none"/> Logout
                                                 </button>
-                                                <div className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700 border-none"></div>
-                                                <button onClick={() => setShowDeleteConfirm(true)} className="flex items-center gap-1.5 hover:text-red-500 transition-colors border-none cursor-pointer bg-transparent">
+                                                <div className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700 border-none hidden sm:block"></div>
+                                                <button onClick={() => setShowDeleteConfirm(true)} className="flex items-center gap-1.5 hover:text-red-500 transition-colors border-none cursor-pointer bg-transparent whitespace-nowrap">
                                                     <Trash2 className="w-4 h-4 border-none"/> Hapus Akun
                                                 </button>
                                             </div>
@@ -705,15 +700,20 @@ export default function Profile({ supabase }) {
 
                         {/* 4. ACTIVITY SECTION */}
                         <div className="w-full bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.3)] border-none">
-                            <div className="bg-[#106EBE] px-5 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-none cursor-pointer select-none" onClick={() => toggleSection('activity')}>
-                                <div className="flex items-center gap-4 border-none">
+                            <div 
+                                role="button"
+                                tabIndex={0}
+                                className="bg-[#106EBE] hover:bg-[#0e5c9f] transition-colors px-5 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-none cursor-pointer select-none" 
+                                onClick={() => toggleSection('activity')}
+                            >
+                                <div className="flex items-center gap-4 border-none pointer-events-none">
                                     <Clock className="w-7 h-7 text-white shrink-0 border-none" strokeWidth={2.5}/>
                                     <div className="border-none">
                                         <h2 className="text-lg sm:text-xl font-black text-white leading-tight border-none">Activity</h2>
                                         <p className="text-[11px] sm:text-xs text-blue-100 font-medium mt-0.5 border-none">Lihat riwayat aktivitas kamu di sini.</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3 self-end sm:self-auto border-none">
+                                <div className="flex items-center gap-3 self-end sm:self-auto border-none pointer-events-none">
                                     <ChevronDown className={`w-5 h-5 text-white transition-transform duration-300 border-none ${openSections.activity ? 'rotate-180' : ''}`} />
                                 </div>
                             </div>
@@ -768,7 +768,6 @@ export default function Profile({ supabase }) {
                     </div>
                 </div>
 
-                {/* Komponen Iklan Outstream tepat di bawah konten profil */}
                 <OutstreamAd />
 
             </main>
