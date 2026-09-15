@@ -25,7 +25,8 @@ import {
     ThumbsUp,
     Star,
     Eye,
-    Users
+    BarChart2,
+    Calendar
 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import Navbar from '../components/Navbar';
@@ -69,7 +70,6 @@ export default function Profile({ supabase }) {
     const [isSaving, setIsSaving] = useState(false);
     const [notification, setNotification] = useState(null);
 
-    // PERBAIKAN: Semua menu disetel ke 'false' agar tertutup secara default
     const [openSections, setOpenSections] = useState({
         wardrobe: false,
         customize: false, 
@@ -97,26 +97,6 @@ export default function Profile({ supabase }) {
     const [likedVideos, setLikedVideos] = useState([]);
     const [historyVideos, setHistoryVideos] = useState([]);
     const [savedVideos, setSavedVideos] = useState([]);
-    const [activeUsers, setActiveUsers] = useState([]);
-
-    useEffect(() => {
-        const fetchActiveUsers = async () => {
-            if (!supabase) return;
-            try {
-                const { data, error } = await supabase
-                    .from('profiles')
-                    .select('id, name, avatar_url, active_frame, is_admin, is_premium')
-                    .limit(50);
-                    
-                if (!error && data) {
-                    setActiveUsers(data);
-                }
-            } catch (err) {
-                console.error("Gagal memuat user aktif:", err);
-            }
-        };
-        fetchActiveUsers();
-    }, [supabase]);
 
     const fetchActivityData = useCallback(async (currentSession) => {
         if (!supabase) return;
@@ -414,6 +394,13 @@ export default function Profile({ supabase }) {
     else if (mediaTab === 'likes') activeMediaList = likedVideos;
     else if (mediaTab === 'saved') activeMediaList = savedVideos;
 
+    // Persiapan Data untuk Statistik Sidebar
+    const activeFrameName = FRAME_OPTIONS.find((f) => f.id === profile.active_frame)?.name || 'Tanpa Frame';
+    const activeModelName = MODEL_PRESETS.find((m) => m.url === profile.header_bg_url)?.name || 'Tanpa Model';
+    const joinDate = session?.user?.created_at 
+        ? new Date(session.user.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) 
+        : '-';
+
     return (
         <div className="min-h-screen flex flex-col bg-[#F0F4F8] dark:bg-[#0E1116] text-zinc-900 dark:text-zinc-200 font-sans antialiased transition-colors duration-200">
             <Toaster position="top-center" reverseOrder={false} />
@@ -422,53 +409,93 @@ export default function Profile({ supabase }) {
             <main className="flex-1 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-10">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start border-none">
                     
-                    {/* --- KIRI: SIDEBAR ACTIVE USERS --- */}
+                    {/* --- KIRI: SIDEBAR STATISTIK USER --- */}
                     <aside className="hidden lg:flex flex-col lg:col-span-3 sticky top-28 h-[calc(100vh-140px)] border-none">
                         <div className="w-full h-full flex flex-col bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.3)] border-none">
                             <div className="bg-[#106EBE] px-5 py-4 flex items-center gap-3 border-none shrink-0">
-                                <Users className="w-6 h-6 text-white shrink-0 border-none" strokeWidth={2.5}/>
+                                <BarChart2 className="w-6 h-6 text-white shrink-0 border-none" strokeWidth={2.5}/>
                                 <div className="border-none">
-                                    <h2 className="text-base font-black text-white leading-tight border-none">Active Users</h2>
-                                    <p className="text-[10px] text-blue-100 font-medium mt-0.5 border-none">Komunitas ShadowClips.</p>
+                                    <h2 className="text-base font-black text-white leading-tight border-none">Statistik User</h2>
+                                    <p className="text-[10px] text-blue-100 font-medium mt-0.5 border-none">Ringkasan data profil kamu.</p>
                                 </div>
                             </div>
                             
-                            <div 
-                                className="flex-1 flex flex-col gap-3 border-none p-4 overflow-y-auto outline-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-                                tabIndex={0}
-                            >
-                                {activeUsers.length > 0 ? (
-                                    activeUsers.map(user => {
-                                        const userAvatarFallback = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=random&color=fff&bold=true`;
-                                        
-                                        return (
-                                            <div key={user.id} className="flex items-center gap-3 p-2 rounded-2xl hover:bg-zinc-50 dark:hover:bg-[#1E242D] transition-colors border-none group cursor-pointer shrink-0">
-                                                <div className="relative shrink-0 flex items-center justify-center border-none">
-                                                    <Avatar 
-                                                        url={userAvatarFallback} 
-                                                        frameId={user.active_frame} 
-                                                        containerClass="w-10 h-10 border-none" 
-                                                        scale={0.45} 
-                                                    />
-                                                </div>
-                                                <div className="flex flex-col min-w-0 border-none">
-                                                    <div className="flex items-center gap-1.5 border-none">
-                                                        <span className="text-[13px] font-bold text-zinc-800 dark:text-zinc-200 truncate border-none group-hover:text-[#106EBE] dark:group-hover:text-[#32ADFF] transition-colors">
-                                                            {user.name || 'User'}
-                                                        </span>
-                                                        {user.is_admin && <Shield className="w-3.5 h-3.5 text-emerald-500 fill-emerald-500 shrink-0 border-none drop-shadow-sm" title="Admin" />}
-                                                        {user.is_premium && <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0 border-none drop-shadow-sm" title="Premium" />}
-                                                    </div>
-                                                    <span className="text-[10px] font-medium text-zinc-400 border-none mt-0.5">Active</span>
-                                                </div>
+                            <div className="flex-1 flex flex-col gap-6 border-none p-5 overflow-y-auto custom-scrollbar">
+                                
+                                {/* Status Akun (Diperbarui tanpa background) */}
+                                <div className="flex flex-col gap-2 border-none">
+                                    <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider border-none">Status Akun</span>
+                                    <div className="flex flex-wrap items-center gap-4 border-none">
+                                        {profile.is_premium ? (
+                                            <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 border-none">
+                                                <Crown className="w-4 h-4 border-none" /> <span className="text-xs font-bold border-none">Premium VIP</span>
                                             </div>
-                                        );
-                                    })
-                                ) : (
-                                    <div className="py-3 text-[13px] font-medium text-zinc-500 flex items-center gap-2 border-none">
-                                        <Loader2 className="w-4 h-4 animate-spin border-none" /> Memuat data...
+                                        ) : (
+                                            <div className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400 border-none">
+                                                <User className="w-4 h-4 border-none" /> <span className="text-xs font-bold border-none">Member Gratis</span>
+                                            </div>
+                                        )}
+                                        {profile.is_admin && (
+                                            <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 border-none">
+                                                <Shield className="w-4 h-4 border-none" /> <span className="text-xs font-bold border-none">Admin</span>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
+                                </div>
+
+                                {/* Informasi Dasar */}
+                                <div className="flex flex-col gap-3.5 border-none">
+                                    <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider border-none">Informasi Dasar</span>
+                                    
+                                    <div className="flex items-center gap-3 border-none">
+                                        <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0 border-none">
+                                            <Calendar className="w-4 h-4 text-[#106EBE] border-none" />
+                                        </div>
+                                        <div className="flex flex-col border-none">
+                                            <span className="text-[10px] text-zinc-500 border-none">Bergabung Sejak</span>
+                                            <span className="text-[13px] font-bold text-zinc-900 dark:text-white border-none">{joinDate}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-3 border-none">
+                                        <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0 border-none">
+                                            <Shirt className="w-4 h-4 text-[#106EBE] border-none" />
+                                        </div>
+                                        <div className="flex flex-col border-none">
+                                            <span className="text-[10px] text-zinc-500 border-none">Wardrobe Aktif</span>
+                                            <span className="text-[13px] font-bold text-zinc-900 dark:text-white border-none">{activeFrameName}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-3 border-none">
+                                        <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0 border-none">
+                                            <Smile className="w-4 h-4 text-[#106EBE] border-none" />
+                                        </div>
+                                        <div className="flex flex-col border-none">
+                                            <span className="text-[10px] text-zinc-500 border-none">Model Karakter</span>
+                                            <span className="text-[13px] font-bold text-zinc-900 dark:text-white border-none">{activeModelName}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Statistik Interaksi */}
+                                <div className="flex flex-col gap-3 border-none mt-2">
+                                    <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider border-none">Aktivitas Interaksi</span>
+                                    
+                                    <div className="grid grid-cols-2 gap-3 border-none">
+                                        <div className="bg-zinc-50 dark:bg-[#1E242D] p-3 rounded-xl flex flex-col items-center justify-center text-center border-none">
+                                            <ThumbsUp className="w-5 h-5 text-[#106EBE] mb-1.5 border-none" />
+                                            <span className="text-lg font-black text-zinc-900 dark:text-white leading-none border-none">{totalLikes}</span>
+                                            <span className="text-[10px] font-medium text-zinc-500 mt-1 border-none">Video Disukai</span>
+                                        </div>
+                                        <div className="bg-zinc-50 dark:bg-[#1E242D] p-3 rounded-xl flex flex-col items-center justify-center text-center border-none">
+                                            <Bookmark className="w-5 h-5 text-[#106EBE] mb-1.5 border-none" />
+                                            <span className="text-lg font-black text-zinc-900 dark:text-white leading-none border-none">{savedVideos.length}</span>
+                                            <span className="text-[10px] font-medium text-zinc-500 mt-1 border-none">Disimpan</span>
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </aside>
