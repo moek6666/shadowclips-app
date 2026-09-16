@@ -1,86 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import useSWR from 'swr';
-import { Play, Clock, FolderOpen, Loader2 } from 'lucide-react';
-
-import { SiOnlyfans, SiTelegram } from 'react-icons/si';
-import { FaCrown, FaVideo, FaFire, FaBan, FaRandom, FaFilm, FaMask, FaMobileAlt, FaGlobeAmericas, FaGem, FaUserSecret, FaHeart } from 'react-icons/fa';
-import { FaClapperboard } from 'react-icons/fa6';
-import { BiSolidCategory } from 'react-icons/bi';
-import { MdLiveTv } from 'react-icons/md';
+import { FolderOpen, Loader2, ArrowUpRight } from 'lucide-react';
 
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 const getImageUrl = (imgString) => imgString ? imgString.split(',')[0].trim() : '';
 
-const getCategoryIcon = (categoryName) => {
-    const name = categoryName.toLowerCase();
-    const iconClasses = "w-7 h-7 md:w-8 md:h-8 text-[#106EBE] group-hover:text-[#106EBE] transition-colors drop-shadow-md shrink-0";
-
-    if (name.includes('onlyfans')) return <SiOnlyfans className={iconClasses} />;
-    if (name.includes('telegram')) return <SiTelegram className={iconClasses} />;
-    if (name.includes('movie') || name.includes('scene')) return <FaClapperboard className={iconClasses} />;
-    if (name.includes('live')) return <MdLiveTv className={iconClasses} />;
-    if (name.includes('deepfake')) return <FaMask className={iconClasses} />;
-    if (name.includes('amateur') || name.includes('amatir')) return <FaMobileAlt className={iconClasses} />;
-    if (name.includes('barat') || name.includes('western')) return <FaGlobeAmericas className={iconClasses} />;
-    if (name.includes('premium') || name.includes('vip')) return <FaGem className={iconClasses} />;
-    if (name.includes('skandal') || name.includes('scandal')) return <FaUserSecret className={iconClasses} />;
-    if (name.includes('romance') || name.includes('asmara')) return <FaHeart className={iconClasses} />;
-    if (name.includes('exclusive') || name.includes('eksklusif')) return <FaCrown className={iconClasses} />;
-    if (name.includes('viral')) return <FaFire className={iconClasses} />;
-    if (name.includes('random') || name.includes('acak')) return <FaRandom className={iconClasses} />;
-    if (name.includes('banned')) return <FaBan className={iconClasses} />;
-
-    if (name.includes('kbj') || name.includes('korean')) {
-        return (
-            <div className="relative shrink-0 flex items-center justify-center">
-                <FaVideo className={iconClasses} />
-                <span className="absolute -bottom-1 -right-2 bg-zinc-200 dark:bg-zinc-800 border-none text-zinc-900 dark:text-white text-[8px] md:text-[9px] font-black px-1 rounded-sm shadow-md group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors">
-                    KR
-                </span>
-            </div>
-        );
-    }
-
-    if (name.includes('jav') || name.includes('jepang') || name.includes('film')) {
-        return (
-            <div className="relative shrink-0 flex items-center justify-center">
-                <FaFilm className={iconClasses} />
-                <span className="absolute -bottom-1 -right-2 bg-zinc-200 dark:bg-zinc-800 border-none text-zinc-900 dark:text-white text-[8px] md:text-[9px] font-black px-1 rounded-sm shadow-md group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors">
-                    JP
-                </span>
-            </div>
-        );
-    }
-
-    if (name.includes('indo') || name.includes('indonesia')) {
-        return (
-            <div className="relative shrink-0 flex items-center justify-center">
-                <FaVideo className={iconClasses} />
-                <span className="absolute -bottom-1 -right-2 bg-zinc-200 dark:bg-zinc-800 border-none text-zinc-900 dark:text-white text-[8px] md:text-[9px] font-black px-1 rounded-sm shadow-md group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors">
-                    ID
-                </span>
-            </div>
-        );
-    }
-
-    if (name.includes('asia') || name.includes('asian')) {
-        return (
-            <div className="relative shrink-0 flex items-center justify-center">
-                <FaFilm className={iconClasses} />
-                <span className="absolute -bottom-1 -right-2 bg-zinc-200 dark:bg-zinc-800 border-none text-zinc-900 dark:text-white text-[8px] md:text-[9px] font-black px-1 rounded-sm shadow-md group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors">
-                    AS
-                </span>
-            </div>
-        );
-    }
-
-    return <BiSolidCategory className={iconClasses} />;
-};
+// Palet warna Pastel Soft & Muted dengan kontras teks tajam
+const cardThemes = [
+    { bg: 'bg-[#A8C3DA]', text: 'text-[#0F2338]', subtext: 'text-[#1E3A58]', btn: 'text-[#0F2338]' }, // Soft Steel Blue
+    { bg: 'bg-[#A2E8DD]', text: 'text-[#044E3B]', subtext: 'text-[#067857]', btn: 'text-[#044E3B]' }, // Soft Mint
+    { bg: 'bg-[#FAD7A0]', text: 'text-[#68320F]', subtext: 'text-[#884214]', btn: 'text-[#68320F]' }, // Soft Peach
+    { bg: 'bg-[#D8B4F8]', text: 'text-[#3B0764]', subtext: 'text-[#581C87]', btn: 'text-[#3B0764]' }, // Soft Lavender
+    { bg: 'bg-[#F8C4B4]', text: 'text-[#7C1235]', subtext: 'text-[#9F1239]', btn: 'text-[#7C1235]' }, // Soft Coral / Rose
+    { bg: 'bg-[#C5E1A5]', text: 'text-[#14532D]', subtext: 'text-[#15803D]', btn: 'text-[#14532D]' }, // Soft Sage Green
+];
 
 export default function Jelajahi({ supabase }) {
-    const [visibleCategories, setVisibleCategories] = useState(5);
+    const [visibleCategories, setVisibleCategories] = useState(6);
 
     useEffect(() => {
         document.title = "Explore Categories | ShadowClips";
@@ -119,135 +57,98 @@ export default function Jelajahi({ supabase }) {
     );
 
     const handleLoadMore = () => {
-        setVisibleCategories(prev => prev + 5);
+        setVisibleCategories(prev => prev + 6);
     };
 
     const displayedCategories = kategoriData.slice(0, visibleCategories);
     const hasMore = visibleCategories < kategoriData.length;
 
     return (
-        <>
+        <div className="min-h-screen bg-zinc-50 dark:bg-[#0E1116] transition-colors duration-300">
             <Navbar isScrolled={true} supabase={supabase} />
 
-            <main className="max-w-[1440px] mx-auto px-4 sm:px-8 pt-32 pb-24 overflow-hidden">
+            <main className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-24 overflow-hidden">
                 {loading ? (
                     <div className="flex justify-center items-center py-32">
-                        <div className="w-14 h-14 border-4 border-zinc-200 dark:border-zinc-800 border-t-[#106EBE] rounded-full animate-spin shadow-sm dark:shadow-[0_0_20px_rgba(16,110,190,0.5)]"></div>
+                        <div className="w-12 h-12 border-4 border-zinc-200 dark:border-zinc-800 border-t-[#106EBE] rounded-full animate-spin"></div>
                     </div>
                 ) : displayedCategories.length > 0 ? (
-                    <div className="flex flex-col gap-20">
-                        {displayedCategories.map(([kategori, videos]) => {
-                            const heroVideo = videos[0];
-                            const subVideos = videos.slice(1, 5);
+                    <div className="flex flex-col gap-10">
+                        
+                        {/* Bento Grid Layout */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                            {displayedCategories.map(([kategori, videos], index) => {
+                                const heroVideo = videos[0];
+                                const theme = cardThemes[index % cardThemes.length];
 
-                            return (
-                                <section key={kategori} className="relative">
-                                    <div
-                                        onClick={() => window.location.href = `/category/${encodeURIComponent(kategori)}`}
-                                        className="flex items-center justify-between mb-5 md:mb-6 group cursor-pointer"
+                                return (
+                                    <a
+                                        key={kategori}
+                                        href={`/category/${encodeURIComponent(kategori)}`}
+                                        className={`relative flex flex-col justify-between w-full min-h-[200px] md:min-h-[220px] rounded-[24px] lg:rounded-[28px] overflow-hidden group shadow-sm hover:shadow-xl transition-all duration-300 ${theme.bg} border-0 outline-none`}
                                     >
-                                        <div className="flex items-center gap-2 md:gap-3">
-                                            {getCategoryIcon(kategori)}
-                                            <h2 className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors">{kategori}</h2>
-                                        </div>
-
-                                        <div className="flex items-center gap-1 text-zinc-500 dark:text-zinc-400 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors">
-                                            <span className="text-sm font-bold tracking-wider hidden sm:block">View All</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
-
+                                        {/* Container Gambar Kanan dengan Smooth Fade Masking */}
                                         {heroVideo && (
-                                            <div
-                                                onClick={() => window.location.href = `/streaming/${heroVideo.slug || heroVideo.id}`}
-                                                className="lg:col-span-7 group cursor-pointer relative aspect-video md:aspect-[16/10] lg:aspect-auto rounded-[4px] overflow-hidden bg-zinc-100 dark:bg-zinc-900 border-none shadow-xl dark:shadow-2xl transition-colors"
-                                            >
-                                                <img
-                                                    src={getImageUrl(heroVideo.img)}
-                                                    alt={heroVideo.title}
-                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                                    loading="lazy"
-                                                />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90 transition-opacity duration-300"></div>
-
-                                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
-                                                    <Play className="w-14 h-14 md:w-16 md:h-16 text-white/90 fill-current drop-shadow-2xl scale-75 group-hover:scale-100 transition-transform duration-300" />
-                                                </div>
-
-                                                <div className="absolute bottom-0 left-0 right-0 p-5 md:p-8 z-30 transform transition-transform duration-300 group-hover:-translate-y-2">
-                                                    <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2 md:mb-3 text-[10px] md:text-xs font-bold">
-                                                        <span className="bg-[#106EBE] text-white px-2.5 py-1.5 rounded-[3px] uppercase tracking-widest shadow-md dark:shadow-[0_0_15px_rgba(16,110,190,0.5)]">
-                                                            LATEST CONTENT
-                                                        </span>
-                                                    </div>
-                                                    <h3 className="text-xl md:text-3xl lg:text-4xl font-bold text-white group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors line-clamp-2 drop-shadow-lg leading-tight md:leading-tight">
-                                                        {heroVideo.title}
-                                                    </h3>
+                                            <div className="absolute top-0 right-0 w-[65%] md:w-[60%] h-full z-0 pointer-events-none">
+                                                <div 
+                                                    className="w-full h-full"
+                                                    style={{ 
+                                                        WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 45%)',
+                                                        maskImage: 'linear-gradient(to right, transparent 0%, black 45%)'
+                                                    }}
+                                                >
+                                                    <img
+                                                        src={getImageUrl(heroVideo.img)}
+                                                        alt={kategori}
+                                                        className="w-full h-full object-cover object-center transform transition-transform duration-700 group-hover:scale-105"
+                                                        loading="lazy"
+                                                    />
                                                 </div>
                                             </div>
                                         )}
 
-                                        {subVideos.length > 0 && (
-                                            <div className="lg:col-span-5 grid grid-cols-2 gap-3 md:gap-6">
-                                                {subVideos.map((video) => (
-                                                    <div
-                                                        key={video.id}
-                                                        onClick={() => window.location.href = `/streaming/${video.slug || video.id}`}
-                                                        className="group cursor-pointer flex flex-col gap-2"
-                                                    >
-                                                        <div className="relative aspect-video rounded-[4px] overflow-hidden bg-zinc-100 dark:bg-zinc-900 border-none shadow-md transition-colors">
-                                                            <img
-                                                                src={getImageUrl(video.img)}
-                                                                alt={video.title}
-                                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                                                loading="lazy"
-                                                            />
-                                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
-                                                                <Play className="w-8 h-8 text-white/90 fill-current drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300" />
-                                                            </div>
-
-                                                            {video.duration && video.duration !== 'EMPTY' && (
-                                                                <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-[3px] flex items-center gap-1 z-30 pointer-events-none">
-                                                                    <Clock className="w-2.5 h-2.5" /> {video.duration}
-                                                                </div>
-                                                            )}
-                                                        </div>
-
-                                                        <div className="px-1 text-center">
-                                                            <h4 className="font-bold text-[13px] md:text-[14px] text-zinc-800 dark:text-zinc-300 group-hover:text-[#106EBE] dark:group-hover:text-[#106EBE] transition-colors line-clamp-2 leading-snug" title={video.title}>
-                                                                {video.title}
-                                                            </h4>
-                                                        </div>
-                                                    </div>
-                                                ))}
+                                        {/* Container Teks Kiri - Kontras Tinggi Agar Jelas */}
+                                        <div className="relative z-10 flex flex-col justify-between h-full p-6 md:p-8 w-[60%] md:w-[55%]">
+                                            <div>
+                                                <h2 className={`text-2xl md:text-[28px] font-extrabold leading-tight break-words line-clamp-2 ${theme.text}`}>
+                                                    {kategori}
+                                                </h2>
+                                                <p className={`text-xs md:text-sm font-bold mt-2 tracking-wide ${theme.subtext}`}>
+                                                    {videos.length} KONTEN
+                                                </p>
                                             </div>
-                                        )}
-                                    </div>
-                                </section>
-                            );
-                        })}
 
+                                            <div className={`flex items-center gap-2 text-[11px] md:text-xs font-black tracking-[0.2em] uppercase mt-6 ${theme.btn} group-hover:translate-x-1.5 transition-all duration-300`}>
+                                                <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5 stroke-[2.5]" />
+                                                EXPLORE
+                                            </div>
+                                        </div>
+                                    </a>
+                                );
+                            })}
+                        </div>
+
+                        {/* Tombol Load More */}
                         {hasMore && (
-                            <div className="flex justify-center mt-10">
+                            <div className="flex justify-center mt-6">
                                 <button
                                     onClick={handleLoadMore}
-                                    className="flex items-center gap-2 px-8 py-3 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800/80 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-bold rounded-[10px] transition-colors outline-none border-none cursor-pointer shadow-sm hover:shadow-md"
+                                    className="flex items-center gap-2 px-8 py-3.5 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800/80 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-bold rounded-full transition-colors outline-none border-0 cursor-pointer"
                                 >
                                     <Loader2 className="w-4 h-4 animate-spin text-zinc-500 hidden" />
-                                    Load More Categories
+                                    Tampilkan Lebih Banyak
                                 </button>
                             </div>
                         )}
                     </div>
                 ) : (
-                    <div className="text-center text-zinc-500 py-32 bg-zinc-100 dark:bg-zinc-900/40 rounded-[4px] border border-zinc-200 dark:border-transparent mx-4 transition-colors">
+                    <div className="text-center text-zinc-500 py-32 bg-zinc-100 dark:bg-zinc-900/40 rounded-[28px] mx-4 transition-colors">
                         <FolderOpen className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                        <p className="text-lg md:text-xl font-medium">No categories available yet.</p>
+                        <p className="text-lg font-medium">Belum ada kategori tersedia.</p>
                     </div>
                 )}
             </main>
             <Footer />
-        </>
+        </div>
     );
 }
