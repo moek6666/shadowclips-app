@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Loader2, Clock, Bot } from 'lucide-react'; // Ikon Eye dihapus
+import { Play, Loader2, Clock, Bot } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -49,15 +49,17 @@ export default function Ai({ supabase }) {
             
             <main className="flex-1 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-16">
                 
-                {/* Grid Konten Vertikal */}
+                {/* Grid Konten */}
                 {loading ? (
                     <div className="flex justify-center items-center h-[60vh] border-none">
-                        <Loader2 className="w-8 h-8 animate-spin text-indigo-500 border-none" />
+                        <Loader2 className="w-8 h-8 animate-spin text-[#106EBE] border-none" />
                     </div>
                 ) : videos.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6 border-none mt-4">
+                    /* PERBAIKAN: Mengurangi jumlah maksimal kolom (dari 6 ke 5) agar card lebih lebar secara horizontal */
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 border-none mt-4">
                         {videos.map(vid => (
-                            <a href={`/streaming/${vid.slug || vid.id}`} key={vid.id} className="group relative rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 aspect-[9/16] shadow-sm hover:shadow-[0_10px_30px_rgba(0,0,0,0.2)] dark:hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all duration-300 outline-none border-none">
+                            /* PERBAIKAN: Mengubah aspect-[9/16] menjadi aspect-[3/4] agar card tidak terlalu panjang ke bawah dan lebih proporsional */
+                            <a href={`/streaming/${vid.slug || vid.id}`} key={vid.id} className="group relative rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 aspect-[3/4] shadow-sm hover:shadow-[0_10px_30px_rgba(0,0,0,0.2)] dark:hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all duration-300 outline-none border-none">
                                 
                                 {/* Gambar Cover Vertikal */}
                                 <img src={getImageUrl(vid.img)} alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" loading="lazy" />
@@ -75,7 +77,6 @@ export default function Ai({ supabase }) {
                                     <h3 className="text-[13px] sm:text-[14px] font-bold text-white line-clamp-2 leading-snug mb-2 drop-shadow-md border-none">{vid.title}</h3>
                                     
                                     <div className="flex items-center gap-3 text-[10px] sm:text-[11px] font-bold text-zinc-300 border-none">
-                                        {/* PERBAIKAN: Ganti Views menjadi Durasi */}
                                         <span className="flex items-center gap-1 border-none">
                                             <Play className="w-3.5 h-3.5 border-none fill-zinc-300" /> 
                                             {vid.duration && vid.duration !== 'EMPTY' ? vid.duration : '--:--'}
