@@ -452,7 +452,7 @@ export default function Profile({ supabase }) {
                                                 </div>
                                             ) : (
                                                 <div className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400 border-none">
-                                                    <User className="w-4 h-4 fill-current border-none" /> <span className="text-xs font-bold border-none">Member Gratis</span>
+                                                    <User className="w-4 h-4 fill-current border-none" /> <span className="text-xs font-bold border-none">Global Member</span>
                                                 </div>
                                             )}
                                             {profile.is_admin && (

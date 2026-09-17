@@ -265,9 +265,11 @@ export default function Navbar({ isScrolled, supabase }) {
                                 <span className="font-bold border-none">AI Shorts</span>
                             </a>
 
+                            {/* Menu Download APK disembunyikan sementara untuk perbaikan
                             <a href="/download-apk" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ml-2 ${pathname === '/download-apk' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                 <Download className="w-4 h-4 border-none" /> APK
                             </a>
+                            */}
                         </div>
                     </div>
 
@@ -458,9 +460,11 @@ export default function Navbar({ isScrolled, supabase }) {
                             <span>AI Shorts</span>
                         </a>
 
+                        {/* Menu Download APK disembunyikan sementara untuk perbaikan
                         <a href="/download-apk" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors mt-1">
                             <Download className="w-4 h-4 text-[#106EBE]" /> APK
                         </a>
+                        */}
                     </div>
                 </div>
             </div>
