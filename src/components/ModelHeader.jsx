@@ -10,7 +10,7 @@ export const MODEL_PRESETS = [
     { id: 'model4', name: 'Asian Blonde', url: 'https://simp6.cuckcapital.cr/images4/ac55897a-3e2e-4102-9b23-fe6740514614.webp' },
     { id: 'model5', name: 'Beauty Pose', url: 'https://simp6.cuckcapital.cr/images4/04bc2beb-a587-4640-9432-b9e25cde38b8.webp' },
     { id: 'model6', name: 'Favorite', url: 'https://simp6.cuckcapital.cr/images4/acefd2ae-61ff-4add-8abb-7f994c0319dc.webp' },
-    { id: 'model7', name: 'NudeWibu2', url: 'https://simp6.cuckcapital.cr/images4/9691f6ae-cd82-4b24-be4f-2eb92cd11ae3.webp' },
+    { id: 'model7', name: 'Asian Big', url: 'https://simp6.cuckcapital.cr/images4/74d957bc-6b9d-42be-87a2-127cf48cd2e6.webp' },
     { id: 'model8', name: 'Manwha1', url: 'https://simp6.cuckcapital.cr/images4/ad68b05c-b352-4ee6-b635-6fb7ee099541.webp' },
     { id: 'model9', name: 'Wibuku3', url: 'https://simp6.cuckcapital.cr/images4/4f5b4c3b-0130-4bb8-9a79-3d841a74251a.webp' },
     { id: 'model10', name: 'Manwah2', url: 'https://simp6.cuckcapital.cr/images4/9d1a7b48-11be-4250-b6bd-162b2da5c3bd.webp' }
