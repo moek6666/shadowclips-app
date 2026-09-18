@@ -5,7 +5,7 @@ export const MODEL_PRESETS = [
     { id: 'none', name: 'Tanpa Model', url: '' },
     // Isi properti 'url' di bawah dengan link gambar transparan (PNG/WebP) Anda
     { id: 'model1', name: 'Bikini', url: 'https://simp6.cuckcapital.cr/images4/7fb12495-1ab9-4a8c-bc1a-fbe71f4c296e.webp' },
-    { id: 'model2', name: 'Sakura', url: 'https://simp6.cuckcapital.cr/images4/18b184bf-42a4-4135-95d2-c22351c23318.webp' },
+    { id: 'model2', name: 'Cute 1', url: 'https://simp6.cuckcapital.cr/images4/2461f19f-6f32-4be2-82a7-fcbfacacc7ca.webp' },
     { id: 'model3', name: 'YourPose', url: 'https://simp6.cuckcapital.cr/images4/9abafc46-fa23-40bf-947d-4fe15148c507.webp' },
     { id: 'model4', name: 'Wibuku1', url: 'https://simp6.cuckcapital.cr/images4/aa29b88c-608b-430f-a022-52f88fb54b76.webp' },
     { id: 'model5', name: 'Wibuku2', url: 'https://simp6.cuckcapital.cr/images4/bfd5246d-bc30-4ce5-ba5f-009225efc075.webp' },
