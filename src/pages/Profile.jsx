@@ -26,7 +26,8 @@ import {
     Star,
     Eye,
     BarChart2,
-    Calendar
+    Calendar,
+    Info
 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import Navbar from '../components/Navbar';
@@ -111,6 +112,7 @@ export default function Profile({ supabase }) {
     const [isDeleting, setIsDeleting] = useState(false);
 
     const [totalLikes, setTotalLikes] = useState(0);
+    const [totalSaved, setTotalSaved] = useState(0);
     const [likedVideos, setLikedVideos] = useState([]);
     const [historyVideos, setHistoryVideos] = useState([]);
     const [savedVideos, setSavedVideos] = useState([]);
@@ -190,6 +192,14 @@ export default function Profile({ supabase }) {
             }
 
             if (userId) {
+                // Fetch total saved count dari Supabase secara real-time & presisi
+                const { count: savedCount } = await supabase
+                    .from('user_bookmarks')
+                    .select('video_id', { count: 'exact', head: true })
+                    .eq('user_id', userId);
+
+                setTotalSaved(savedCount || 0);
+
                 const { data: bookmarkData, error: bookmarkError } = await supabase
                     .from('user_bookmarks')
                     .select('video_id')
@@ -213,6 +223,8 @@ export default function Profile({ supabase }) {
                 } else {
                     setSavedVideos([]);
                 }
+            } else {
+                setTotalSaved(0);
             }
 
         } catch (error) {
@@ -358,8 +370,8 @@ export default function Profile({ supabase }) {
         const diffInSeconds = Math.floor((new Date() - date) / 1000);
         if (diffInSeconds < 60) return 'Baru saja';
         if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} menit yang lalu`;
-        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} jam yang lalu`;
-        return `${Math.floor(diffInSeconds / 86400)} hari yang lalu`;
+        if (diffInSeconds < 84600) return `${Math.floor(diffInSeconds / 3600)} jam yang lalu`;
+        return `${Math.floor(diffInSeconds / 84600)} hari yang lalu`;
     };
 
     if (loading) {
@@ -400,7 +412,6 @@ export default function Profile({ supabase }) {
     const googleAvatar = session?.user?.user_metadata?.avatar_url;
     const currentAvatarToDisplay = editAvatarUrl || googleAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=106EBE&color=fff&size=256&bold=true`;
     
-    // PEMBARUAN: Memisahkan state unsaved untuk tombol simpan yang terpisah
     const hasWardrobeChanges = editFrame !== (profile.active_frame || 'none');
     
     const hasCostumeChanges =
@@ -413,8 +424,10 @@ export default function Profile({ supabase }) {
     else if (mediaTab === 'likes') activeMediaList = likedVideos;
     else if (mediaTab === 'saved') activeMediaList = savedVideos;
 
+    // Menggunakan data tersimpan Supabase
     const activeFrameName = FRAME_OPTIONS.find((f) => f.id === profile.active_frame)?.name || 'Tanpa Frame';
     const activeModelName = MODEL_PRESETS.find((m) => m.url === profile.header_bg_url)?.name || 'Tanpa Model';
+    
     const joinDate = session?.user?.created_at 
         ? new Date(session.user.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) 
         : '-';
@@ -428,10 +441,321 @@ export default function Profile({ supabase }) {
 
             <main className="flex-1 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-10">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 border-none">
-                    
-                    {/* --- KIRI: SIDEBAR STATISTIK USER --- */}
-                    <aside className="hidden lg:block lg:col-span-3 border-none mt-6 sm:mt-10 z-10 transition-all duration-300">
-                        <div className="sticky top-28 flex flex-col z-10 transition-all duration-300">
+
+                    {/* --- KANAN / UTAMA --- */}
+                    <div className="order-1 lg:order-2 lg:col-span-9 flex flex-col gap-6 border-none">
+                        
+                        {/* HEADER */}
+                        <div className={`relative w-full h-auto min-h-[180px] sm:min-h-[250px] rounded-[24px] sm:rounded-[32px] ${headerGradientClass} p-4 sm:p-10 grid grid-cols-2 md:flex md:flex-row items-center md:items-center gap-3 sm:gap-10 shadow-[0_8px_30px_rgba(16,110,190,0.15)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)] border-none mt-6 sm:mt-10 overflow-hidden sm:overflow-visible`}>
+                            
+                            {/* Model Header */}
+                            {editHeaderBgUrl && editHeaderBgUrl !== 'none' && (
+                                <div className="hidden sm:flex absolute bottom-0 right-0 sm:right-6 md:right-12 w-[65%] sm:w-[50%] lg:w-[45%] h-[125%] sm:h-[145%] pointer-events-none z-0 border-none justify-end items-end">
+                                    <img 
+                                        src={editHeaderBgUrl} 
+                                        className="w-auto h-full max-w-full object-contain object-bottom drop-shadow-[0_10px_20px_rgba(0,0,0,0.4)] dark:drop-shadow-[0_10px_20px_rgba(0,0,0,0.7)] border-none" 
+                                        alt="header model" 
+                                    />
+                                </div>
+                            )}
+                            
+                            {/* Kolom 1: Avatar */}
+                            <div className="relative z-10 shrink-0 flex items-center justify-center border-none">
+                               <div className="relative rounded-full bg-white/10 p-1.5 sm:p-2 backdrop-blur-sm border-none shadow-2xl">
+                                   <Avatar
+                                       url={currentAvatarToDisplay}
+                                       frameId={editFrame}
+                                       containerClass="w-24 h-24 sm:w-36 sm:h-36 md:w-40 md:h-40 border-none" 
+                                       scale={1.2} 
+                                   />
+                               </div>
+                            </div>
+
+                            {/* Kolom 2: Detail Informasi User */}
+                            <div className="relative z-10 flex flex-col items-start text-white w-full md:w-[60%] border-none drop-shadow-md">
+                                <div className="flex flex-wrap items-center gap-1.5 sm:gap-3 mb-1 border-none">
+                                    <h1 className="text-xl sm:text-3xl md:text-4xl font-black tracking-tight border-none truncate max-w-[150px] sm:max-w-none">{displayName}</h1>
+                                    {profile.is_premium && <Crown className="w-4 h-4 sm:w-6 sm:h-6 text-amber-400 fill-amber-400 border-none drop-shadow-md shrink-0" />}
+                                    {profile.is_admin && <Shield className="w-4 h-4 sm:w-6 sm:h-6 text-emerald-400 fill-emerald-400 border-none drop-shadow-md shrink-0" />}
+                                </div>
+                                
+                                <div className="flex items-center gap-2 text-blue-100 dark:text-blue-200 text-xs sm:text-sm font-medium mb-1.5 sm:mb-3 border-none w-full">
+                                    <span className="truncate max-w-[140px] sm:max-w-md border-none">{session?.user?.email}</span>
+                                </div>
+                                
+                                <p className="text-xs sm:text-sm text-blue-50 dark:text-blue-100 font-medium mb-3 sm:mb-8 text-left border-none hidden sm:block">
+                                    Keep watching, keep enjoying.
+                                </p>
+
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-start gap-2.5 sm:gap-8 md:gap-12 border-none">
+                                   <div className="flex items-center gap-2 sm:gap-3.5 border-none">
+                                      <div className="w-8 h-8 sm:w-12 sm:h-12 bg-amber-500 rounded-full flex items-center justify-center shadow-lg border-none shrink-0">
+                                         <Star className="w-4 h-4 sm:w-6 sm:h-6 text-amber-950 fill-current border-none"/>
+                                      </div>
+                                      <div className="flex flex-col border-none">
+                                         <span className="text-base sm:text-2xl font-black leading-none tracking-tight border-none">{currentPoints.toLocaleString()}</span>
+                                         <span className="text-[10px] sm:text-xs text-blue-100 font-bold mt-0.5 sm:mt-1 border-none">Pts</span>
+                                      </div>
+                                   </div>
+                                   
+                                   <div className="w-px h-10 bg-white/20 hidden sm:block border-none"></div>
+
+                                   <div className="flex items-center gap-2 sm:gap-3.5 border-none">
+                                      <div className="w-8 h-8 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg border-none shrink-0">
+                                         <ThumbsUp className="w-4 h-4 sm:w-6 sm:h-6 text-white fill-current border-none"/>
+                                      </div>
+                                      <div className="flex flex-col border-none">
+                                         <span className="text-base sm:text-2xl font-black leading-none tracking-tight border-none">{totalLikes.toLocaleString()}</span>
+                                         <span className="text-[10px] sm:text-xs text-blue-100 font-bold mt-0.5 sm:mt-1 border-none">Likes</span>
+                                      </div>
+                                   </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* WARDROBE SECTION */}
+                        <div ref={wardrobeRef} className="w-full bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-none">
+                            <div 
+                                role="button"
+                                tabIndex={0}
+                                className={`${headerGradientClass} hover:brightness-110 transition-all px-5 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-none cursor-pointer select-none`} 
+                                onClick={() => toggleSection('wardrobe', wardrobeRef)}
+                            >
+                                <div className="flex items-center gap-4 border-none pointer-events-none">
+                                    <Shirt className="w-7 h-7 text-white shrink-0 border-none" strokeWidth={2.5}/>
+                                    <div className="border-none">
+                                        <h2 className="text-lg sm:text-xl font-black text-white leading-tight border-none">Wardrobe</h2>
+                                        <p className="text-[11px] sm:text-xs text-blue-100 font-medium mt-0.5 border-none">Kumpulkan Point untuk membuka border avatar eksklusif.</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3 self-end sm:self-auto border-none">
+                                    {hasWardrobeChanges && (
+                                        <button onClick={(e) => { e.stopPropagation(); handleUpdateProfile(); }} disabled={isSaving} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-[#106EBE] text-xs font-bold shadow-sm border-none cursor-pointer hover:bg-zinc-50 z-10">
+                                            {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin border-none" /> : <Save className="w-3.5 h-3.5 border-none" />}
+                                            Simpan
+                                        </button>
+                                    )}
+                                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center transition-colors pointer-events-none border-none">
+                                        <ChevronDown className={`w-5 h-5 text-white transition-transform duration-300 border-none ${openSections.wardrobe ? 'rotate-180' : ''}`} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className={`grid transition-[grid-template-rows,opacity] duration-500 ease-in-out border-none ${openSections.wardrobe ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                                <div className="overflow-hidden border-none">
+                                    <div className="p-5 sm:p-8 border-none bg-slate-50/50 dark:bg-transparent">
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-5 border-none">
+                                            {FRAME_OPTIONS.map((frame) => {
+                                                const isLocked = currentPoints < frame.unlockPoints;
+                                                const isEquipped = editFrame === frame.id;
+
+                                                return (
+                                                    <div
+                                                        key={frame.id}
+                                                        onClick={() => { if (!isLocked) { setEditFrame(frame.id); } }}
+                                                        className={`relative rounded-2xl p-4 sm:p-5 flex flex-col items-center text-center transition-all cursor-pointer border-none shadow-sm dark:shadow-none ${isEquipped
+                                                            ? 'bg-[#106EBE] text-white ring-4 ring-[#106EBE]/20 dark:ring-[#106EBE]/40'
+                                                            : 'bg-white dark:bg-[#1E242D] hover:shadow-md dark:hover:bg-[#252C36]'
+                                                        }`}
+                                                    >
+                                                        <div className={`w-16 h-16 sm:w-20 sm:h-20 relative flex items-center justify-center mb-4 transition-opacity border-none ${isLocked ? 'opacity-50 grayscale' : 'opacity-100'}`}>
+                                                            <Avatar url={currentAvatarToDisplay} frameId={frame.id} containerClass="w-full h-full pointer-events-none border-none" scale={0.65} />
+                                                        </div>
+
+                                                        <span className={`text-[13px] font-bold truncate w-full mb-3 border-none ${isEquipped ? 'text-white' : 'text-zinc-800 dark:text-zinc-200'}`}>
+                                                            {frame.name}
+                                                        </span>
+
+                                                        {isEquipped ? (
+                                                            <div className="w-full py-1.5 rounded-lg bg-white/20 text-white flex items-center justify-center gap-1.5 text-[11px] font-bold border-none shadow-inner">
+                                                                <Check className="w-3.5 h-3.5 border-none stroke-[3]" /> Selected
+                                                            </div>
+                                                        ) : (
+                                                            <div className={`w-full py-1.5 rounded-lg flex items-center justify-center gap-1.5 text-[11px] font-bold border-none ${isLocked ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400' : 'bg-blue-50 dark:bg-blue-900/30 text-[#106EBE] dark:text-[#32ADFF]'}`}>
+                                                                {isLocked ? <Lock className="w-3.5 h-3.5 border-none" /> : null}
+                                                                <span className="border-none">{frame.unlockPoints === 0 ? 'Free' : `${frame.unlockPoints.toLocaleString()} Pts`}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* COSTUME PROFILE SECTION */}
+                        <div ref={customizeRef} className="w-full bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-none">
+                            <div 
+                                role="button"
+                                tabIndex={0}
+                                className={`${headerGradientClass} hover:brightness-110 transition-all px-5 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-none cursor-pointer select-none`} 
+                                onClick={() => toggleSection('customize', customizeRef)}
+                            >
+                                <div className="flex items-center gap-4 border-none pointer-events-none">
+                                    <Smile className="w-7 h-7 text-white shrink-0 border-none" strokeWidth={2.5}/>
+                                    <div className="border-none">
+                                        <h2 className="text-lg sm:text-xl font-black text-white leading-tight border-none">Costume Profile</h2>
+                                        <p className="text-[11px] sm:text-xs text-blue-100 font-medium mt-0.5 border-none">Ubah latar belakang, model karakter, dan nama profil kamu.</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3 self-end sm:self-auto border-none">
+                                    {hasCostumeChanges && (
+                                        <button onClick={(e) => { e.stopPropagation(); handleUpdateProfile(); }} disabled={isSaving} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-[#106EBE] text-xs font-bold shadow-sm border-none cursor-pointer hover:bg-zinc-50 z-10">
+                                            {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin border-none" /> : <Save className="w-3.5 h-3.5 border-none" />}
+                                            Simpan
+                                        </button>
+                                    )}
+                                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center transition-colors pointer-events-none border-none">
+                                        <ChevronDown className={`w-5 h-5 text-white transition-transform duration-300 border-none ${openSections.customize ? 'rotate-180' : ''}`} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className={`grid transition-[grid-template-rows,opacity] duration-500 ease-in-out border-none ${openSections.customize ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                                <div className="overflow-hidden border-none">
+                                    <div className="p-6 sm:p-8 flex flex-col md:flex-row items-center md:items-start gap-8 lg:gap-12 border-none bg-slate-50/50 dark:bg-transparent pb-8">
+                                        <div className="relative shrink-0 flex items-center justify-center border-none bg-white dark:bg-[#1E242D] p-6 rounded-[2rem] shadow-sm">
+                                            <Avatar
+                                                url={currentAvatarToDisplay}
+                                                frameId={editFrame}
+                                                containerClass="w-36 h-36 sm:w-48 sm:h-48 border-none"
+                                                scale={1.3}
+                                            />
+                                        </div>
+
+                                        <div className="flex-1 min-w-0 w-full space-y-6 border-none">
+                                            
+                                            <div className="border-none">
+                                                <div className="flex flex-wrap items-center justify-between gap-1 mb-2 border-none">
+                                                    <label className="block text-[13px] font-bold text-[#106EBE] dark:text-[#32ADFF] border-none">Model Karakter (Header)</label>
+                                                </div>
+                                                <ModelHeader 
+                                                    currentModel={editHeaderBgUrl} 
+                                                    onSelectModel={setEditHeaderBgUrl} 
+                                                    isSaving={isSaving} 
+                                                />
+                                                <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium mt-2 flex items-center gap-1.5 border-none">
+                                                    <Info className="w-3.5 h-3.5 shrink-0 border-none" />
+                                                    <span>Catatan: Model header hanya ditampilkan pada versi desktop/web (tidak tampil di mobile).</span>
+                                                </p>
+                                            </div>
+
+                                            <div className="border-none">
+                                                <label className="block text-[13px] font-bold text-[#106EBE] dark:text-[#32ADFF] mb-2 border-none">Nama Profil</label>
+                                                <div className="flex items-center bg-white dark:bg-[#1E242D] border border-zinc-200 dark:border-zinc-700/50 rounded-xl px-4 py-3 shadow-sm focus-within:ring-2 ring-[#106EBE]/20 transition-all border-none">
+                                                    <input
+                                                        type="text"
+                                                        value={editName}
+                                                        onChange={(e) => setEditName(e.target.value)}
+                                                        className="bg-transparent flex-1 text-zinc-900 dark:text-white font-semibold text-[14px] outline-none border-none placeholder-zinc-400"
+                                                        placeholder="Masukkan nama keren kamu..."
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="border-none">
+                                                <label className="block text-[13px] font-bold text-[#106EBE] dark:text-[#32ADFF] mb-2 border-none">Pilih Karakter Avatar</label>
+                                                <CharacterSelector 
+                                                    currentAvatar={editAvatarUrl} 
+                                                    onSelectAvatar={handleSelectAvatar}
+                                                    isSaving={isSaving}
+                                                />
+                                            </div>
+                                            
+                                            <div className="w-full mt-6 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                                                <div className="flex flex-wrap items-center justify-end gap-4 text-xs font-bold text-zinc-500 border-none">
+                                                    <button onClick={handleLogout} className="flex items-center gap-1.5 hover:text-red-500 transition-colors border-none cursor-pointer bg-transparent whitespace-nowrap">
+                                                        <LogOut className="w-4 h-4 border-none"/> Logout
+                                                    </button>
+                                                    <div className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700 border-none hidden sm:block"></div>
+                                                    <button onClick={() => setShowDeleteConfirm(true)} className="flex items-center gap-1.5 hover:text-red-500 transition-colors border-none cursor-pointer bg-transparent whitespace-nowrap">
+                                                        <Trash2 className="w-4 h-4 border-none"/> Hapus Akun
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ACTIVITY SECTION */}
+                        <div ref={activityRef} className="w-full bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-none">
+                            <div 
+                                role="button"
+                                tabIndex={0}
+                                className={`${headerGradientClass} hover:brightness-110 transition-all px-5 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-none cursor-pointer select-none`} 
+                                onClick={() => toggleSection('activity', activityRef)}
+                            >
+                                <div className="flex items-center gap-4 border-none pointer-events-none">
+                                    <Clock className="w-7 h-7 text-white shrink-0 border-none" strokeWidth={2.5}/>
+                                    <div className="border-none">
+                                        <h2 className="text-lg sm:text-xl font-black text-white leading-tight border-none">Activity</h2>
+                                        <p className="text-[11px] sm:text-xs text-blue-100 font-medium mt-0.5 border-none">Lihat riwayat aktivitas kamu di sini.</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3 self-end sm:self-auto border-none pointer-events-none">
+                                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center transition-colors border-none">
+                                        <ChevronDown className={`w-5 h-5 text-white transition-transform duration-300 border-none ${openSections.activity ? 'rotate-180' : ''}`} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className={`grid transition-[grid-template-rows,opacity] duration-500 ease-in-out border-none ${openSections.activity ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                                <div className="overflow-hidden border-none">
+                                    <div className="p-5 sm:p-8 border-none bg-slate-50/50 dark:bg-transparent flex flex-col gap-6">
+                                        
+                                        <div className="w-full flex flex-col sm:flex-row items-center bg-white dark:bg-[#1E242D] rounded-xl sm:rounded-full p-1.5 shadow-sm border border-zinc-100 dark:border-zinc-800/50">
+                                            <button onClick={() => setMediaTab('history')} className={`flex-1 w-full sm:w-auto py-2.5 px-4 rounded-lg sm:rounded-full text-[13px] font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border-none ${mediaTab === 'history' ? 'bg-[#106EBE] text-white shadow-md' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white bg-transparent'}`}>
+                                                <User className="w-4 h-4 border-none" /> User History
+                                            </button>
+                                            <button onClick={() => setMediaTab('likes')} className={`flex-1 w-full sm:w-auto py-2.5 px-4 rounded-lg sm:rounded-full text-[13px] font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border-none ${mediaTab === 'likes' ? 'bg-[#106EBE] text-white shadow-md' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white bg-transparent'}`}>
+                                                <ThumbsUp className="w-4 h-4 border-none" /> Like History
+                                            </button>
+                                            <button onClick={() => setMediaTab('saved')} className={`flex-1 w-full sm:w-auto py-2.5 px-4 rounded-lg sm:rounded-full text-[13px] font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border-none ${mediaTab === 'saved' ? 'bg-[#106EBE] text-white shadow-md' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white bg-transparent'}`}>
+                                                <Bookmark className="w-4 h-4 border-none" /> Saved History
+                                            </button>
+                                        </div>
+
+                                        <div className="flex flex-col gap-3 border-none">
+                                            {activeMediaList.length > 0 ? (
+                                                activeMediaList.map((vid) => (
+                                                    <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group flex items-center gap-4 bg-white dark:bg-[#1E242D] p-3 rounded-2xl hover:shadow-md transition-all border border-zinc-100 dark:border-zinc-800/50 cursor-pointer outline-none">
+                                                        <div className="w-[100px] sm:w-[140px] aspect-video rounded-xl overflow-hidden shrink-0 relative border-none bg-zinc-200 dark:bg-zinc-800">
+                                                            <img src={getImageUrl(vid.img)} alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" loading="lazy" />
+                                                            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center border-none">
+                                                                <Play className="w-6 h-6 text-white fill-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md border-none" />
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex-1 min-w-0 border-none">
+                                                            <h3 className="text-[13px] sm:text-[14px] font-bold text-zinc-900 dark:text-white truncate mb-1 border-none group-hover:text-[#106EBE] transition-colors">{vid.title}</h3>
+                                                            <p className="text-[11px] sm:text-[12px] text-zinc-500 dark:text-zinc-400 font-medium border-none truncate">Diperbarui {timeAgo(vid.created_at)}</p>
+                                                        </div>
+                                                        <div className="hidden sm:flex items-center gap-1.5 text-zinc-400 dark:text-zinc-500 shrink-0 border-none">
+                                                            <Eye className="w-4 h-4 border-none"/>
+                                                            <span className="text-[12px] font-medium border-none">{timeAgo(vid.created_at)}</span>
+                                                        </div>
+                                                    </a>
+                                                ))
+                                            ) : (
+                                                <div className="py-10 flex flex-col items-center justify-center text-center text-zinc-400 dark:text-zinc-500 border-none">
+                                                    <Eye className="w-8 h-8 opacity-40 mb-2 border-none" />
+                                                    <p className="text-[13px] font-bold border-none">Tidak ada riwayat aktivitas ditemukan.</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    {/* --- SIDEBAR STATISTIK USER --- */}
+                    <aside className="order-2 lg:order-1 block lg:col-span-3 border-none mt-2 sm:mt-10 z-10 transition-all duration-300">
+                        <div className="lg:sticky lg:top-28 flex flex-col z-10 transition-all duration-300">
                             <div className="w-full flex flex-col bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-none pb-2">
                                 <div className={`${headerGradientClass} px-5 py-4 flex items-center gap-3 border-none shrink-0`}>
                                     <BarChart2 className="w-6 h-6 text-white shrink-0 border-none" strokeWidth={2.5}/>
@@ -508,7 +832,8 @@ export default function Profile({ supabase }) {
                                             </div>
                                             <div className="bg-zinc-50 dark:bg-[#1E242D] p-3 rounded-xl flex flex-col items-center justify-center text-center border-none">
                                                 <Bookmark className="w-5 h-5 text-[#106EBE] mb-1.5 border-none" />
-                                                <span className="text-lg font-black text-zinc-900 dark:text-white leading-none border-none">{savedVideos.length}</span>
+                                                {/* Menggunakan state totalSaved yang memperhitungkan total exact count Supabase */}
+                                                <span className="text-lg font-black text-zinc-900 dark:text-white leading-none border-none">{totalSaved}</span>
                                                 <span className="text-[10px] font-medium text-zinc-500 mt-1 border-none">Disimpan</span>
                                             </div>
                                         </div>
@@ -519,309 +844,6 @@ export default function Profile({ supabase }) {
                         </div>
                     </aside>
 
-                    {/* --- KANAN: MAIN CONTENT --- */}
-                    <div className="lg:col-span-9 flex flex-col gap-6 border-none">
-                        
-                        <div className={`relative w-full h-auto min-h-[200px] sm:min-h-[250px] rounded-[24px] sm:rounded-[32px] ${headerGradientClass} p-6 sm:p-10 flex flex-col md:flex-row items-center md:items-center gap-6 sm:gap-10 shadow-[0_8px_30px_rgba(16,110,190,0.15)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)] border-none mt-6 sm:mt-10`}>
-                            
-                            {editHeaderBgUrl && editHeaderBgUrl !== 'none' && (
-                                <div className="absolute bottom-0 right-0 sm:right-6 md:right-12 w-[65%] sm:w-[50%] lg:w-[45%] h-[125%] sm:h-[145%] pointer-events-none z-0 border-none flex justify-end items-end">
-                                    <img 
-                                        src={editHeaderBgUrl} 
-                                        className="w-auto h-full max-w-full object-contain object-bottom drop-shadow-[0_10px_20px_rgba(0,0,0,0.4)] dark:drop-shadow-[0_10px_20px_rgba(0,0,0,0.7)] border-none" 
-                                        alt="header model" 
-                                    />
-                                </div>
-                            )}
-                            
-                            <div className="relative z-10 shrink-0 flex items-center justify-center border-none">
-                               <div className="relative rounded-full bg-white/10 p-2 backdrop-blur-sm border-none shadow-2xl">
-                                   <Avatar
-                                       url={currentAvatarToDisplay}
-                                       frameId={editFrame}
-                                       containerClass="w-32 h-32 sm:w-40 sm:h-40 border-none" 
-                                       scale={1.2} 
-                                   />
-                               </div>
-                            </div>
-
-                            <div className="relative z-10 flex flex-col items-center md:items-start text-white w-full md:w-[60%] border-none drop-shadow-md">
-                                <div className="flex items-center gap-3 mb-1 border-none">
-                                    <h1 className="text-3xl sm:text-4xl font-black tracking-tight border-none">{displayName}</h1>
-                                    {profile.is_premium && <Crown className="w-6 h-6 text-amber-400 fill-amber-400 border-none drop-shadow-md" />}
-                                    {profile.is_admin && <Shield className="w-6 h-6 text-emerald-400 fill-emerald-400 border-none drop-shadow-md" />}
-                                </div>
-                                
-                                <div className="flex items-center gap-2 text-blue-100 dark:text-blue-200 text-sm font-medium mb-3 border-none">
-                                    <span className="truncate max-w-[200px] sm:max-w-md border-none">{session?.user?.email}</span>
-                                </div>
-                                
-                                <p className="text-sm text-blue-50 dark:text-blue-100 font-medium mb-6 sm:mb-8 text-center md:text-left border-none">
-                                    Keep watching, keep enjoying.
-                                </p>
-
-                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-8 sm:gap-12 border-none">
-                                   <div className="flex items-center gap-3.5 border-none">
-                                      <div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center shadow-lg border-none">
-                                         <Star className="w-6 h-6 text-amber-950 fill-current border-none"/>
-                                      </div>
-                                      <div className="flex flex-col border-none">
-                                         <span className="text-xl sm:text-2xl font-black leading-none tracking-tight border-none">{currentPoints.toLocaleString()}</span>
-                                         <span className="text-xs text-blue-100 font-bold mt-1 border-none">Pts</span>
-                                      </div>
-                                   </div>
-                                   
-                                   <div className="w-px h-10 bg-white/20 hidden sm:block border-none"></div>
-
-                                   <div className="flex items-center gap-3.5 border-none">
-                                      <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg border-none">
-                                         <ThumbsUp className="w-6 h-6 text-white fill-current border-none"/>
-                                      </div>
-                                      <div className="flex flex-col border-none">
-                                         <span className="text-xl sm:text-2xl font-black leading-none tracking-tight border-none">{totalLikes.toLocaleString()}</span>
-                                         <span className="text-xs text-blue-100 font-bold mt-1 border-none">Likes (Video)</span>
-                                      </div>
-                                   </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* 2. WARDROBE SECTION */}
-                        <div ref={wardrobeRef} className="w-full bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-none">
-                            <div 
-                                role="button"
-                                tabIndex={0}
-                                className={`${headerGradientClass} hover:brightness-110 transition-all px-5 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-none cursor-pointer select-none`} 
-                                onClick={() => toggleSection('wardrobe', wardrobeRef)}
-                            >
-                                <div className="flex items-center gap-4 border-none pointer-events-none">
-                                    <Shirt className="w-7 h-7 text-white shrink-0 border-none" strokeWidth={2.5}/>
-                                    <div className="border-none">
-                                        <h2 className="text-lg sm:text-xl font-black text-white leading-tight border-none">Wardrobe</h2>
-                                        <p className="text-[11px] sm:text-xs text-blue-100 font-medium mt-0.5 border-none">Kumpulkan Point untuk membuka border avatar eksklusif.</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3 self-end sm:self-auto border-none">
-                                    {/* PEMBARUAN: Tombol Simpan Terpisah untuk Wardrobe */}
-                                    {hasWardrobeChanges && (
-                                        <button onClick={(e) => { e.stopPropagation(); handleUpdateProfile(); }} disabled={isSaving} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-[#106EBE] text-xs font-bold shadow-sm border-none cursor-pointer hover:bg-zinc-50 z-10">
-                                            {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin border-none" /> : <Save className="w-3.5 h-3.5 border-none" />}
-                                            Simpan
-                                        </button>
-                                    )}
-                                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center transition-colors pointer-events-none border-none">
-                                        <ChevronDown className={`w-5 h-5 text-white transition-transform duration-300 border-none ${openSections.wardrobe ? 'rotate-180' : ''}`} />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className={`grid transition-[grid-template-rows,opacity] duration-500 ease-in-out border-none ${openSections.wardrobe ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-                                <div className="overflow-hidden border-none">
-                                    <div className="p-5 sm:p-8 border-none bg-slate-50/50 dark:bg-transparent">
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-5 border-none">
-                                            {FRAME_OPTIONS.map((frame) => {
-                                                const isLocked = currentPoints < frame.unlockPoints;
-                                                const isEquipped = editFrame === frame.id;
-
-                                                return (
-                                                    <div
-                                                        key={frame.id}
-                                                        // PEMBARUAN: Hapus handleUpdateProfile() dari onClick agar tidak Auto-Save
-                                                        onClick={() => { if (!isLocked) { setEditFrame(frame.id); } }}
-                                                        className={`relative rounded-2xl p-4 sm:p-5 flex flex-col items-center text-center transition-all cursor-pointer border-none shadow-sm dark:shadow-none ${isEquipped
-                                                            ? 'bg-[#106EBE] text-white ring-4 ring-[#106EBE]/20 dark:ring-[#106EBE]/40'
-                                                            : 'bg-white dark:bg-[#1E242D] hover:shadow-md dark:hover:bg-[#252C36]'
-                                                        }`}
-                                                    >
-                                                        <div className={`w-16 h-16 sm:w-20 sm:h-20 relative flex items-center justify-center mb-4 transition-opacity border-none ${isLocked ? 'opacity-50 grayscale' : 'opacity-100'}`}>
-                                                            <Avatar url={currentAvatarToDisplay} frameId={frame.id} containerClass="w-full h-full pointer-events-none border-none" scale={0.65} />
-                                                        </div>
-
-                                                        <span className={`text-[13px] font-bold truncate w-full mb-3 border-none ${isEquipped ? 'text-white' : 'text-zinc-800 dark:text-zinc-200'}`}>
-                                                            {frame.name}
-                                                        </span>
-
-                                                        {isEquipped ? (
-                                                            <div className="w-full py-1.5 rounded-lg bg-white/20 text-white flex items-center justify-center gap-1.5 text-[11px] font-bold border-none shadow-inner">
-                                                                <Check className="w-3.5 h-3.5 border-none stroke-[3]" /> Selected
-                                                            </div>
-                                                        ) : (
-                                                            <div className={`w-full py-1.5 rounded-lg flex items-center justify-center gap-1.5 text-[11px] font-bold border-none ${isLocked ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400' : 'bg-blue-50 dark:bg-blue-900/30 text-[#106EBE] dark:text-[#32ADFF]'}`}>
-                                                                {isLocked ? <Lock className="w-3.5 h-3.5 border-none" /> : null}
-                                                                <span className="border-none">{frame.unlockPoints === 0 ? 'Free' : `${frame.unlockPoints.toLocaleString()} Pts`}</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* 3. COSTUME PROFILE SECTION */}
-                        <div ref={customizeRef} className="w-full bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-none">
-                            <div 
-                                role="button"
-                                tabIndex={0}
-                                className={`${headerGradientClass} hover:brightness-110 transition-all px-5 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-none cursor-pointer select-none`} 
-                                onClick={() => toggleSection('customize', customizeRef)}
-                            >
-                                <div className="flex items-center gap-4 border-none pointer-events-none">
-                                    <Smile className="w-7 h-7 text-white shrink-0 border-none" strokeWidth={2.5}/>
-                                    <div className="border-none">
-                                        <h2 className="text-lg sm:text-xl font-black text-white leading-tight border-none">Costume Profile</h2>
-                                        <p className="text-[11px] sm:text-xs text-blue-100 font-medium mt-0.5 border-none">Ubah latar belakang, model karakter, dan nama profil kamu.</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3 self-end sm:self-auto border-none">
-                                    {/* PEMBARUAN: Tombol Simpan Terpisah untuk Costume */}
-                                    {hasCostumeChanges && (
-                                        <button onClick={(e) => { e.stopPropagation(); handleUpdateProfile(); }} disabled={isSaving} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-[#106EBE] text-xs font-bold shadow-sm border-none cursor-pointer hover:bg-zinc-50 z-10">
-                                            {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin border-none" /> : <Save className="w-3.5 h-3.5 border-none" />}
-                                            Simpan
-                                        </button>
-                                    )}
-                                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center transition-colors pointer-events-none border-none">
-                                        <ChevronDown className={`w-5 h-5 text-white transition-transform duration-300 border-none ${openSections.customize ? 'rotate-180' : ''}`} />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className={`grid transition-[grid-template-rows,opacity] duration-500 ease-in-out border-none ${openSections.customize ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-                                <div className="overflow-hidden border-none">
-                                    <div className="p-6 sm:p-8 flex flex-col md:flex-row items-center md:items-start gap-8 lg:gap-12 border-none bg-slate-50/50 dark:bg-transparent pb-8">
-                                        <div className="relative shrink-0 flex items-center justify-center border-none bg-white dark:bg-[#1E242D] p-6 rounded-[2rem] shadow-sm">
-                                            <Avatar
-                                                url={currentAvatarToDisplay}
-                                                frameId={editFrame}
-                                                containerClass="w-36 h-36 sm:w-48 sm:h-48 border-none"
-                                                scale={1.3}
-                                            />
-                                        </div>
-
-                                        <div className="flex-1 min-w-0 w-full space-y-6 border-none">
-                                            
-                                            <div className="border-none">
-                                                <label className="block text-[13px] font-bold text-[#106EBE] dark:text-[#32ADFF] mb-3 border-none">Model Karakter (Header)</label>
-                                                <ModelHeader 
-                                                    currentModel={editHeaderBgUrl} 
-                                                    onSelectModel={setEditHeaderBgUrl} 
-                                                    isSaving={isSaving} 
-                                                />
-                                            </div>
-
-                                            <div className="border-none">
-                                                <label className="block text-[13px] font-bold text-[#106EBE] dark:text-[#32ADFF] mb-2 border-none">Nama Profil</label>
-                                                <div className="flex items-center bg-white dark:bg-[#1E242D] border border-zinc-200 dark:border-zinc-700/50 rounded-xl px-4 py-3 shadow-sm focus-within:ring-2 ring-[#106EBE]/20 transition-all border-none">
-                                                    <input
-                                                        type="text"
-                                                        value={editName}
-                                                        onChange={(e) => setEditName(e.target.value)}
-                                                        className="bg-transparent flex-1 text-zinc-900 dark:text-white font-semibold text-[14px] outline-none border-none placeholder-zinc-400"
-                                                        placeholder="Masukkan nama keren kamu..."
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="border-none">
-                                                <label className="block text-[13px] font-bold text-[#106EBE] dark:text-[#32ADFF] mb-2 border-none">Pilih Karakter Avatar</label>
-                                                <CharacterSelector 
-                                                    currentAvatar={editAvatarUrl} 
-                                                    onSelectAvatar={handleSelectAvatar}
-                                                    isSaving={isSaving}
-                                                />
-                                            </div>
-                                            
-                                            <div className="w-full mt-6 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-                                                <div className="flex flex-wrap items-center justify-end gap-4 text-xs font-bold text-zinc-500 border-none">
-                                                    <button onClick={handleLogout} className="flex items-center gap-1.5 hover:text-red-500 transition-colors border-none cursor-pointer bg-transparent whitespace-nowrap">
-                                                        <LogOut className="w-4 h-4 border-none"/> Logout
-                                                    </button>
-                                                    <div className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700 border-none hidden sm:block"></div>
-                                                    <button onClick={() => setShowDeleteConfirm(true)} className="flex items-center gap-1.5 hover:text-red-500 transition-colors border-none cursor-pointer bg-transparent whitespace-nowrap">
-                                                        <Trash2 className="w-4 h-4 border-none"/> Hapus Akun
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* 4. ACTIVITY SECTION */}
-                        <div ref={activityRef} className="w-full bg-white dark:bg-[#161B22] rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-none">
-                            <div 
-                                role="button"
-                                tabIndex={0}
-                                className={`${headerGradientClass} hover:brightness-110 transition-all px-5 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-none cursor-pointer select-none`} 
-                                onClick={() => toggleSection('activity', activityRef)}
-                            >
-                                <div className="flex items-center gap-4 border-none pointer-events-none">
-                                    <Clock className="w-7 h-7 text-white shrink-0 border-none" strokeWidth={2.5}/>
-                                    <div className="border-none">
-                                        <h2 className="text-lg sm:text-xl font-black text-white leading-tight border-none">Activity</h2>
-                                        <p className="text-[11px] sm:text-xs text-blue-100 font-medium mt-0.5 border-none">Lihat riwayat aktivitas kamu di sini.</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3 self-end sm:self-auto border-none pointer-events-none">
-                                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center transition-colors border-none">
-                                        <ChevronDown className={`w-5 h-5 text-white transition-transform duration-300 border-none ${openSections.activity ? 'rotate-180' : ''}`} />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className={`grid transition-[grid-template-rows,opacity] duration-500 ease-in-out border-none ${openSections.activity ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-                                <div className="overflow-hidden border-none">
-                                    <div className="p-5 sm:p-8 border-none bg-slate-50/50 dark:bg-transparent flex flex-col gap-6">
-                                        
-                                        <div className="w-full flex flex-col sm:flex-row items-center bg-white dark:bg-[#1E242D] rounded-xl sm:rounded-full p-1.5 shadow-sm border border-zinc-100 dark:border-zinc-800/50">
-                                            <button onClick={() => setMediaTab('history')} className={`flex-1 w-full sm:w-auto py-2.5 px-4 rounded-lg sm:rounded-full text-[13px] font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border-none ${mediaTab === 'history' ? 'bg-[#106EBE] text-white shadow-md' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white bg-transparent'}`}>
-                                                <User className="w-4 h-4 border-none" /> User History
-                                            </button>
-                                            <button onClick={() => setMediaTab('likes')} className={`flex-1 w-full sm:w-auto py-2.5 px-4 rounded-lg sm:rounded-full text-[13px] font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border-none ${mediaTab === 'likes' ? 'bg-[#106EBE] text-white shadow-md' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white bg-transparent'}`}>
-                                                <ThumbsUp className="w-4 h-4 border-none" /> Like History
-                                            </button>
-                                            <button onClick={() => setMediaTab('saved')} className={`flex-1 w-full sm:w-auto py-2.5 px-4 rounded-lg sm:rounded-full text-[13px] font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border-none ${mediaTab === 'saved' ? 'bg-[#106EBE] text-white shadow-md' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white bg-transparent'}`}>
-                                                <Bookmark className="w-4 h-4 border-none" /> Saved History
-                                            </button>
-                                        </div>
-
-                                        <div className="flex flex-col gap-3 border-none">
-                                            {activeMediaList.length > 0 ? (
-                                                activeMediaList.map((vid) => (
-                                                    <a key={vid.id} href={`/streaming/${vid.slug || vid.id}`} className="group flex items-center gap-4 bg-white dark:bg-[#1E242D] p-3 rounded-2xl hover:shadow-md transition-all border border-zinc-100 dark:border-zinc-800/50 cursor-pointer outline-none">
-                                                        <div className="w-[100px] sm:w-[140px] aspect-video rounded-xl overflow-hidden shrink-0 relative border-none bg-zinc-200 dark:bg-zinc-800">
-                                                            <img src={getImageUrl(vid.img)} alt={vid.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 border-none" loading="lazy" />
-                                                            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center border-none">
-                                                                <Play className="w-6 h-6 text-white fill-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md border-none" />
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex-1 min-w-0 border-none">
-                                                            <h3 className="text-[13px] sm:text-[14px] font-bold text-zinc-900 dark:text-white truncate mb-1 border-none group-hover:text-[#106EBE] transition-colors">{vid.title}</h3>
-                                                            <p className="text-[11px] sm:text-[12px] text-zinc-500 dark:text-zinc-400 font-medium border-none truncate">Diperbarui {timeAgo(vid.created_at)}</p>
-                                                        </div>
-                                                        <div className="hidden sm:flex items-center gap-1.5 text-zinc-400 dark:text-zinc-500 shrink-0 border-none">
-                                                            <Eye className="w-4 h-4 border-none"/>
-                                                            <span className="text-[12px] font-medium border-none">{timeAgo(vid.created_at)}</span>
-                                                        </div>
-                                                    </a>
-                                                ))
-                                            ) : (
-                                                <div className="py-10 flex flex-col items-center justify-center text-center text-zinc-400 dark:text-zinc-500 border-none">
-                                                    <Eye className="w-8 h-8 opacity-40 mb-2 border-none" />
-                                                    <p className="text-[13px] font-bold border-none">Tidak ada riwayat aktivitas ditemukan.</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
                 </div>
 
                 <OutstreamAd />
