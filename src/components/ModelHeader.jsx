@@ -4,12 +4,12 @@ import { Check, User } from 'lucide-react';
 export const MODEL_PRESETS = [
     { id: 'none', name: 'Tanpa Model', url: '' },
     // Isi properti 'url' di bawah dengan link gambar transparan (PNG/WebP) Anda
-    { id: 'model1', name: 'Bikini', url: 'https://simp6.cuckcapital.cr/images4/7fb12495-1ab9-4a8c-bc1a-fbe71f4c296e.webp' },
+    { id: 'model1', name: 'Selfie', url: 'https://simp6.cuckcapital.cr/images4/1ee7a4b2-b092-4e40-9007-dd81572e6699.webp' },
     { id: 'model2', name: 'Cute 1', url: 'https://simp6.cuckcapital.cr/images4/2461f19f-6f32-4be2-82a7-fcbfacacc7ca.webp' },
-    { id: 'model3', name: 'YourPose', url: 'https://simp6.cuckcapital.cr/images4/9abafc46-fa23-40bf-947d-4fe15148c507.webp' },
-    { id: 'model4', name: 'Wibuku1', url: 'https://simp6.cuckcapital.cr/images4/aa29b88c-608b-430f-a022-52f88fb54b76.webp' },
-    { id: 'model5', name: 'Wibuku2', url: 'https://simp6.cuckcapital.cr/images4/bfd5246d-bc30-4ce5-ba5f-009225efc075.webp' },
-    { id: 'model6', name: 'NudeWibu1', url: 'https://simp6.cuckcapital.cr/images4/b7e58b56-91ca-4309-bddb-f2b75fd5f40d.webp' },
+    { id: 'model3', name: 'Cute 2', url: 'https://simp6.cuckcapital.cr/images4/ee5819d1-80ac-4f68-8849-0f110bcec002.webp' },
+    { id: 'model4', name: 'Asian Blonde', url: 'https://simp6.cuckcapital.cr/images4/ac55897a-3e2e-4102-9b23-fe6740514614.webp' },
+    { id: 'model5', name: 'Beauty Pose', url: 'https://simp6.cuckcapital.cr/images4/04bc2beb-a587-4640-9432-b9e25cde38b8.webp' },
+    { id: 'model6', name: 'Favorite', url: 'https://simp6.cuckcapital.cr/images4/acefd2ae-61ff-4add-8abb-7f994c0319dc.webp' },
     { id: 'model7', name: 'NudeWibu2', url: 'https://simp6.cuckcapital.cr/images4/9691f6ae-cd82-4b24-be4f-2eb92cd11ae3.webp' },
     { id: 'model8', name: 'Manwha1', url: 'https://simp6.cuckcapital.cr/images4/ad68b05c-b352-4ee6-b635-6fb7ee099541.webp' },
     { id: 'model9', name: 'Wibuku3', url: 'https://simp6.cuckcapital.cr/images4/4f5b4c3b-0130-4bb8-9a79-3d841a74251a.webp' },
