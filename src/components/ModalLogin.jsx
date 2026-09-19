@@ -204,73 +204,48 @@ function ModalLogin({ isOpen, onClose, supabase }) {
             className="fixed inset-0 z-[200] bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300 border-none transition-colors"
             onClick={onClose}
         >
+            {/* Lebar disesuaikan ke max-w-[900px] dan min-h dihapus agar tinggi menyesuaikan rasio gambar */}
             <div
-                className="relative w-full max-w-[1000px] bg-white dark:bg-[#0E1116] rounded-2xl md:rounded-[1.5rem] shadow-2xl shadow-slate-300/50 dark:shadow-[0_20px_60px_rgba(0,0,0,0.9)] animate-in zoom-in-95 duration-300 border-none overflow-hidden flex flex-col md:flex-row min-h-[600px] transition-colors"
+                className="relative w-full max-w-[900px] bg-white dark:bg-[#0E1116] rounded-2xl md:rounded-[1.5rem] shadow-2xl shadow-slate-300/50 dark:shadow-[0_20px_60px_rgba(0,0,0,0.9)] animate-in zoom-in-95 duration-300 border-none overflow-hidden flex flex-col md:flex-row transition-colors"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* BAGIAN KIRI DENGAN BACKGROUND BARU */}
-                <div className="hidden md:flex flex-col w-[55%] p-10 lg:p-12 relative overflow-hidden bg-slate-100 dark:bg-[#07090D] border-none transition-colors">
-
-                    {/* Efek Cahaya (Blur) Latar Belakang */}
-                    <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500/10 dark:bg-blue-600/20 blur-[100px] rounded-full pointer-events-none z-0"></div>
-                    <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-500/10 dark:bg-blue-600/15 blur-[100px] rounded-full pointer-events-none z-0"></div>
-
-                    {/* Gambar Full Background Baru */}
+                {/* BAGIAN KIRI - Rasio dikunci ke ukuran asli gambar (512/768) */}
+                <div 
+                    className="hidden md:flex flex-col w-[45%] relative overflow-hidden bg-slate-900 border-none transition-colors shrink-0"
+                    style={{ aspectRatio: '512/768' }}
+                >
+                    {/* Gambar Full Background */}
                     <div className="absolute inset-0 z-0 pointer-events-none">
                         <img
-                            src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/Original%20Shadowclips/Bg%20Modal%20Login%20.webp"
+                            src="https://simp6.cuckcapital.cr/images4/a5ca0486-30d5-4908-8acf-51b61dfb9743.jpg"
                             alt="Background Modal"
-                            className="w-full h-full object-cover opacity-90 dark:opacity-80"
+                            className="w-full h-full object-cover"
                         />
                     </div>
 
-                    {/* Efek Gradasi (Agar Teks Tetap Jelas dan Terbaca) */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-100 via-slate-100/40 to-transparent dark:from-[#07090D] dark:via-[#07090D]/50 dark:to-transparent z-0 pointer-events-none"></div>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-white dark:to-[#0E1116] z-0 pointer-events-none"></div>
+                    {/* Efek Gradasi (Agar teks putih tetap terbaca jelas di atas gambar) */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-0 pointer-events-none"></div>
 
-                    <div className="relative z-10 flex flex-col h-full justify-end pb-2 lg:pb-4">
-                        <div className="flex flex-col gap-2 mb-6">
-                            <div className="flex items-center gap-3">
-                                <img
-                                    src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/New%20Logo%20Shadowclips.webp"
-                                    alt="ShadowClips Logo"
-                                    className="w-10 h-10 lg:w-12 lg:h-12 shrink-0 border-none drop-shadow-md object-contain"
-                                />
-                                <h3 className="text-[28px] lg:text-[32px] font-black tracking-tighter text-slate-900 dark:text-white leading-none">
-                                    Shadow<span className="text-[#3b82f6]">Clips</span>
-                                </h3>
-                            </div>
-                            <p className="text-slate-800 dark:text-zinc-200 text-[13px] lg:text-[14px] leading-relaxed font-semibold">
-                                Nikmati konten-konten exclusive setiap hari dan selamat bergabung di shadowclips.asia.
-                            </p>
+                    {/* Logo & Deskripsi Centered Bottom */}
+                    <div className="relative z-10 flex flex-col h-full justify-end items-center pb-8 lg:pb-10 px-6 text-center">
+                        <div className="flex items-center gap-3 mb-3">
+                            <img
+                                src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/New%20Logo%20Shadowclips.webp"
+                                alt="ShadowClips Logo"
+                                className="w-10 h-10 lg:w-12 lg:h-12 shrink-0 border-none drop-shadow-md object-contain"
+                            />
+                            <h3 className="text-[28px] lg:text-[32px] font-black tracking-tighter text-white leading-none drop-shadow-lg">
+                                Shadow<span className="text-[#3b82f6]">Clips</span>
+                            </h3>
                         </div>
-
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-                            <div className="flex flex-col gap-1">
-                                <MonitorPlay className="w-5 h-5 lg:w-6 lg:h-6 text-[#3b82f6] mb-0.5" strokeWidth={2} />
-                                <h4 className="text-[12px] lg:text-[13px] font-bold text-slate-900 dark:text-zinc-100 leading-none">Exclusive</h4>
-                                <p className="text-[11px] text-slate-600 dark:text-zinc-300 leading-snug font-medium">Premium access only</p>
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <Zap className="w-5 h-5 lg:w-6 lg:h-6 text-[#3b82f6] mb-0.5" strokeWidth={2} />
-                                <h4 className="text-[12px] lg:text-[13px] font-bold text-slate-900 dark:text-zinc-100 leading-none">Viral</h4>
-                                <p className="text-[11px] text-slate-600 dark:text-zinc-300 leading-snug font-medium">Trending content</p>
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <Eye className="w-5 h-5 lg:w-6 lg:h-6 text-[#3b82f6] mb-0.5" strokeWidth={2} />
-                                <h4 className="text-[12px] lg:text-[13px] font-bold text-slate-900 dark:text-zinc-100 leading-none">DeepFake</h4>
-                                <p className="text-[11px] text-slate-600 dark:text-zinc-300 leading-snug font-medium">AI-generated realistic content</p>
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <Radio className="w-5 h-5 lg:w-6 lg:h-6 text-[#3b82f6] mb-0.5" strokeWidth={2} />
-                                <h4 className="text-[12px] lg:text-[13px] font-bold text-slate-900 dark:text-zinc-100 leading-none">Live</h4>
-                                <p className="text-[11px] text-slate-600 dark:text-zinc-300 leading-snug font-medium">Record or replay streaming</p>
-                            </div>
-                        </div>
+                        <p className="text-zinc-200 text-[13px] lg:text-[14px] leading-relaxed font-semibold drop-shadow-md max-w-[95%]">
+                            Nikmati konten-konten exclusive setiap hari dan selamat bergabung di shadowclips.asia.
+                        </p>
                     </div>
                 </div>
 
-                <div className="w-full md:w-[45%] p-8 sm:p-12 flex flex-col justify-center relative bg-white dark:bg-[#0E1116]">
+                {/* BAGIAN KANAN - Lebar disesuaikan menjadi 55% */}
+                <div className="w-full md:w-[55%] p-8 sm:p-10 lg:p-12 flex flex-col justify-center relative bg-white dark:bg-[#0E1116]">
                     <button
                         type="button"
                         onClick={onClose}
@@ -401,7 +376,6 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                 </div>
                             )}
 
-                            {/* PERBAIKAN: Mengunci tinggi container secara absolut (h-[65px] shrink-0) agar layout benar-benar kaku dan tidak memantul ke atas/bawah */}
                             <div className="w-full h-[65px] shrink-0 flex items-center justify-center mt-1 mb-1 relative border-none">
                                 <div className="transform scale-[0.90] origin-center w-full flex justify-center border-none">
                                     <Turnstile
