@@ -11,9 +11,9 @@ export const MODEL_PRESETS = [
     { id: 'model5', name: 'Beauty Pose', url: 'https://simp6.cuckcapital.cr/images4/04bc2beb-a587-4640-9432-b9e25cde38b8.webp' },
     { id: 'model6', name: 'Favorite', url: 'https://simp6.cuckcapital.cr/images4/acefd2ae-61ff-4add-8abb-7f994c0319dc.webp' },
     { id: 'model7', name: 'Asian Big', url: 'https://simp6.cuckcapital.cr/images4/74d957bc-6b9d-42be-87a2-127cf48cd2e6.webp' },
-    { id: 'model8', name: 'Hijab Nude', url: 'https://simp6.cuckcapital.cr/images4/da11aedc-5616-488a-a22b-98668048c48c.webp' },
-    { id: 'model9', name: 'Korean Style', url: 'https://simp6.cuckcapital.cr/images4/8031ed98-6145-4edd-b778-8806ee6d58c1.webp' },
-    { id: 'model10', name: 'Beauty Full', url: 'https://simp6.cuckcapital.cr/images4/54403a92-f927-436c-824a-c47749d4ffd7.webp' }
+    { id: 'model8', name: 'Hijab Nude', url: 'https://i.ibb.co.com/TMLFB1Ts/Hijab-Nude.webp' },
+    { id: 'model9', name: 'Beauty Full', url: 'https://i.ibb.co.com/6cYjmJ85/Beauty-And-Cutee.webp' },
+    { id: 'model10', name: 'Beauty Slut', url: 'https://i.ibb.co.com/gFT2b6WX/Asian-Slut.webp' }
 ];
 
 export const DEFAULT_HEADER_MODEL = MODEL_PRESETS[0].url;
