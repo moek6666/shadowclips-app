@@ -30,7 +30,6 @@ function ModalLogin({ isOpen, onClose, supabase }) {
 
     if (!isOpen) return null;
 
-    // Kalkulator Kekuatan Password
     const getPasswordStrength = (pass) => {
         let score = 0;
         if (!pass) return score;
@@ -92,34 +91,25 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                     password,
                     options: {
                         emailRedirectTo: `${window.location.origin}/verified-success`,
-                        data: {
-                            name: username,
-                        }
+                        data: { name: username }
                     }
                 });
                 if (error) throw error;
 
                 if (data?.user) {
-                    const { error: profileError } = await supabase.from('profiles').upsert({
+                    await supabase.from('profiles').upsert({
                         id: data.user.id,
                         name: username,
                     }, { onConflict: 'id' });
-
-                    if (profileError) console.warn("Sinkronisasi profil gagal:", profileError.message);
                 }
 
                 window.location.href = '/verify-email';
             }
         } catch (err) {
             let customError = err.message;
-            if (customError.includes("Password should contain at least one character of each")) {
-                customError = "Password terlalu lemah. Gunakan minimal 1 huruf besar, angka, dan simbol.";
-            } else if (customError.includes("Invalid login credentials")) {
+            if (customError.includes("Invalid login credentials")) {
                 customError = "Email/Password salah, atau akun belum diverifikasi via email.";
-            } else if (customError.includes("For security purposes, you can only request this once every")) {
-                customError = "Anda sudah meminta reset password baru-baru ini. Silakan cek email Anda.";
             }
-
             setErrorMsg(customError || 'Terjadi kesalahan sistem.');
             if (turnstileRef.current) turnstileRef.current.reset();
             setCaptchaToken(null);
@@ -131,24 +121,17 @@ function ModalLogin({ isOpen, onClose, supabase }) {
     const handleGoogleSuccess = async (credentialResponse) => {
         if (!supabase) return;
         setLoading(true);
-        setErrorMsg('');
-
         try {
             const { data, error } = await supabase.auth.signInWithIdToken({
                 provider: 'google',
                 token: credentialResponse.credential,
             });
-
             if (error) throw error;
-
             if (data.session) {
                 onClose();
                 window.location.reload();
-            } else {
-                throw new Error("Sesi gagal dibuat oleh Supabase.");
             }
         } catch (err) {
-            console.error("ID Token Error:", err);
             setErrorMsg('Gagal memproses sesi Google: ' + err.message);
             setLoading(false);
         }
@@ -161,13 +144,10 @@ function ModalLogin({ isOpen, onClose, supabase }) {
     const handleAndroidGoogleLogin = async () => {
         if (!supabase) return;
         setLoading(true);
-        setErrorMsg('');
         try {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
-                options: {
-                    redirectTo: 'com.shadowclips.app://',
-                }
+                options: { redirectTo: 'com.shadowclips.app://' }
             });
             if (error) throw error;
         } catch (err) {
@@ -179,21 +159,15 @@ function ModalLogin({ isOpen, onClose, supabase }) {
     const handleDiscordLogin = async () => {
         if (!supabase) return;
         setLoading(true);
-        setErrorMsg('');
-
         try {
             const isNative = Capacitor.isNativePlatform();
             const redirectUrl = isNative ? 'com.shadowclips.app://' : window.location.href;
-
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'discord',
-                options: {
-                    redirectTo: redirectUrl
-                }
+                options: { redirectTo: redirectUrl }
             });
             if (error) throw error;
         } catch (err) {
-            console.error("Discord Login Error:", err);
             setErrorMsg('Gagal terhubung ke Discord: ' + err.message);
             setLoading(false);
         }
@@ -201,38 +175,33 @@ function ModalLogin({ isOpen, onClose, supabase }) {
 
     return (
         <div
-            className="fixed inset-0 z-[200] bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300 border-none transition-colors"
+            className="fixed inset-0 z-[200] bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300 transition-colors"
             onClick={onClose}
         >
-            {/* Lebar disesuaikan ke max-w-[900px] dan min-h dihapus agar tinggi menyesuaikan rasio gambar */}
             <div
-                className="relative w-full max-w-[900px] bg-white dark:bg-[#0E1116] rounded-2xl md:rounded-[1.5rem] shadow-2xl shadow-slate-300/50 dark:shadow-[0_20px_60px_rgba(0,0,0,0.9)] animate-in zoom-in-95 duration-300 border-none overflow-hidden flex flex-col md:flex-row transition-colors"
+                className="relative w-full max-w-[900px] bg-white dark:bg-[#0E1116] rounded-2xl md:rounded-[1.5rem] shadow-2xl shadow-slate-300/50 dark:shadow-[0_20px_60px_rgba(0,0,0,0.9)] animate-in zoom-in-95 duration-300 overflow-hidden flex flex-col md:flex-row transition-colors"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* BAGIAN KIRI - Rasio dikunci ke ukuran asli gambar (512/768) */}
+                {/* BAGIAN KIRI */}
                 <div 
-                    className="hidden md:flex flex-col w-[45%] relative overflow-hidden bg-slate-900 border-none transition-colors shrink-0"
+                    className="hidden md:flex flex-col w-[45%] relative overflow-hidden bg-slate-900 transition-colors shrink-0"
                     style={{ aspectRatio: '512/768' }}
                 >
-                    {/* Gambar Full Background */}
                     <div className="absolute inset-0 z-0 pointer-events-none">
                         <img
-                            src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatars_Collection/ModalLogin.jpg"
+                            src="https://simp6.cuckcapital.cr/images4/a5ca0486-30d5-4908-8acf-51b61dfb9743.jpg"
                             alt="Background Modal"
                             className="w-full h-full object-cover"
                         />
                     </div>
-
-                    {/* Efek Gradasi (Agar teks putih tetap terbaca jelas di atas gambar) */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-0 pointer-events-none"></div>
 
-                    {/* Logo & Deskripsi Centered Bottom */}
                     <div className="relative z-10 flex flex-col h-full justify-end items-center pb-8 lg:pb-10 px-6 text-center">
                         <div className="flex items-center gap-3 mb-3">
                             <img
                                 src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/New%20Logo%20Shadowclips.webp"
                                 alt="ShadowClips Logo"
-                                className="w-10 h-10 lg:w-12 lg:h-12 shrink-0 border-none drop-shadow-md object-contain"
+                                className="w-10 h-10 lg:w-12 lg:h-12 shrink-0 drop-shadow-md object-contain"
                             />
                             <h3 className="text-[28px] lg:text-[32px] font-black tracking-tighter text-white leading-none drop-shadow-lg">
                                 Shadow<span className="text-[#3b82f6]">Clips</span>
@@ -244,14 +213,14 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                     </div>
                 </div>
 
-                {/* BAGIAN KANAN - Lebar disesuaikan menjadi 55% */}
+                {/* BAGIAN KANAN */}
                 <div className="w-full md:w-[55%] p-8 sm:p-10 lg:p-12 flex flex-col justify-center relative bg-white dark:bg-[#0E1116]">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="absolute top-6 right-6 p-2 bg-transparent hover:bg-slate-100 dark:hover:bg-zinc-800/50 text-slate-400 dark:text-zinc-500 rounded-full transition-colors cursor-pointer z-50 border-none"
+                        className="absolute top-6 right-6 p-2 bg-transparent hover:bg-slate-100 dark:hover:bg-zinc-800/50 text-slate-400 dark:text-zinc-500 rounded-full transition-all duration-300 cursor-pointer z-50 group border-none outline-none"
                     >
-                        <X className="w-5 h-5" />
+                        <X className="w-5 h-5 transition-transform duration-300 group-hover:rotate-90 group-hover:scale-110" />
                     </button>
 
                     <div className="w-full max-w-[340px] mx-auto flex flex-col">
@@ -278,8 +247,9 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                         )}
 
                         <form onSubmit={handleEmailAuth} className="flex flex-col gap-4">
-                            {!isLogin && !isForgotPass && (
-                                <div className="flex flex-col gap-1.5">
+                            {/* USERNAME FIELD */}
+                            <div className={`grid transition-all duration-300 ease-in-out ${!isLogin && !isForgotPass ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                                <div className="overflow-hidden flex flex-col gap-1.5">
                                     <label className="text-[12px] font-semibold text-slate-700 dark:text-zinc-300 ml-1">Username</label>
                                     <div className="relative group">
                                         <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#3b82f6]" strokeWidth={1.5} />
@@ -288,12 +258,12 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                             placeholder="Enter your username"
                                             value={username}
                                             onChange={(e) => { setUsername(e.target.value); setErrorMsg(''); setSuccessMsg(''); }}
-                                            required
-                                            className="w-full bg-slate-100 dark:bg-[#161921] py-3 pl-11 pr-4 rounded-[8px] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#3b82f6]/50 text-[13px] border-none"
+                                            required={!isLogin && !isForgotPass}
+                                            className="w-full bg-slate-100 dark:bg-[#161921] py-3 pl-11 pr-4 rounded-[8px] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#3b82f6] text-[13px] transition-all"
                                         />
                                     </div>
                                 </div>
-                            )}
+                            </div>
 
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-[12px] font-semibold text-slate-700 dark:text-zinc-300 ml-1">Email Address</label>
@@ -305,13 +275,14 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                         value={email}
                                         onChange={(e) => { setEmail(e.target.value); setErrorMsg(''); setSuccessMsg(''); }}
                                         required
-                                        className="w-full bg-slate-100 dark:bg-[#161921] py-3 pl-11 pr-4 rounded-[8px] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#3b82f6]/50 text-[13px] border-none"
+                                        className="w-full bg-slate-100 dark:bg-[#161921] py-3 pl-11 pr-4 rounded-[8px] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#3b82f6] text-[13px] transition-all"
                                     />
                                 </div>
                             </div>
 
-                            {!isForgotPass && (
-                                <div className="flex flex-col gap-1">
+                            {/* PASSWORD FIELD */}
+                            <div className={`grid transition-all duration-300 ease-in-out ${!isForgotPass ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                                <div className="overflow-hidden flex flex-col gap-1">
                                     <div className="flex justify-between items-end ml-1 mb-0.5">
                                         <label className="text-[12px] font-semibold text-slate-700 dark:text-zinc-300">Password</label>
                                         {!isLogin && password.length > 0 && (
@@ -323,10 +294,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
 
                                     {!isLogin && password.length > 0 && (
                                         <div className="w-full h-1 bg-slate-200 dark:bg-[#272A35] rounded-full overflow-hidden mb-1.5">
-                                            <div
-                                                className={`h-full transition-all duration-300 ${strengthColor}`}
-                                                style={{ width: `${strengthScore}%` }}
-                                            ></div>
+                                            <div className={`h-full transition-all duration-300 ${strengthColor}`} style={{ width: `${strengthScore}%` }}></div>
                                         </div>
                                     )}
 
@@ -337,47 +305,49 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                             placeholder="Enter your password"
                                             value={password}
                                             onChange={(e) => { setPassword(e.target.value); setErrorMsg(''); }}
-                                            required={isLogin}
+                                            required={!isForgotPass && isLogin}
                                             minLength={6}
-                                            className="w-full bg-slate-100 dark:bg-[#161921] py-3 pl-11 pr-11 rounded-[8px] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#3b82f6]/50 text-[13px] border-none"
+                                            className="w-full bg-slate-100 dark:bg-[#161921] py-3 pl-11 pr-11 rounded-[8px] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#3b82f6] text-[13px] transition-all"
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 bg-transparent cursor-pointer border-none"
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 bg-transparent cursor-pointer border-none outline-none"
                                         >
                                             {showPassword ? <EyeOff className="w-4 h-4" strokeWidth={1.5} /> : <Eye className="w-4 h-4" strokeWidth={1.5} />}
                                         </button>
                                     </div>
                                 </div>
-                            )}
+                            </div>
 
-                            {isLogin && !isForgotPass && (
-                                <div className="flex justify-end -mt-1 mb-1">
+                            {/* FORGOT PASSWORD BUTTON */}
+                            <div className={`grid transition-all duration-300 ease-in-out ${isLogin && !isForgotPass ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                                <div className="overflow-hidden flex justify-end -mt-1 mb-1">
                                     <button
                                         type="button"
                                         onClick={() => { setIsForgotPass(true); setErrorMsg(''); setSuccessMsg(''); }}
-                                        className="text-[12px] text-[#3b82f6] hover:underline font-medium bg-transparent cursor-pointer border-none"
+                                        className="text-[12px] text-[#3b82f6] hover:underline font-medium bg-transparent cursor-pointer border-none outline-none"
                                     >
                                         Forgot password?
                                     </button>
                                 </div>
-                            )}
+                            </div>
 
-                            {isForgotPass && (
-                                <div className="flex items-center gap-1.5 -mt-1 mb-1">
+                            {/* BACK TO LOGIN BUTTON */}
+                            <div className={`grid transition-all duration-300 ease-in-out ${isForgotPass ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                                <div className="overflow-hidden flex items-center gap-1.5 -mt-1 mb-1">
                                     <button
                                         type="button"
                                         onClick={() => { setIsForgotPass(false); setErrorMsg(''); setSuccessMsg(''); }}
-                                        className="text-[12px] text-[#3b82f6] hover:underline font-medium bg-transparent cursor-pointer border-none flex items-center gap-1"
+                                        className="text-[12px] text-[#3b82f6] hover:underline font-medium bg-transparent cursor-pointer border-none outline-none flex items-center gap-1"
                                     >
                                         <ArrowLeft className="w-3.5 h-3.5" /> Back to login
                                     </button>
                                 </div>
-                            )}
+                            </div>
 
-                            <div className="w-full h-[65px] shrink-0 flex items-center justify-center mt-1 mb-1 relative border-none">
-                                <div className="transform scale-[0.90] origin-center w-full flex justify-center border-none">
+                            <div className="w-full h-[65px] shrink-0 flex items-center justify-center mt-1 mb-1 relative">
+                                <div className="transform scale-[0.90] origin-center w-full flex justify-center">
                                     <Turnstile
                                         siteKey="0x4AAAAAAEI8owBAGHjSd7E5"
                                         onSuccess={(token) => setCaptchaToken(token)}
@@ -392,7 +362,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                             <button
                                 type="submit"
                                 disabled={loading || !email || (!isForgotPass && isLogin && !password) || !captchaToken}
-                                className="w-full bg-[#1D4ED8] hover:bg-[#2563EB] disabled:bg-slate-200 dark:disabled:bg-zinc-800 text-white py-3.5 rounded-[8px] font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed border-none mt-2"
+                                className="w-full bg-[#1D4ED8] hover:bg-[#2563EB] disabled:bg-slate-200 dark:disabled:bg-zinc-800 text-white py-3.5 rounded-[8px] font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed mt-2 shadow-sm border-none outline-none"
                             >
                                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isForgotPass ? 'Send Reset Code' : (isLogin ? 'Login' : 'Sign Up'))}
                             </button>
@@ -423,7 +393,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                             <span className="text-[13px] font-medium">Google</span>
                                         </button>
                                     ) : (
-                                        <div className="relative w-full h-[40px] rounded-[8px] bg-slate-100 dark:bg-[#161921] hover:bg-slate-200 dark:hover:bg-[#1E222D] transition-colors cursor-pointer overflow-hidden">
+                                        <div className="relative w-full h-[40px] rounded-[8px] bg-slate-100 dark:bg-[#161921] hover:bg-slate-200 dark:hover:bg-[#1E222D] transition-colors cursor-pointer overflow-hidden border-none">
                                             <div className="absolute inset-0 flex items-center justify-center gap-2 text-slate-700 dark:text-zinc-200 pointer-events-none">
                                                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                                                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -465,7 +435,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                                 <button
                                     type="button"
                                     onClick={() => { setIsLogin(!isLogin); setErrorMsg(''); setSuccessMsg(''); setUsername(''); setPassword(''); }}
-                                    className="text-[#3b82f6] hover:underline font-semibold bg-transparent cursor-pointer border-none"
+                                    className="text-[#3b82f6] hover:underline font-semibold bg-transparent cursor-pointer border-none outline-none"
                                 >
                                     {isLogin ? 'Sign up' : 'Login'}
                                 </button>
