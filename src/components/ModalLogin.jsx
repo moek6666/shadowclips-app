@@ -217,7 +217,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                     {/* Gambar Full Background */}
                     <div className="absolute inset-0 z-0 pointer-events-none">
                         <img
-                            src="https://simp6.cuckcapital.cr/images4/a5ca0486-30d5-4908-8acf-51b61dfb9743.jpg"
+                            src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatars_Collection/ModalLogin.jpg"
                             alt="Background Modal"
                             className="w-full h-full object-cover"
                         />
