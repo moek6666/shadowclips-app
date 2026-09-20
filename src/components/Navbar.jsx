@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import useSWR from 'swr';
-import { Search, Menu, X, Home, Compass, Flame, FolderOpen, Crown, ChevronDown, Sun, Moon, LogIn, LogOut, User, Settings, Download, Bell, Activity, Bot } from 'lucide-react';
+import { Search, Menu, X, Home, Compass, Flame, FolderOpen, Crown, ChevronDown, Sun, Moon, LogIn, LogOut, User, Settings, Download, Bell, Activity, Bot, Coffee } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
 import ModalLogin from './ModalLogin';
 import Avatar from './Avatar';
@@ -274,6 +274,13 @@ export default function Navbar({ isScrolled, supabase }) {
                     </div>
 
                     <div className="flex items-center gap-3 md:gap-2 lg:gap-4 border-none relative">
+                        {/* TOMBOL TRAKTEER DESKTOP */}
+                        <div className="hidden md:flex relative z-50 mr-1">
+                            <a href="https://trakteer.id/shadowclips" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-2 py-1.5 text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 transition-colors font-bold text-[13px] border-none outline-none group cursor-pointer bg-transparent">
+                                <Coffee className="w-4 h-4 group-hover:animate-bounce border-none" /> Traktir
+                            </a>
+                        </div>
+
                         <div className="hidden md:flex relative z-50">
                             <button onClick={() => setShowSearchModal(true)} className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE] transition-colors border-none outline-none cursor-pointer bg-transparent">
                                 <Search className="w-5 h-5 border-none" />
@@ -458,6 +465,12 @@ export default function Navbar({ isScrolled, supabase }) {
                         <a href="/ai" className={`flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors mt-1 ${pathname === '/ai' ? 'text-indigo-500 font-bold' : 'text-zinc-900 dark:text-white font-bold hover:text-indigo-500'}`}>
                             <Bot className="w-4 h-4" /> 
                             <span>AI Shorts</span>
+                        </a>
+
+                        {/* TOMBOL TRAKTEER MOBILE */}
+                        <a href="https://trakteer.id/shadowclips" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-3 transition-colors mt-1 text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 font-bold group bg-transparent">
+                            <Coffee className="w-4 h-4 group-hover:animate-bounce" /> 
+                            <span>Traktir Support</span>
                         </a>
 
                         {/* Menu Download APK disembunyikan sementara untuk perbaikan

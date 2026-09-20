@@ -12,7 +12,7 @@ const Populer = lazy(() => import('./pages/Populer'));
 const LegalPages = lazy(() => import('./pages/LegalPages'));
 const Koleksi = lazy(() => import('./pages/Koleksi'));
 const Jelajahi = lazy(() => import('./pages/Jelajahi'));
-const Ai = lazy(() => import('./pages/Ai')); // Routing halaman AI baru
+const Ai = lazy(() => import('./pages/Ai')); 
 const Tutorial = lazy(() => import('./pages/Tutorial'));
 const Profile = lazy(() => import('./pages/Profile'));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
@@ -20,7 +20,7 @@ const VerifiedSuccess = lazy(() => import('./pages/VerifiedSuccess'));
 const UpdatePassword = lazy(() => import('./pages/UpdatePassword'));
 const DownloadApk = lazy(() => import('./pages/DownloadApk'));
 
-// ROUTING FOLDER BARU
+// ROUTING FOLDER CATEGORY & KOLEKSI
 const DetailCategory = lazy(() => import('./pages/Category/DetailCategory'));
 const DetailKoleksi = lazy(() => import('./pages/colection/DetailKoleksi'));
 
