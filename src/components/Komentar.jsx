@@ -102,7 +102,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                     if (uniqueEmails.length > 0) {
                         const { data: profilesData } = await supabase
                             .from('profiles')
-                            .select('email, name, is_admin, is_premium, active_frame, avatar_url') // PERBAIKAN: pastikan kolom 'name' diambil
+                            .select('email, name, is_admin, is_premium, active_frame, avatar_url')
                             .in('email', uniqueEmails);
 
                         if (profilesData) {
@@ -278,15 +278,16 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
 
         const newCommentPayload = {
             video_id: String(videoId),
-            name: userName, // PERBAIKAN: ini untuk fallback saja
+            name: userName,
             email: userEmail,
-            avatar_url: currentUserAvatar, // PERBAIKAN: ini untuk fallback saja
+            avatar_url: currentUserAvatar,
             content: content,
             parent_id: targetParentId,
             status: statusKomentar
         };
 
         try {
+            // 1. Insert Komentar ke tabel comments
             const { data: insertedData, error } = await supabase.from('comments').insert(newCommentPayload).select();
 
             if (error) throw error;
@@ -297,19 +298,59 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                 ...newCommentPayload
             };
 
+            const newCommentId = newComment ? newComment.id : null;
+
             setComments(prev => [newComment, ...(prev || [])]);
 
             setUserProfiles(prev => ({
                 ...prev,
                 [userEmail]: {
                     email: userEmail,
-                    name: userName, // PERBAIKAN: memastikan state lokal diupdate dgn nama terbaru
+                    name: userName,
                     is_admin: profile?.is_admin || false,
                     is_premium: profile?.is_premium || false,
                     active_frame: profile?.active_frame || 'none',
                     avatar_url: currentUserAvatar
                 }
             }));
+
+            // ==========================================
+            // 🔥 2. PUSH NOTIFIKASI GLOBAL (UNTUK SEMUA) 🔥
+            // ==========================================
+            try {
+                if (statusKomentar === 'approved') {
+                    const truncatedContent = content.length > 80 ? content.substring(0, 80) + '...' : content;
+
+                    await supabase.from('global_notifications').insert({
+                        title: replyTo ? `💬 ${userName} membalas komentar` : `💬 ${userName} berkomentar`,
+                        message: truncatedContent,
+                        comment_id: newCommentId, 
+                        created_at: new Date().toISOString()
+                    });
+                }
+            } catch (notifError) {
+                console.error("Gagal mem-push notifikasi global:", notifError);
+            }
+
+            // ==========================================
+            // 🔥 3. PUSH NOTIFIKASI PERSONAL KE USER TUJUAN 🔥
+            // ==========================================
+            try {
+                if (statusKomentar === 'approved' && replyTo && replyTo.email && replyTo.email !== userEmail) {
+                    const truncatedContent = content.length > 80 ? content.substring(0, 80) + '...' : content;
+
+                    await supabase.from('user_notifications').insert({
+                        user_email: replyTo.email, // Email pemilik komentar asli yang dibalas
+                        title: `💬 ${userName} membalas komentar Anda`,
+                        message: truncatedContent,
+                        is_read: false,
+                        created_at: new Date().toISOString()
+                    });
+                }
+            } catch (personalNotifError) {
+                console.error("Gagal mengirim notifikasi personal:", personalNotifError);
+            }
+            // ==========================================
 
             setNotification({ type: isErrorNotif ? 'error' : 'success', message: notifMessage });
             setTimeout(() => setNotification(null), 4000);
@@ -455,7 +496,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                         const isPremium = userProfile.is_premium;
                         const frameId = userProfile.active_frame || 'none';
 
-                        // PERBAIKAN: Selalu gunakan nama dari profile (jika ada) untuk komentar lama maupun baru secara real-time
                         const currentDisplayName = userProfile.name || comment.name;
                         const avatarUrl = getValidAvatar(userProfile.avatar_url, comment.avatar_url);
 
@@ -504,7 +544,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                                             const isReplyPremium = replyProfile.is_premium;
                                             const replyFrameId = replyProfile.active_frame || 'none';
                                             
-                                            // PERBAIKAN: Selalu gunakan nama dari profile (jika ada) untuk balasan komentar secara real-time
                                             const currentReplyDisplayName = replyProfile.name || reply.name;
                                             const replyAvatarUrl = getValidAvatar(replyProfile.avatar_url, reply.avatar_url);
 
@@ -537,7 +576,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                                                             </div>
 
                                                             <div className="text-[11px] sm:text-[13px] text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap break-words border-none transition-colors">
-                                                                <span className="text-[#106EBE] font-bold mr-1 border-none">@{currentDisplayName}</span> <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(parseMarkdown(reply.content)) }} />
+                                                                <span className="text-[#106EBE] font-bold mr-1 border-none">@{currentReplyDisplayName}</span> <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(parseMarkdown(reply.content)) }} />
                                                             </div>
 
                                                             <div className="flex items-center gap-4 mt-3 pt-2 border-none"><button onClick={() => handleReplyClick(reply)} className="text-[9px] sm:text-[10px] text-zinc-500 dark:text-zinc-400 font-bold hover:text-[#106EBE] dark:hover:text-[#0FFCBE] transition-colors outline-none border-none cursor-pointer">Reply</button></div>

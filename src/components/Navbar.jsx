@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import useSWR from 'swr';
-import { Search, Menu, X, Home, Compass, Flame, FolderOpen, Crown, ChevronDown, Sun, Moon, LogIn, LogOut, User, Settings, Download, Bell, Activity, Bot, Coffee } from 'lucide-react';
+import { Search, Menu, X, Home, Compass, Flame, FolderOpen, Crown, ChevronDown, Sun, Moon, LogIn, LogOut, User, Settings, Download, Bell, Activity, Bot, Coffee, MessageSquare } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
 import ModalLogin from './ModalLogin';
 import Avatar from './Avatar';
@@ -60,6 +60,7 @@ export default function Navbar({ isScrolled, supabase }) {
         return () => subscription?.unsubscribe();
     }, [supabase]);
 
+    // Listener Status Server
     useEffect(() => {
         if (!supabase) return;
 
@@ -91,22 +92,90 @@ export default function Navbar({ isScrolled, supabase }) {
         };
     }, [supabase]);
 
+    // 🔥 LISTENER GLOBAL & PERSONAL NOTIFICATIONS 🔥
     useEffect(() => {
+        if (!supabase) return;
+
         const fetchNotifications = async () => {
-            if (!supabase) return;
             try {
-                const { data, error } = await supabase.from('global_notifications').select('*').order('created_at', { ascending: false }).limit(10);
-                if (error && error.code !== '42P01') throw error;
-                if (data) {
-                    setNotifications(data);
+                // 1. Ambil Notifikasi Global
+                const { data: globalData, error: globalError } = await supabase
+                    .from('global_notifications')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+                if (globalError && globalError.code !== '42P01') throw globalError;
+
+                // 2. Ambil Notifikasi Personal (Jika User Login)
+                let personalData = [];
+                const userEmail = session?.user?.email;
+                if (userEmail) {
+                    const { data: pData, error: pError } = await supabase
+                        .from('user_notifications')
+                        .select('*')
+                        .eq('user_email', userEmail)
+                        .order('created_at', { ascending: false })
+                        .limit(10);
+                    if (!pError && pData) {
+                        personalData = pData;
+                    }
+                }
+
+                // Gabungkan kedua jenis notifikasi dan urutkan berdasarkan waktu terbaru
+                const combined = [...(globalData || []), ...personalData].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+                if (combined.length > 0) {
+                    setNotifications(combined);
                     const readNotifs = JSON.parse(localStorage.getItem('shadowclips_read_notifs') || '[]');
-                    const unread = data.filter(n => !readNotifs.includes(n.id)).length;
+                    const unread = combined.filter(n => !readNotifs.includes(n.id)).length;
                     setUnreadCount(prev => prev + unread);
                 }
-            } catch (err) { }
+            } catch (err) { 
+                console.error("Error fetching notifications:", err);
+            }
         };
+
         fetchNotifications();
-    }, [supabase]);
+
+        // Realtime Global
+        const notifChannel = supabase.channel('public:global_notifications')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_notifications' }, (payload) => {
+                if (payload.new) {
+                    setNotifications(currentNotifs => {
+                        const isDuplicate = currentNotifs.some(notif => notif.id === payload.new.id);
+                        if (isDuplicate) return currentNotifs;
+                        
+                        setUnreadCount(prev => prev + 1);
+                        return [payload.new, ...currentNotifs];
+                    });
+                }
+            })
+            .subscribe();
+
+        // Realtime Personal (Khusus User Terkait)
+        let personalChannel = null;
+        const userEmail = session?.user?.email;
+        if (userEmail) {
+            personalChannel = supabase.channel(`public:user_notifications:${userEmail}`)
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_notifications', filter: `user_email=eq.${userEmail}` }, (payload) => {
+                    if (payload.new) {
+                        setNotifications(currentNotifs => {
+                            const isDuplicate = currentNotifs.some(notif => notif.id === payload.new.id);
+                            if (isDuplicate) return currentNotifs;
+
+                            setUnreadCount(prev => prev + 1);
+                            return [payload.new, ...currentNotifs];
+                        });
+                    }
+                })
+                .subscribe();
+        }
+
+        return () => {
+            supabase.removeChannel(notifChannel);
+            if (personalChannel) supabase.removeChannel(personalChannel);
+        };
+    }, [supabase, session?.user?.email]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -189,7 +258,7 @@ export default function Navbar({ isScrolled, supabase }) {
     if (pcServerStatus === 'online') {
         displayNotifications.unshift({
             id: 'server-live',
-            title: '🟢 Original Server Online',
+            title: 'Original Server Online',
             message: 'Server Utama saat ini sedang aktif. Nikmati pengalaman streaming dengan kualitas maksimal.',
             created_at: new Date().toISOString(),
             isServerStatus: true
@@ -197,7 +266,7 @@ export default function Navbar({ isScrolled, supabase }) {
     } else {
         displayNotifications.unshift({
             id: 'server-dead',
-            title: '🔴 Original Server Offline',
+            title: 'Original Server Offline',
             message: 'Saat ini Server Utama sedang offline. Silakan gunakan pilihan server lain yang tersedia.',
             created_at: new Date().toISOString(),
             isServerStatus: true
@@ -259,22 +328,14 @@ export default function Navbar({ isScrolled, supabase }) {
                                 </div>
                             </div>
 
-                            {/* MENU AI SHORTS PADA POSISI SETELAH PROFESIONAL SITE */}
                             <a href="/ai" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ml-2 ${pathname === '/ai' ? 'text-indigo-500' : 'text-zinc-600 dark:text-zinc-400 hover:text-indigo-500'}`}>
                                 <Bot className="w-4 h-4 border-none" /> 
                                 <span className="font-bold border-none">AI Shorts</span>
                             </a>
-
-                            {/* Menu Download APK disembunyikan sementara untuk perbaikan
-                            <a href="/download-apk" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ml-2 ${pathname === '/download-apk' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
-                                <Download className="w-4 h-4 border-none" /> APK
-                            </a>
-                            */}
                         </div>
                     </div>
 
                     <div className="flex items-center gap-3 md:gap-2 lg:gap-4 border-none relative">
-                        {/* TOMBOL TRAKTEER DESKTOP */}
                         <div className="hidden md:flex relative z-50 mr-1">
                             <a href="https://trakteer.id/shadowclips" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-2 py-1.5 text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 transition-colors font-bold text-[13px] border-none outline-none group cursor-pointer bg-transparent">
                                 <Coffee className="w-4 h-4 group-hover:animate-bounce border-none" /> Traktir
@@ -295,28 +356,50 @@ export default function Navbar({ isScrolled, supabase }) {
                                 )}
                             </button>
 
+                            {/* Dropdown Notifikasi - Lebar Responsif dan Scrollbar Lembut (Soft) */}
                             {isNotificationOpen && (
-                                <div className="absolute top-[calc(100%+0.5rem)] right-[-3rem] sm:right-0 w-[90vw] max-w-[320px] sm:w-80 bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-none overflow-hidden z-[110] flex flex-col">
-                                    <div className="px-4 py-3.5 bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center border-none shrink-0">
-                                        <h3 className="text-sm font-black text-zinc-900 dark:text-white border-none">Notifikasi</h3>
-                                        {unreadCount > 0 && <span className="text-[10px] bg-[#106EBE]/10 text-[#106EBE] px-2 py-1 rounded-full font-bold border-none">{unreadCount} Baru</span>}
+                                <div className="absolute top-[calc(100%+0.5rem)] right-[-3rem] sm:right-0 w-[90vw] max-w-[320px] md:max-w-[420px] md:w-[420px] bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.8)] border border-zinc-100 dark:border-zinc-800 overflow-hidden z-[110] flex flex-col">
+                                    <div className="px-5 py-4 bg-zinc-50/80 dark:bg-zinc-800/80 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center shrink-0">
+                                        <h3 className="text-[15px] font-black text-zinc-900 dark:text-white">Notifikasi</h3>
+                                        {unreadCount > 0 && <span className="text-[11px] bg-[#106EBE] text-white px-2.5 py-1 rounded-md font-bold shadow-sm">{unreadCount} Baru</span>}
                                     </div>
-                                    <div className="max-h-[320px] overflow-y-auto flex flex-col custom-scrollbar border-none">
+                                    
+                                    {/* Area Scroll dengan Scrollbar yang Lembut & Modern */}
+                                    <div className="max-h-[400px] overflow-y-auto overflow-x-hidden flex flex-col scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-800 scrollbar-track-transparent hover:scrollbar-thumb-zinc-300 dark:hover:scrollbar-thumb-zinc-700">
                                         {displayNotifications.length > 0 ? displayNotifications.map((notif, index) => (
-                                            <div key={notif.id || index} className={`p-4 border-b border-zinc-50 dark:border-zinc-800/60 transition-colors border-none cursor-default ${notif.isServerStatus ? (pcServerStatus === 'online' ? 'bg-emerald-500/10 hover:bg-emerald-500/20' : 'bg-red-500/10 hover:bg-red-500/20') : 'hover:bg-zinc-50 dark:hover:bg-white/5'}`}>
-                                                <h4 className={`text-[13px] font-bold mb-1 leading-snug border-none flex items-center gap-1.5 ${notif.isServerStatus ? (pcServerStatus === 'online' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400') : 'text-zinc-800 dark:text-zinc-100'}`}>
-                                                    {notif.isServerStatus && <Activity className="w-3.5 h-3.5 border-none" />}
-                                                    {notif.title}
-                                                </h4>
-                                                <p className={`text-[11px] line-clamp-3 leading-relaxed border-none ${notif.isServerStatus ? 'text-zinc-700 dark:text-zinc-300' : 'text-zinc-500 dark:text-zinc-400'}`}>{notif.message}</p>
-                                                {!notif.isServerStatus && (
-                                                    <span className="text-[9px] text-zinc-400 dark:text-zinc-500 font-bold mt-2.5 block border-none">{new Date(notif.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                                                )}
+                                            <div key={notif.id || index} className={`p-4 md:p-5 border-b border-zinc-50 dark:border-zinc-800/50 transition-colors cursor-default ${notif.isServerStatus ? (pcServerStatus === 'online' ? 'bg-emerald-500/5 hover:bg-emerald-500/10' : 'bg-red-500/5 hover:bg-red-500/10') : 'hover:bg-zinc-50 dark:hover:bg-white/5'}`}>
+                                                <div className="flex gap-3.5 items-start">
+                                                    
+                                                    {/* Ikon Dinamis Profesional */}
+                                                    <div className="mt-0.5 shrink-0">
+                                                        {notif.isServerStatus ? (
+                                                            <Activity className={`w-5 h-5 ${pcServerStatus === 'online' ? 'text-emerald-500' : 'text-red-500'}`} />
+                                                        ) : (
+                                                            <div className="w-8 h-8 rounded-full bg-[#106EBE]/10 flex items-center justify-center">
+                                                                <MessageSquare className="w-4 h-4 text-[#106EBE]" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className={`text-[14px] font-bold mb-1 leading-snug truncate ${notif.isServerStatus ? (pcServerStatus === 'online' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400') : 'text-zinc-900 dark:text-white'}`}>
+                                                            {notif.title}
+                                                        </h4>
+                                                        <p className="text-[13px] text-zinc-600 dark:text-zinc-400 leading-relaxed break-words whitespace-pre-wrap">
+                                                            {notif.message}
+                                                        </p>
+                                                        {!notif.isServerStatus && (
+                                                            <span className="text-[11px] text-zinc-400 dark:text-zinc-500 font-medium mt-2.5 block">
+                                                                {new Date(notif.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </div>
                                         )) : (
-                                            <div className="p-8 text-center flex flex-col items-center justify-center border-none">
-                                                <Bell className="w-8 h-8 text-zinc-300 dark:text-zinc-700 mb-2 border-none" />
-                                                <span className="text-zinc-500 dark:text-zinc-400 text-[12px] font-bold border-none">Belum ada pengumuman</span>
+                                            <div className="p-10 text-center flex flex-col items-center justify-center">
+                                                <Bell className="w-10 h-10 text-zinc-300 dark:text-zinc-700 mb-3" />
+                                                <span className="text-zinc-500 dark:text-zinc-400 text-[13px] font-medium">Belum ada aktivitas terbaru</span>
                                             </div>
                                         )}
                                     </div>
@@ -461,23 +544,15 @@ export default function Navbar({ isScrolled, supabase }) {
                             </div>
                         </div>
 
-                        {/* MENU AI SHORTS PADA POSISI SETELAH PROFESIONAL SITE */}
                         <a href="/ai" className={`flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors mt-1 ${pathname === '/ai' ? 'text-indigo-500 font-bold' : 'text-zinc-900 dark:text-white font-bold hover:text-indigo-500'}`}>
                             <Bot className="w-4 h-4" /> 
                             <span>AI Shorts</span>
                         </a>
 
-                        {/* TOMBOL TRAKTEER MOBILE */}
                         <a href="https://trakteer.id/shadowclips" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-3 transition-colors mt-1 text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 font-bold group bg-transparent">
                             <Coffee className="w-4 h-4 group-hover:animate-bounce" /> 
                             <span>Traktir Support</span>
                         </a>
-
-                        {/* Menu Download APK disembunyikan sementara untuk perbaikan
-                        <a href="/download-apk" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors mt-1">
-                            <Download className="w-4 h-4 text-[#106EBE]" /> APK
-                        </a>
-                        */}
                     </div>
                 </div>
             </div>
