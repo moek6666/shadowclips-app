@@ -80,22 +80,16 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
 
     useEffect(() => {
         const fetchData = async () => {
-            if (!videoId || !supabase) return;
+            if (!videoId || videoId === 'Unknown' || !supabase) {
+                setComments([]);
+                return; 
+            }
 
             try {
-                // Konversi videoId ke Number untuk tipe int8 di database
-                // PENAMBAHAN VALIDASI: Hentikan eksekusi jika videoId tidak valid agar tidak error saat fetch
-                const parsedVideoId = Number(videoId);
-                if (isNaN(parsedVideoId) || videoId === 'Unknown') {
-                    setComments([]);
-                    return; 
-                }
-                const formattedId = parsedVideoId;
-                
                 let query = supabase
                     .from('comments')
                     .select('*')
-                    .eq('video_id', formattedId)
+                    .eq('video_id', String(videoId))
                     .order('created_at', { ascending: false });
 
                 const userEmail = session?.user?.email;
@@ -133,7 +127,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
 
         fetchData();
 
-        if (supabase) {
+        if (supabase && videoId && videoId !== 'Unknown') {
             const channel = supabase.channel(`public:comments:${videoId}`)
                 .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'comments' }, (payload) => {
                     setComments(currentComments => (currentComments || []).filter(c => c.id !== payload.old.id));
@@ -254,15 +248,12 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
         e.preventDefault();
         if (!session?.user || !content.trim()) return;
 
-        // PENAMBAHAN VALIDASI: Tolak pengiriman jika videoId bukan angka yang valid
-        const parsedVideoId = Number(videoId);
-        if (isNaN(parsedVideoId) || videoId === 'Unknown') {
+        if (!videoId || videoId === 'Unknown') {
             setNotification({ type: 'error', message: 'Gagal: Video ID tidak valid atau video belum dimuat.' });
             setTimeout(() => setNotification(null), 4000);
             return;
         }
 
-        // 🔥 VALIDASI ANTI-SPAM 🔥
         const contentWithoutEmojis = content.replace(/:[a-zA-Z0-9_]+:/g, '');
         const textOnly = contentWithoutEmojis.replace(/\s+/g, '');
         
@@ -313,11 +304,8 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
             notifMessage = 'Komentar Anda berhasil dikirim!';
         }
 
-        // Gunakan videoId yang sudah divalidasi ke dalam tipe data yang sesuai dengan int8
-        const formattedVideoId = parsedVideoId;
-
         const newCommentPayload = {
-            video_id: formattedVideoId,
+            video_id: String(videoId),
             name: userName,
             email: userEmail,
             avatar_url: currentUserAvatar,
@@ -327,7 +315,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
         };
 
         try {
-            // 1. Insert Komentar ke tabel comments
             const { data: insertedData, error } = await supabase.from('comments').insert(newCommentPayload).select();
 
             if (error) throw error;
@@ -352,29 +339,12 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                 }
             }));
 
-            // 2. Notifikasi Global (Ditambahkan kolom 'link')
-            try {
-                if (statusKomentar === 'approved') {
-                    const truncatedContent = content.length > 80 ? content.substring(0, 80) + '...' : content;
-                    
-                    const currentUrlPath = window.location.pathname; 
-                    
-                    await supabase.from('global_notifications').insert({
-                        title: replyTo ? `💬 ${userName} membalas komentar` : `💬 ${userName} berkomentar`,
-                        message: truncatedContent,
-                        link: currentUrlPath,
-                        created_at: new Date().toISOString()
-                    });
-                }
-            } catch (notifError) {
-                console.error("Gagal push notifikasi global:", notifError);
-            }
+            // Notifikasi Global ditangani otomatis oleh Database Trigger Supabase (Tidak ada duplikasi)
 
-            // 3. Notifikasi Personal
+            // Notifikasi Personal (Balasan Komentar)
             try {
                 if (statusKomentar === 'approved' && replyTo && replyTo.email && replyTo.email !== userEmail) {
                     const truncatedContent = content.length > 80 ? content.substring(0, 80) + '...' : content;
-                    
                     const currentUrlPath = window.location.pathname;
 
                     await supabase.from('user_notifications').insert({
