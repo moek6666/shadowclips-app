@@ -5,11 +5,9 @@ import { Play, Eye, Clock, ChevronLeft, ChevronRight, Search } from 'lucide-reac
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
-// 1. TAMBAHKAN IMPORT KOMPONEN CTA DAN MODAL DI SINI
 import ProfileCta from '../components/ProfileCta';
 import ModalLogin from '../components/ModalLogin';
 
-// Max post ditingkatkan menjadi 16
 const ITEMS_PER_PAGE = 16;
 
 const getImageUrl = (imgString) => imgString ? imgString.split(',')[0].trim() : '';
@@ -21,8 +19,6 @@ const formatViews = (views) => {
 
 export default function Home({ supabase }) {
     const [isScrolled, setIsScrolled] = useState(false);
-    
-    // 2. STATE UNTUK MENGONTROL MUNCULNYA MODAL LOGIN
     const [isModalLoginOpen, setIsModalLoginOpen] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(() => {
@@ -57,7 +53,7 @@ export default function Home({ supabase }) {
         const { data, count, error } = await supabase
             .from('videos')
             .select('*', { count: 'exact' })
-            .not('category', 'ilike', '%AI%') // Filter untuk mengecualikan video dengan kategori AI
+            .not('category', 'ilike', '%AI%')
             .order('created_at', { ascending: false })
             .range(from, to);
 
@@ -77,7 +73,7 @@ export default function Home({ supabase }) {
     const videos = swrData?.data || [];
     const totalPages = swrData?.totalPages || 0;
 
-    // Script Iklan dikembalikan ke default aslinya (tanpa looping paksa)
+    // Memuat script penyedia iklan Magsrv
     useEffect(() => {
         if (!isLoading && videos.length > 0) {
             if (!document.querySelector('script[src="https://a.magsrv.com/ad-provider.js"]')) {
@@ -115,8 +111,6 @@ export default function Home({ supabase }) {
         <>
             <Navbar isScrolled={isScrolled} supabase={supabase} />
 
-            {/* 3. PEMANGGILAN PROFILE CTA DI SINI */}
-            {/* Dibungkus dengan z-50 dan relative agar berada di atas layer konten bawahnya */}
             <div className="max-w-7xl mx-auto px-4 pt-6 relative z-50">
                 <ProfileCta 
                     supabase={supabase} 
@@ -153,7 +147,6 @@ export default function Home({ supabase }) {
                         ))
                     ) : videos.length > 0 ? (
                         videos.map((video, index) => {
-                            // HANYA MUNCUL 1 KALI: Setelah video ke-8 (index 7)
                             const showAd = index === 7;
 
                             return (
@@ -182,7 +175,7 @@ export default function Home({ supabase }) {
 
                                     </div>
 
-                                    {/* IKLAN IN-FEED (Hanya dipanggil sekali) */}
+                                    {/* 1. IKLAN IN-FEED (SETELAH VIDEO KE-8) */}
                                     {showAd && (
                                         <div className="col-span-full flex justify-center w-full my-4 bg-transparent min-h-[250px]" style={{ border: 'none' }}>
                                             <ins className="eas6a97888e2" data-zoneid="6002932" data-sub="123450000"></ins>
@@ -199,9 +192,9 @@ export default function Home({ supabase }) {
                     )}
                 </div>
 
-                {/* 🔥 IKLAN BANNER 900x250 (Atas Pagination) 🔥 */}
-                <div className="w-full flex justify-center my-10 overflow-hidden border-none relative z-20 px-4 sm:px-0">
-                    <div className="bg-zinc-100/50 dark:bg-zinc-900/50 rounded-xl flex items-center justify-center min-h-[90px] md:min-h-[250px] w-full max-w-[900px]">
+                {/* 2. IKLAN BANNER DESKTOP 900x250 (HANYA TAMPIL DI DESKTOP/LAPTOP) */}
+                <div className="hidden md:flex w-full justify-center my-10 overflow-hidden border-none relative z-20 px-4 sm:px-0">
+                    <div className="bg-zinc-100/50 dark:bg-zinc-900/50 rounded-xl flex items-center justify-center min-h-[250px] w-full max-w-[900px]">
                         <ins 
                             className="eas6a97888e2 block" 
                             data-zoneid="6036458" 
@@ -210,8 +203,20 @@ export default function Home({ supabase }) {
                         ></ins>
                     </div>
                 </div>
-                {/* =============================== */}
 
+                {/* 3. IKLAN BANNER MOBILE 300x250 (HANYA TAMPIL DI HP) */}
+                <div className="flex md:hidden w-full justify-center my-8 overflow-hidden border-none relative z-20 px-4">
+                    <div className="bg-zinc-100/50 dark:bg-zinc-900/50 rounded-xl flex items-center justify-center min-h-[250px] w-full max-w-[300px]">
+                        <ins 
+                            className="eas6a97888e10 block" 
+                            data-zoneid="6036470" 
+                            data-sub="123450000" 
+                            data-block-ad-types="0"
+                        ></ins>
+                    </div>
+                </div>
+
+                {/* PAGINATION */}
                 {!isLoading && totalPages > 1 && (
                     <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mt-10 px-4 sm:px-0">
                         {currentPage > 1 && (
@@ -246,7 +251,6 @@ export default function Home({ supabase }) {
             </main>
             <Footer />
 
-            {/* 4. RENDER MODAL LOGIN DI BAGIAN PALING BAWAH HALAMAN */}
             {isModalLoginOpen && (
                 <ModalLogin 
                     supabase={supabase} 
