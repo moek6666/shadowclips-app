@@ -39,7 +39,7 @@ export default function Streaming({ supabase }) {
     const [likes, setLikes] = useState(0);
     const [hasLiked, setHasLiked] = useState(false);
     const [hasBookmarked, setHasBookmarked] = useState(false);
-    const [bookmarksCount, setBookmarksCount] = useState(0);
+    const [bookmarkCount, setBookmarkCount] = useState(0);
 
     const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
     const [modalStatus, setModalStatus] = useState('waiting');
@@ -99,9 +99,7 @@ export default function Streaming({ supabase }) {
     }, [activeServer, isPlaying, isOriginalOnline, secureUrls.original]);
 
     const checkVipAccess = useCallback(async (videoId, vidData, forceCommented = null, forceLiked = null) => {
-        if (!supabase || !vidData || !videoId || videoId === 'Unknown') return;
-
-        const safeVideoId = String(videoId);
+        if (!supabase || !vidData) return;
 
         const categoryStr = String(vidData.category || '').toLowerCase().trim();
         const titleStr = String(vidData.title || '').toLowerCase().trim();
@@ -137,7 +135,7 @@ export default function Streaming({ supabase }) {
             isLiked = forceLiked;
         } else {
             try {
-                const { data: likeData } = await supabase.from('user_likes').select('id').eq('video_id', safeVideoId).eq('device_id', activeDeviceId).maybeSingle();
+                const { data: likeData } = await supabase.from('user_likes').select('id').eq('video_id', videoId).eq('device_id', activeDeviceId).maybeSingle();
                 if (likeData) isLiked = true;
             } catch (error) { }
         }
@@ -148,7 +146,7 @@ export default function Streaming({ supabase }) {
             isCommented = forceCommented;
         } else if (userEmail) {
             try {
-                const { data: commentData } = await supabase.from('comments').select('id').eq('video_id', safeVideoId).eq('email', userEmail).limit(1);
+                const { data: commentData } = await supabase.from('comments').select('id').eq('video_id', String(videoId)).eq('email', userEmail).limit(1);
                 if (commentData && commentData.length > 0) isCommented = true;
             } catch (error) { }
         }
@@ -157,11 +155,22 @@ export default function Streaming({ supabase }) {
         let isBookmarked = false;
         if (userEmail) {
             try {
-                const { data: bookmarkData } = await supabase.from('user_bookmarks').select('id').eq('video_id', safeVideoId).eq('user_id', activeDeviceId).maybeSingle();
+                const { data: bookmarkData } = await supabase.from('user_bookmarks').select('id').eq('video_id', String(videoId)).eq('user_id', activeDeviceId).maybeSingle();
                 if (bookmarkData) isBookmarked = true;
             } catch (error) { }
         }
         setHasBookmarked(isBookmarked);
+
+        try {
+            const { count: totalBookmarks, error: countError } = await supabase
+                .from('user_bookmarks')
+                .select('*', { count: 'exact', head: true })
+                .eq('video_id', String(videoId));
+            
+            if (!countError && totalBookmarks !== null) {
+                setBookmarkCount(totalBookmarks);
+            }
+        } catch (error) { console.error("Error fetching bookmark count:", error); }
 
         const uOriginal = vidData.server_original || '';
         const uMain = vidData.trailer_url || '';
@@ -186,28 +195,9 @@ export default function Streaming({ supabase }) {
         }
 
         try {
-            // DENGAN PERBAIKAN: Hitung jumlah baris di tabel user_likes agar akurat sesuai data tabel
-            const { count: likeCount, error: likeCountError } = await supabase
-                .from('user_likes')
-                .select('*', { count: 'exact', head: true })
-                .eq('video_id', safeVideoId);
-                
-            if (!likeCountError && likeCount !== null) {
-                setLikes(likeCount);
-            }
-
-            // DENGAN PERBAIKAN: Hitung jumlah baris di tabel user_bookmarks yang memiliki video_id sama
-            const { count: bookmarkCount, error: countError } = await supabase
-                .from('user_bookmarks')
-                .select('*', { count: 'exact', head: true })
-                .eq('video_id', safeVideoId);
-                
-            if (!countError && bookmarkCount !== null) {
-                setBookmarksCount(bookmarkCount);
-            }
-        } catch (e) {
-            console.error("Error fetching likes/bookmarks stats:", e);
-        }
+            const { data: currentVideo } = await supabase.from('videos').select('likes').eq('id', videoId).single();
+            if (currentVideo) setLikes(currentVideo.likes || 0);
+        } catch (e) { }
 
     }, [supabase, deviceId]);
 
@@ -284,7 +274,7 @@ export default function Streaming({ supabase }) {
     }, [isDownloadModalOpen, modalStatus]);
 
     const handleLike = async () => {
-        if (!supabase || !video || !video.id || video.id === 'Unknown') return;
+        if (!supabase || !video) return;
         const newHasLiked = !hasLiked;
 
         setHasLiked(newHasLiked);
@@ -310,7 +300,7 @@ export default function Streaming({ supabase }) {
     };
 
     const handleBookmark = async () => {
-        if (!supabase || !video || !video.id || video.id === 'Unknown') return;
+        if (!supabase || !video) return;
 
         try {
             const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -323,8 +313,7 @@ export default function Streaming({ supabase }) {
             const newBookmarkState = !hasBookmarked;
             setHasBookmarked(newBookmarkState);
             
-            // Optimistic update untuk angka saved count
-            setBookmarksCount(prev => newBookmarkState ? prev + 1 : Math.max(prev - 1, 0));
+            setBookmarkCount(prev => newBookmarkState ? prev + 1 : Math.max(prev - 1, 0)); 
 
             const { error } = await supabase.rpc('toggle_user_bookmark', { p_video_id: String(video.id) });
             if (error) throw error;
@@ -336,9 +325,8 @@ export default function Streaming({ supabase }) {
             }
         } catch (error) {
             console.error("Bookmark Error:", error);
-            // Revert state jika terjadi error database
             setHasBookmarked(hasBookmarked);
-            setBookmarksCount(prev => hasBookmarked ? prev + 1 : Math.max(prev - 1, 0));
+            setBookmarkCount(prev => hasBookmarked ? prev : Math.max(prev - 1, 0)); 
             toast.error("Terjadi kesalahan saat menyimpan video.");
         }
     };
@@ -590,8 +578,7 @@ export default function Streaming({ supabase }) {
 
                                     <button onClick={handleBookmark} className={`flex items-center justify-center gap-2 px-4 py-2 sm:py-1.5 rounded-full sm:rounded-[10px] text-[13px] font-bold transition-all cursor-pointer border-none shrink-0 ${hasBookmarked ? 'bg-[#106EBE] text-white shadow-sm' : 'bg-zinc-100 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300'}`}>
                                         <Bookmark className={`w-4 h-4 border-none ${hasBookmarked ? 'fill-current scale-110' : ''}`} />
-                                        {/* Menampilkan jumlah saved Count atau kata "Save" jika belum ada */}
-                                        <span className="border-none">{bookmarksCount > 0 ? formatViews(bookmarksCount) : 'Save'}</span>
+                                        <span className="border-none">{bookmarkCount > 0 ? formatViews(bookmarkCount) : (hasBookmarked ? 'Saved' : 'Save')}</span>
                                     </button>
 
                                     <button onClick={handleShare} className="flex items-center justify-center gap-2 px-4 py-2 sm:py-1.5 rounded-full sm:rounded-[10px] text-[13px] font-bold bg-zinc-100 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 cursor-pointer border-none shrink-0">
