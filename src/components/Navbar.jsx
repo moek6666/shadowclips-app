@@ -4,8 +4,34 @@ import { Search, Menu, X, Home, Compass, Flame, FolderOpen, Crown, ChevronDown, 
 import { ThemeContext } from '../context/ThemeContext';
 import ModalLogin from './ModalLogin';
 import Avatar from './Avatar';
+import DOMPurify from 'dompurify';
 
 const generateSeoSlug = (categoryName) => categoryName ? categoryName.toLowerCase().trim().replace(/\s+/g, '-') : '';
+
+// ==========================================
+// 🔥 DATABASE EMOJI 3D UNTUK NOTIFIKASI 🔥
+// ==========================================
+const animatedEmojis = {
+    ':love:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Smiling%20Face%20with%20Heart-Eyes.png',
+    ':api:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Fire.png',
+    ':ketawa:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Rolling%20on%20the%20Floor%20Laughing.png',
+    ':jempol:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Hand%20gestures/Thumbs%20Up.png',
+    ':marah:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Angry%20Face.png',
+    ':mahkota:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Crown.png',
+};
+
+const parseNotification = (text) => {
+    if (!text || typeof text !== 'string') return '';
+    let html = text.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+    
+    html = html.replace(/(:[a-zA-Z0-9_]+:)/g, (match) => {
+        if (animatedEmojis[match]) {
+            return `<img src="${animatedEmojis[match]}" alt="${match}" class="inline-block w-[18px] h-[18px] object-contain shrink-0 align-middle drop-shadow-sm mx-0.5 border-none" draggable="false" />`;
+        }
+        return match;
+    });
+    return html;
+};
 
 export default function Navbar({ isScrolled, supabase }) {
     const themeContext = useContext(ThemeContext);
@@ -405,9 +431,10 @@ export default function Navbar({ isScrolled, supabase }) {
                                                             <h4 className="text-[14px] font-bold text-sky-950 dark:text-sky-200 mb-1 leading-snug truncate border-none">
                                                                 {notif.title || 'Pengumuman Sistem'}
                                                             </h4>
-                                                            <p className="text-[13px] text-sky-900/80 dark:text-sky-300/80 leading-relaxed break-words whitespace-pre-wrap border-none">
-                                                                {notif.message || notif.text}
-                                                            </p>
+                                                            <p 
+                                                                className="text-[13px] text-sky-900/80 dark:text-sky-300/80 leading-relaxed break-words whitespace-pre-wrap border-none"
+                                                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(parseNotification(notif.message || notif.text)) }}
+                                                            />
                                                             <span className="text-[11px] text-sky-600/70 dark:text-sky-400/70 font-medium mt-2.5 block border-none">
                                                                 {new Date(notif.created_at || Date.now()).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                                             </span>
@@ -431,9 +458,10 @@ export default function Navbar({ isScrolled, supabase }) {
                                                             <h4 className="text-[14px] font-bold text-zinc-900 dark:text-white mb-1 leading-snug truncate border-none">
                                                                 {notif.title || 'Pesan Baru'}
                                                             </h4>
-                                                            <p className="text-[13px] text-zinc-600 dark:text-zinc-400 leading-relaxed break-words whitespace-pre-wrap border-none">
-                                                                {notif.message || notif.text}
-                                                            </p>
+                                                            <p 
+                                                                className="text-[13px] text-zinc-600 dark:text-zinc-400 leading-relaxed break-words whitespace-pre-wrap border-none"
+                                                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(parseNotification(notif.message || notif.text)) }}
+                                                            />
                                                             <span className="text-[11px] text-zinc-400 dark:text-zinc-500 font-medium mt-2.5 block border-none">
                                                                 {new Date(notif.created_at || Date.now()).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                                             </span>
