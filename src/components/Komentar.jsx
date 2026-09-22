@@ -244,6 +244,34 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
         e.preventDefault();
         if (!session?.user || !content.trim()) return;
 
+        // 🔥 VALIDASI ANTI-SPAM (MINIMAL 10 HURUF & ANTI BERULANG) 🔥
+        // 1. Hapus format emoji (contoh: :love:, :api:) agar tidak ikut dihitung
+        const contentWithoutEmojis = content.replace(/:[a-zA-Z0-9_]+:/g, '');
+        
+        // 2. Hapus semua spasi dan baris baru untuk menghitung huruf/karakter murni
+        const textOnly = contentWithoutEmojis.replace(/\s+/g, '');
+        
+        // 3. Cek minimal 10 huruf asli
+        if (textOnly.length < 10) {
+            setNotification({ type: 'error', message: `Komentar terlalu pendek. Wajib minimal 10 huruf (saat ini ${textOnly.length} huruf).` });
+            setTimeout(() => setNotification(null), 4000);
+            return;
+        }
+
+        // 4. Cek spam karakter berulang (Contoh: "HHHHH" atau "aaaaa")
+        if (/(.)\1{4,}/i.test(textOnly)) {
+            setNotification({ type: 'error', message: `Komentar terdeteksi spam karakter berulang. Mohon gunakan kalimat yang jelas.` });
+            setTimeout(() => setNotification(null), 4000);
+            return;
+        }
+
+        // 5. Cek spam pola berulang (Contoh: "wkwkwkwkwk" atau "hahahahahaha")
+        if (/(..+)\1{3,}/i.test(contentWithoutEmojis)) {
+            setNotification({ type: 'error', message: `Komentar terdeteksi spam kata berulang. Mohon gunakan kalimat yang bermakna.` });
+            setTimeout(() => setNotification(null), 4000);
+            return;
+        }
+
         setIsSubmitting(true);
         setNotification(null);
 
@@ -446,7 +474,12 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                     </div>
 
                     <div className="relative bg-white dark:bg-zinc-900/40 border-none transition-colors">
-                        <textarea ref={textareaRef} value={content} onChange={handleInputChange} placeholder="Type your comment here..." className={`w-full bg-transparent px-4 sm:px-5 py-5 text-[13px] sm:text-[14px] text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none resize-y border-none transition-colors ${isInline ? 'min-h-[100px]' : 'min-h-[140px]'}`} required />
+                        {/* 🔥 PETUNJUK SYARAT MINIMAL 10 HURUF 🔥 */}
+                        <div className="px-4 sm:px-5 pt-3 pb-0 text-[11px] font-medium text-amber-600 dark:text-amber-500">
+                            * Wajib minimal 10 huruf (emoji tidak dihitung)
+                        </div>
+
+                        <textarea ref={textareaRef} value={content} onChange={handleInputChange} placeholder="Type your comment here..." className={`w-full bg-transparent px-4 sm:px-5 py-3 text-[13px] sm:text-[14px] text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none resize-y border-none transition-colors ${isInline ? 'min-h-[100px]' : 'min-h-[140px]'}`} required />
                         <div className="absolute bottom-3 right-4 text-[9px] sm:text-[10px] font-medium text-zinc-400 dark:text-zinc-500 select-none border-none">{content.length}/2000</div>
                     </div>
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-zinc-50 dark:bg-zinc-800/80 border-none relative transition-colors">
