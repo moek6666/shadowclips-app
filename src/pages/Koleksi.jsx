@@ -46,6 +46,29 @@ export default function Koleksi({ supabase }) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    // 🔥 SCRIPT IKLAN DIEKSEKUSI DI SINI 🔥
+    useEffect(() => {
+        // Muat script Magsrv jika belum ada di dokumen
+        if (!document.querySelector('script[src="https://a.magsrv.com/ad-provider.js"]')) {
+            const script = document.createElement('script');
+            script.async = true;
+            script.type = 'application/javascript';
+            script.src = 'https://a.magsrv.com/ad-provider.js';
+            document.head.appendChild(script);
+        }
+
+        // Jalankan trigger iklan
+        const serveScript = document.createElement('script');
+        serveScript.text = '(window.AdProvider = window.AdProvider || []).push({"serve": {}});';
+        document.body.appendChild(serveScript);
+
+        return () => {
+            if (document.body.contains(serveScript)) {
+                document.body.removeChild(serveScript);
+            }
+        };
+    }, []);
+
     const fetchCollections = async () => {
         if (!supabase) throw new Error("Supabase not initialized");
 
@@ -91,6 +114,20 @@ export default function Koleksi({ supabase }) {
 
             <main className="min-h-screen pb-20 relative overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-8 duration-700 ease-out border-none">
                 <div className="max-w-[1440px] mx-auto px-4 sm:px-8 pt-32 relative z-10 border-none">
+                    
+                    {/* 🔥 AREA IKLAN BANNER 900x250 🔥 */}
+                    <div className="w-full flex justify-center mb-10 overflow-hidden border-none relative z-20">
+                        <div className="bg-zinc-100/50 dark:bg-zinc-900/50 rounded-xl flex items-center justify-center min-h-[90px] md:min-h-[250px] w-full max-w-[900px]">
+                            <ins 
+                                className="eas6a97888e2 block" 
+                                data-zoneid="6036458" 
+                                data-sub="123450000" 
+                                data-block-ad-types="0"
+                            ></ins>
+                        </div>
+                    </div>
+                    {/* =============================== */}
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8 border-none">
                         {isLoading ? (
                             Array.from({ length: 8 }).map((_, i) => (

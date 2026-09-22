@@ -199,10 +199,18 @@ export default function Home({ supabase }) {
                     )}
                 </div>
 
-                {/* IKLAN HORIZONTAL (Bawah) */}
-                <div className="w-full flex justify-center my-10 bg-transparent min-h-[90px]" style={{ border: 'none' }}>
-                    <ins className="eas6a97888e20" data-zoneid="6002934" data-sub="123450000"></ins>
+                {/* 🔥 IKLAN BANNER 900x250 (Atas Pagination) 🔥 */}
+                <div className="w-full flex justify-center my-10 overflow-hidden border-none relative z-20 px-4 sm:px-0">
+                    <div className="bg-zinc-100/50 dark:bg-zinc-900/50 rounded-xl flex items-center justify-center min-h-[90px] md:min-h-[250px] w-full max-w-[900px]">
+                        <ins 
+                            className="eas6a97888e2 block" 
+                            data-zoneid="6036458" 
+                            data-sub="123450000" 
+                            data-block-ad-types="0"
+                        ></ins>
+                    </div>
                 </div>
+                {/* =============================== */}
 
                 {!isLoading && totalPages > 1 && (
                     <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mt-10 px-4 sm:px-0">
