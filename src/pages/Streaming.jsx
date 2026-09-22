@@ -39,6 +39,7 @@ export default function Streaming({ supabase }) {
     const [likes, setLikes] = useState(0);
     const [hasLiked, setHasLiked] = useState(false);
     const [hasBookmarked, setHasBookmarked] = useState(false);
+    const [bookmarksCount, setBookmarksCount] = useState(0);
 
     const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
     const [modalStatus, setModalStatus] = useState('waiting');
@@ -185,9 +186,28 @@ export default function Streaming({ supabase }) {
         }
 
         try {
-            const { data: currentVideo } = await supabase.from('videos').select('likes').eq('id', safeVideoId).single();
-            if (currentVideo) setLikes(currentVideo.likes || 0);
-        } catch (e) { }
+            // DENGAN PERBAIKAN: Hitung jumlah baris di tabel user_likes agar akurat sesuai data tabel
+            const { count: likeCount, error: likeCountError } = await supabase
+                .from('user_likes')
+                .select('*', { count: 'exact', head: true })
+                .eq('video_id', safeVideoId);
+                
+            if (!likeCountError && likeCount !== null) {
+                setLikes(likeCount);
+            }
+
+            // DENGAN PERBAIKAN: Hitung jumlah baris di tabel user_bookmarks yang memiliki video_id sama
+            const { count: bookmarkCount, error: countError } = await supabase
+                .from('user_bookmarks')
+                .select('*', { count: 'exact', head: true })
+                .eq('video_id', safeVideoId);
+                
+            if (!countError && bookmarkCount !== null) {
+                setBookmarksCount(bookmarkCount);
+            }
+        } catch (e) {
+            console.error("Error fetching likes/bookmarks stats:", e);
+        }
 
     }, [supabase, deviceId]);
 
@@ -302,6 +322,9 @@ export default function Streaming({ supabase }) {
 
             const newBookmarkState = !hasBookmarked;
             setHasBookmarked(newBookmarkState);
+            
+            // Optimistic update untuk angka saved count
+            setBookmarksCount(prev => newBookmarkState ? prev + 1 : Math.max(prev - 1, 0));
 
             const { error } = await supabase.rpc('toggle_user_bookmark', { p_video_id: String(video.id) });
             if (error) throw error;
@@ -313,7 +336,9 @@ export default function Streaming({ supabase }) {
             }
         } catch (error) {
             console.error("Bookmark Error:", error);
+            // Revert state jika terjadi error database
             setHasBookmarked(hasBookmarked);
+            setBookmarksCount(prev => hasBookmarked ? prev + 1 : Math.max(prev - 1, 0));
             toast.error("Terjadi kesalahan saat menyimpan video.");
         }
     };
@@ -565,7 +590,8 @@ export default function Streaming({ supabase }) {
 
                                     <button onClick={handleBookmark} className={`flex items-center justify-center gap-2 px-4 py-2 sm:py-1.5 rounded-full sm:rounded-[10px] text-[13px] font-bold transition-all cursor-pointer border-none shrink-0 ${hasBookmarked ? 'bg-[#106EBE] text-white shadow-sm' : 'bg-zinc-100 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300'}`}>
                                         <Bookmark className={`w-4 h-4 border-none ${hasBookmarked ? 'fill-current scale-110' : ''}`} />
-                                        <span className="border-none">{hasBookmarked ? 'Saved' : 'Save'}</span>
+                                        {/* Menampilkan jumlah saved Count atau kata "Save" jika belum ada */}
+                                        <span className="border-none">{bookmarksCount > 0 ? formatViews(bookmarksCount) : 'Save'}</span>
                                     </button>
 
                                     <button onClick={handleShare} className="flex items-center justify-center gap-2 px-4 py-2 sm:py-1.5 rounded-full sm:rounded-[10px] text-[13px] font-bold bg-zinc-100 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 cursor-pointer border-none shrink-0">
