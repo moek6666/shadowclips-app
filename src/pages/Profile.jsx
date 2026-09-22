@@ -148,7 +148,7 @@ export default function Profile({ supabase }) {
             const localDevId = localStorage.getItem('shadowclips_device_id');
             const userId = currentSession?.user?.id;
             const userEmail = currentSession?.user?.email;
-            const userName = currentUserProfile?.name; // [BUG FIX]: Hapus fallback || editName agar tidak mereload state saat mengetik
+            const userName = currentUserProfile?.name;
 
             const queryIds = [];
             if (userId) queryIds.push(userId);
@@ -310,7 +310,7 @@ export default function Profile({ supabase }) {
         } catch (error) {
             console.warn('Activity fetch error:', error);
         }
-    }, [supabase]); // [BUG FIX]: Hapus editName dari dependency array
+    }, [supabase]);
 
     useEffect(() => {
         if (!supabase) return;
@@ -442,14 +442,12 @@ export default function Profile({ supabase }) {
         }
     };
 
-    // Fungsi menghapus komentar (HANYA DIEKSEKUSI OLEH ADMIN DARI ADMIN PANEL)
     const handleDeleteComment = async (commentId) => {
         if (!supabase) return;
         try {
             const { error } = await supabase.from('comments').delete().eq('id', commentId);
             if (error) throw error;
             
-            // Hapus dari state agar hilang langsung dari UI
             setMyComments(prev => prev.filter(c => c.id !== commentId));
             setAdminComments(prev => prev.filter(c => c.id !== commentId));
             toast.success('Komentar berhasil dihapus.');
@@ -944,7 +942,7 @@ export default function Profile({ supabase }) {
                                                                 </div>
                                                             </a>
 
-                                                            {/* Info & Bubble Komentar (Tanpa Tombol Hapus) */}
+                                                            {/* Info & Bubble Komentar */}
                                                             <div className="flex-1 min-w-0 w-full flex flex-col h-full gap-2">
                                                                 <div>
                                                                     <a href={`/streaming/${comm.videos?.slug || comm.video_id}`} className="block">
@@ -965,8 +963,6 @@ export default function Profile({ supabase }) {
                                                                     <span className="text-[11px] text-zinc-500 font-medium flex items-center gap-1">
                                                                         <Clock className="w-3 h-3" /> {timeAgo(comm.created_at)}
                                                                     </span>
-                                                                    
-                                                                    {/* Tombol Hapus telah ditiadakan dari sini agar user tidak bisa menghapus komentar miliknya sendiri */}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1095,6 +1091,21 @@ export default function Profile({ supabase }) {
                                                 <span className="text-[10px] font-medium text-zinc-500 mt-1">Disimpan</span>
                                             </div>
                                         </div>
+
+                                        <div className="mt-1">
+                                            <a href="/tutorial" className="w-full flex items-center bg-zinc-100 dark:bg-[#1E242D] border border-zinc-200/80 dark:border-zinc-800/80 p-3 rounded-xl hover:bg-zinc-200 dark:hover:bg-[#252C36] transition-colors shadow-none group cursor-pointer outline-none">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center shrink-0 shadow-sm">
+                                                        <Star className="w-4 h-4 text-amber-950 fill-current" />
+                                                    </div>
+                                                    <div className="flex flex-col text-left">
+                                                        <span className="text-[12px] font-bold text-zinc-900 dark:text-white leading-tight">Cara Dapat Poin PTS</span>
+                                                        <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium mt-0.5">Lihat tutorial selengkapnya</span>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </div>
+
                                     </div>
 
                                 </div>
