@@ -92,8 +92,9 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                     .eq('video_id', formattedId)
                     .order('created_at', { ascending: false });
 
-                if (session?.user?.email) {
-                    query = query.or(`status.eq.approved,email.eq.${session.user.email}`);
+                const userEmail = session?.user?.email;
+                if (userEmail) {
+                    query = query.or(`status.eq.approved,email.eq.${userEmail}`);
                 } else {
                     query = query.eq('status', 'approved');
                 }
@@ -342,7 +343,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                 if (statusKomentar === 'approved') {
                     const truncatedContent = content.length > 80 ? content.substring(0, 80) + '...' : content;
                     
-                    // Menggunakan window.location.pathname agar mengarahkan tepat ke halaman ini saat diklik di navbar
                     const currentUrlPath = window.location.pathname; 
                     
                     await supabase.from('global_notifications').insert({
@@ -367,7 +367,7 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                         user_email: replyTo.email,
                         title: `💬 ${userName} membalas komentar Anda`,
                         message: truncatedContent,
-                        link: currentUrlPath, // Pastikan jika tabel ini juga punya link, diisi sekalian
+                        link: currentUrlPath,
                         is_read: false,
                         created_at: new Date().toISOString()
                     });
