@@ -5,6 +5,10 @@ import { Play, Eye, Clock, ChevronLeft, ChevronRight, Search } from 'lucide-reac
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
+// 1. TAMBAHKAN IMPORT KOMPONEN CTA DAN MODAL DI SINI
+import ProfileCta from '../components/ProfileCta';
+import ModalLogin from '../components/ModalLogin';
+
 // Max post ditingkatkan menjadi 16
 const ITEMS_PER_PAGE = 16;
 
@@ -17,6 +21,9 @@ const formatViews = (views) => {
 
 export default function Home({ supabase }) {
     const [isScrolled, setIsScrolled] = useState(false);
+    
+    // 2. STATE UNTUK MENGONTROL MUNCULNYA MODAL LOGIN
+    const [isModalLoginOpen, setIsModalLoginOpen] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -107,6 +114,15 @@ export default function Home({ supabase }) {
     return (
         <>
             <Navbar isScrolled={isScrolled} supabase={supabase} />
+
+            {/* 3. PEMANGGILAN PROFILE CTA DI SINI */}
+            {/* Dibungkus dengan z-50 dan relative agar berada di atas layer konten bawahnya */}
+            <div className="max-w-7xl mx-auto px-4 pt-6 relative z-50">
+                <ProfileCta 
+                    supabase={supabase} 
+                    onLoginClick={() => setIsModalLoginOpen(true)} 
+                />
+            </div>
 
             <main className="max-w-[1440px] mx-auto px-0 sm:px-8 relative z-20 pb-10 pt-32 min-h-screen animate-in fade-in zoom-in-95 slide-in-from-bottom-8 duration-700 ease-out">
 
@@ -221,6 +237,14 @@ export default function Home({ supabase }) {
 
             </main>
             <Footer />
+
+            {/* 4. RENDER MODAL LOGIN DI BAGIAN PALING BAWAH HALAMAN */}
+            {isModalLoginOpen && (
+                <ModalLogin 
+                    supabase={supabase} 
+                    onClose={() => setIsModalLoginOpen(false)} 
+                />
+            )}
         </>
     );
 }
