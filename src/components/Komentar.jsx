@@ -84,7 +84,13 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
 
             try {
                 // Konversi videoId ke Number untuk tipe int8 di database
-                const formattedId = isNaN(Number(videoId)) ? videoId : Number(videoId);
+                // PENAMBAHAN VALIDASI: Hentikan eksekusi jika videoId tidak valid agar tidak error saat fetch
+                const parsedVideoId = Number(videoId);
+                if (isNaN(parsedVideoId) || videoId === 'Unknown') {
+                    setComments([]);
+                    return; 
+                }
+                const formattedId = parsedVideoId;
                 
                 let query = supabase
                     .from('comments')
@@ -248,6 +254,14 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
         e.preventDefault();
         if (!session?.user || !content.trim()) return;
 
+        // PENAMBAHAN VALIDASI: Tolak pengiriman jika videoId bukan angka yang valid
+        const parsedVideoId = Number(videoId);
+        if (isNaN(parsedVideoId) || videoId === 'Unknown') {
+            setNotification({ type: 'error', message: 'Gagal: Video ID tidak valid atau video belum dimuat.' });
+            setTimeout(() => setNotification(null), 4000);
+            return;
+        }
+
         // 🔥 VALIDASI ANTI-SPAM 🔥
         const contentWithoutEmojis = content.replace(/:[a-zA-Z0-9_]+:/g, '');
         const textOnly = contentWithoutEmojis.replace(/\s+/g, '');
@@ -299,8 +313,8 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
             notifMessage = 'Komentar Anda berhasil dikirim!';
         }
 
-        // Konversi video_id ke Number untuk dikirim ke tipe int8 di database
-        const formattedVideoId = isNaN(Number(videoId)) ? videoId : Number(videoId);
+        // Gunakan videoId yang sudah divalidasi ke dalam tipe data yang sesuai dengan int8
+        const formattedVideoId = parsedVideoId;
 
         const newCommentPayload = {
             video_id: formattedVideoId,
