@@ -148,7 +148,7 @@ export default function Profile({ supabase }) {
             const localDevId = localStorage.getItem('shadowclips_device_id');
             const userId = currentSession?.user?.id;
             const userEmail = currentSession?.user?.email;
-            const userName = currentUserProfile?.name || editName;
+            const userName = currentUserProfile?.name; // [BUG FIX]: Hapus fallback || editName agar tidak mereload state saat mengetik
 
             const queryIds = [];
             if (userId) queryIds.push(userId);
@@ -310,7 +310,7 @@ export default function Profile({ supabase }) {
         } catch (error) {
             console.warn('Activity fetch error:', error);
         }
-    }, [supabase, editName]);
+    }, [supabase]); // [BUG FIX]: Hapus editName dari dependency array
 
     useEffect(() => {
         if (!supabase) return;
