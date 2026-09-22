@@ -83,10 +83,13 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
             if (!videoId || !supabase) return;
 
             try {
+                // Konversi videoId ke Number untuk tipe int8 di database
+                const formattedId = isNaN(Number(videoId)) ? videoId : Number(videoId);
+                
                 let query = supabase
                     .from('comments')
                     .select('*')
-                    .eq('video_id', String(videoId))
+                    .eq('video_id', formattedId)
                     .order('created_at', { ascending: false });
 
                 if (session?.user?.email) {
@@ -244,28 +247,22 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
         e.preventDefault();
         if (!session?.user || !content.trim()) return;
 
-        // 🔥 VALIDASI ANTI-SPAM (MINIMAL 10 HURUF & ANTI BERULANG) 🔥
-        // 1. Hapus format emoji (contoh: :love:, :api:) agar tidak ikut dihitung
+        // 🔥 VALIDASI ANTI-SPAM 🔥
         const contentWithoutEmojis = content.replace(/:[a-zA-Z0-9_]+:/g, '');
-        
-        // 2. Hapus semua spasi dan baris baru untuk menghitung huruf/karakter murni
         const textOnly = contentWithoutEmojis.replace(/\s+/g, '');
         
-        // 3. Cek minimal 10 huruf asli
         if (textOnly.length < 10) {
             setNotification({ type: 'error', message: `Komentar terlalu pendek. Wajib minimal 10 huruf (saat ini ${textOnly.length} huruf).` });
             setTimeout(() => setNotification(null), 4000);
             return;
         }
 
-        // 4. Cek spam karakter berulang (Contoh: "HHHHH" atau "aaaaa")
         if (/(.)\1{4,}/i.test(textOnly)) {
             setNotification({ type: 'error', message: `Komentar terdeteksi spam karakter berulang. Mohon gunakan kalimat yang jelas.` });
             setTimeout(() => setNotification(null), 4000);
             return;
         }
 
-        // 5. Cek spam pola berulang (Contoh: "wkwkwkwkwk" atau "hahahahahaha")
         if (/(..+)\1{3,}/i.test(contentWithoutEmojis)) {
             setNotification({ type: 'error', message: `Komentar terdeteksi spam kata berulang. Mohon gunakan kalimat yang bermakna.` });
             setTimeout(() => setNotification(null), 4000);
@@ -274,9 +271,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
 
         setIsSubmitting(true);
         setNotification(null);
-
-        // 🔥 JEDA LOADING 3 DETIK 🔥
-        await new Promise(resolve => setTimeout(resolve, 3000));
 
         const targetParentId = replyTo ? (replyTo.parent_id || replyTo.id) : null;
         const isAdmin = profile?.is_admin || false;
@@ -304,8 +298,11 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
             notifMessage = 'Komentar Anda berhasil dikirim!';
         }
 
+        // Konversi video_id ke Number untuk dikirim ke tipe int8 di database
+        const formattedVideoId = isNaN(Number(videoId)) ? videoId : Number(videoId);
+
         const newCommentPayload = {
-            video_id: String(videoId),
+            video_id: formattedVideoId,
             name: userName,
             email: userEmail,
             avatar_url: currentUserAvatar,
@@ -320,13 +317,11 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
 
             if (error) throw error;
 
-            const newComment = insertedData && insertedData.length > 0 ? insertedData[0] : {
+            const newComment = (insertedData && insertedData.length > 0) ? insertedData[0] : {
                 id: 'temp_' + Date.now(),
                 created_at: new Date().toISOString(),
                 ...newCommentPayload
             };
-
-            const newCommentId = newComment ? newComment.id : null;
 
             setComments(prev => [newComment, ...(prev || [])]);
 
@@ -342,35 +337,37 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                 }
             }));
 
-            // ==========================================
-            // 🔥 2. PUSH NOTIFIKASI GLOBAL (UNTUK SEMUA) 🔥
-            // ==========================================
+            // 2. Notifikasi Global (Ditambahkan kolom 'link')
             try {
                 if (statusKomentar === 'approved') {
                     const truncatedContent = content.length > 80 ? content.substring(0, 80) + '...' : content;
-
+                    
+                    // Menggunakan window.location.pathname agar mengarahkan tepat ke halaman ini saat diklik di navbar
+                    const currentUrlPath = window.location.pathname; 
+                    
                     await supabase.from('global_notifications').insert({
                         title: replyTo ? `💬 ${userName} membalas komentar` : `💬 ${userName} berkomentar`,
                         message: truncatedContent,
-                        comment_id: newCommentId, 
+                        link: currentUrlPath,
                         created_at: new Date().toISOString()
                     });
                 }
             } catch (notifError) {
-                console.error("Gagal mem-push notifikasi global:", notifError);
+                console.error("Gagal push notifikasi global:", notifError);
             }
 
-            // ==========================================
-            // 🔥 3. PUSH NOTIFIKASI PERSONAL KE USER TUJUAN 🔥
-            // ==========================================
+            // 3. Notifikasi Personal
             try {
                 if (statusKomentar === 'approved' && replyTo && replyTo.email && replyTo.email !== userEmail) {
                     const truncatedContent = content.length > 80 ? content.substring(0, 80) + '...' : content;
+                    
+                    const currentUrlPath = window.location.pathname;
 
                     await supabase.from('user_notifications').insert({
-                        user_email: replyTo.email, // Email pemilik komentar asli yang dibalas
+                        user_email: replyTo.email,
                         title: `💬 ${userName} membalas komentar Anda`,
                         message: truncatedContent,
+                        link: currentUrlPath, // Pastikan jika tabel ini juga punya link, diisi sekalian
                         is_read: false,
                         created_at: new Date().toISOString()
                     });
@@ -378,7 +375,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
             } catch (personalNotifError) {
                 console.error("Gagal mengirim notifikasi personal:", personalNotifError);
             }
-            // ==========================================
 
             setNotification({ type: isErrorNotif ? 'error' : 'success', message: notifMessage });
             setTimeout(() => setNotification(null), 4000);
@@ -391,6 +387,8 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
 
         } catch (error) {
             console.error("ERROR INSERT:", error);
+            setNotification({ type: 'error', message: 'Gagal mengirim komentar. Periksa konsol browser.' });
+            setTimeout(() => setNotification(null), 4000);
         } finally {
             setIsSubmitting(false);
         }
@@ -474,7 +472,6 @@ export default function Komentar({ videoId, onCommentSuccess, supabase }) {
                     </div>
 
                     <div className="relative bg-white dark:bg-zinc-900/40 border-none transition-colors">
-                        {/* 🔥 PETUNJUK SYARAT MINIMAL 10 HURUF 🔥 */}
                         <div className="px-4 sm:px-5 pt-3 pb-0 text-[11px] font-medium text-amber-600 dark:text-amber-500">
                             * Wajib minimal 10 huruf (emoji tidak dihitung)
                         </div>

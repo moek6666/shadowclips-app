@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import useSWR from 'swr';
-import { Search, Menu, X, Home, Compass, Flame, FolderOpen, Crown, ChevronDown, Sun, Moon, LogIn, LogOut, User, Settings, Download, Bell, Activity, Bot, Coffee, MessageSquare } from 'lucide-react';
+import { Search, Menu, X, Home, Compass, Flame, FolderOpen, Crown, ChevronDown, Sun, Moon, LogIn, LogOut, User, Settings, Download, Bell, Activity, Bot, Coffee, MessageSquare, Pin } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
 import ModalLogin from './ModalLogin';
 import Avatar from './Avatar';
@@ -75,7 +75,6 @@ export default function Navbar({ isScrolled, supabase }) {
         const channel = supabase.channel('public-server-status')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'server_status' }, (payload) => {
                 const newStatus = payload.new?.status;
-
                 if (newStatus) {
                     setPcServerStatus((prevStatus) => {
                         if (prevStatus !== newStatus) {
@@ -98,12 +97,12 @@ export default function Navbar({ isScrolled, supabase }) {
 
         const fetchNotifications = async () => {
             try {
-                // 1. Ambil Notifikasi Global
+                // 1. Ambil Notifikasi Global / Sistem (Batasi 2 teratas agar otomatis tergeser)
                 const { data: globalData, error: globalError } = await supabase
                     .from('global_notifications')
                     .select('*')
                     .order('created_at', { ascending: false })
-                    .limit(10);
+                    .limit(2);
                 if (globalError && globalError.code !== '42P01') throw globalError;
 
                 // 2. Ambil Notifikasi Personal (Jika User Login)
@@ -121,14 +120,14 @@ export default function Navbar({ isScrolled, supabase }) {
                     }
                 }
 
-                // Gabungkan kedua jenis notifikasi dan urutkan berdasarkan waktu terbaru
-                const combined = [...(globalData || []), ...personalData].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                // Gabungkan untuk perhitungan badge unread
+                const combined = [...(globalData || []), ...personalData];
 
                 if (combined.length > 0) {
                     setNotifications(combined);
                     const readNotifs = JSON.parse(localStorage.getItem('shadowclips_read_notifs') || '[]');
                     const unread = combined.filter(n => !readNotifs.includes(n.id)).length;
-                    setUnreadCount(prev => prev + unread);
+                    setUnreadCount(unread);
                 }
             } catch (err) { 
                 console.error("Error fetching notifications:", err);
@@ -137,8 +136,10 @@ export default function Navbar({ isScrolled, supabase }) {
 
         fetchNotifications();
 
-        // Realtime Global
-        const notifChannel = supabase.channel('public:global_notifications')
+        const uniqueChannelId = Date.now();
+
+        // Realtime Global (Sistem / Komentar Global) -> Maksimal 2 item
+        const notifChannel = supabase.channel(`public:global_notifications_${uniqueChannelId}`)
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_notifications' }, (payload) => {
                 if (payload.new) {
                     setNotifications(currentNotifs => {
@@ -146,7 +147,10 @@ export default function Navbar({ isScrolled, supabase }) {
                         if (isDuplicate) return currentNotifs;
                         
                         setUnreadCount(prev => prev + 1);
-                        return [payload.new, ...currentNotifs];
+                        // Pisahkan yang global dan user, lalu batasi global maksimal 2
+                        const globals = [payload.new, ...currentNotifs.filter(n => n.type === 'global' || n.isGlobal || !n.user_email)].slice(0, 2);
+                        const users = currentNotifs.filter(n => n.user_email);
+                        return [...globals, ...users];
                     });
                 }
             })
@@ -156,7 +160,7 @@ export default function Navbar({ isScrolled, supabase }) {
         let personalChannel = null;
         const userEmail = session?.user?.email;
         if (userEmail) {
-            personalChannel = supabase.channel(`public:user_notifications:${userEmail}`)
+            personalChannel = supabase.channel(`public:user_notifications_${userEmail}_${uniqueChannelId}`)
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_notifications', filter: `user_email=eq.${userEmail}` }, (payload) => {
                     if (payload.new) {
                         setNotifications(currentNotifs => {
@@ -186,6 +190,21 @@ export default function Navbar({ isScrolled, supabase }) {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    // Listener Tombol Escape untuk menutup modal & dropdown
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                setIsMobileMenuOpen(false);
+                setShowSearchModal(false);
+                setIsProfileDropdownOpen(false);
+                setIsNotificationOpen(false);
+                setIsMobileProfileDropdownOpen(false);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
     const handleLogout = async () => {
         if (supabase) await supabase.auth.signOut();
         setIsProfileDropdownOpen(false);
@@ -203,6 +222,14 @@ export default function Navbar({ isScrolled, supabase }) {
             const newReads = [...new Set([...readNotifs, ...notifications.map(n => n.id)])];
             localStorage.setItem('shadowclips_read_notifs', JSON.stringify(newReads));
             setUnreadCount(0);
+        }
+    };
+
+    const handleNotificationClick = (notif) => {
+        setIsNotificationOpen(false);
+        const targetUrl = notif?.url || notif?.link || notif?.target_url || (notif?.slug ? `/streaming/${notif.slug}` : (notif?.video_id ? `/streaming/${notif.video_id}` : null));
+        if (targetUrl) {
+            window.location.href = targetUrl;
         }
     };
 
@@ -254,24 +281,9 @@ export default function Navbar({ isScrolled, supabase }) {
         setDebouncedSearch('');
     };
 
-    let displayNotifications = [...notifications];
-    if (pcServerStatus === 'online') {
-        displayNotifications.unshift({
-            id: 'server-live',
-            title: 'Original Server Online',
-            message: 'Server Utama saat ini sedang aktif. Nikmati pengalaman streaming dengan kualitas maksimal.',
-            created_at: new Date().toISOString(),
-            isServerStatus: true
-        });
-    } else {
-        displayNotifications.unshift({
-            id: 'server-dead',
-            title: 'Original Server Offline',
-            message: 'Saat ini Server Utama sedang offline. Silakan gunakan pilihan server lain yang tersedia.',
-            created_at: new Date().toISOString(),
-            isServerStatus: true
-        });
-    }
+    // Pisahkan antara Global/Sistem (Pinned max 2) dan User Personal
+    const globalNotifs = notifications.filter(n => !n.user_email).slice(0, 2);
+    const userNotifs = notifications.filter(n => n.user_email);
 
     return (
         <>
@@ -280,7 +292,7 @@ export default function Navbar({ isScrolled, supabase }) {
                 <div className="max-w-[1440px] mx-auto px-4 sm:px-8 flex justify-between items-center border-none">
 
                     <div className="flex items-center gap-8 lg:gap-12 border-none">
-                        <a href="/" className="flex items-center gap-2.5 z-50 outline-none border-none">
+                        <a href="/" className="flex items-center gap-2.5 z-50 outline-none border-none cursor-pointer">
                             <img
                                 src="https://nmeaifqvxgyzvwavijhb.supabase.co/storage/v1/object/public/Avatar_Border_Animation/new/New%20Logo%20Shadowclips.webp"
                                 alt="ShadowClips Logo"
@@ -297,16 +309,16 @@ export default function Navbar({ isScrolled, supabase }) {
                         </a>
 
                         <div className="hidden md:flex items-center gap-6 text-sm font-bold z-50 border-none">
-                            <a href="/" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ${pathname === '/' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
+                            <a href="/" className={`flex items-center gap-1.5 group transition-colors outline-none border-none cursor-pointer ${pathname === '/' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                 <Home className="w-4 h-4 border-none" /> Home
                             </a>
-                            <a href="/jelajahi" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ${pathname === '/jelajahi' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
+                            <a href="/jelajahi" className={`flex items-center gap-1.5 group transition-colors outline-none border-none cursor-pointer ${pathname === '/jelajahi' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                 <Compass className="w-4 h-4 border-none" /> Explore
                             </a>
-                            <a href="/populer" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ${pathname === '/populer' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
+                            <a href="/populer" className={`flex items-center gap-1.5 group transition-colors outline-none border-none cursor-pointer ${pathname === '/populer' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                 <Flame className="w-4 h-4 border-none" /> Trending
                             </a>
-                            <a href="/koleksi" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ${pathname === '/koleksi' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
+                            <a href="/koleksi" className={`flex items-center gap-1.5 group transition-colors outline-none border-none cursor-pointer ${pathname === '/koleksi' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                 <FolderOpen className="w-4 h-4 border-none" /> Library
                             </a>
                             
@@ -314,11 +326,11 @@ export default function Navbar({ isScrolled, supabase }) {
                                 <div className={`flex items-center gap-1.5 whitespace-nowrap transition-colors outline-none border-none ${pathname.startsWith('/category') ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                     <Crown className="w-4 h-4 transition-colors border-none" /> Profesional Site <ChevronDown className="w-3 h-3 group-hover:rotate-180 transition-transform duration-300 border-none" />
                                 </div>
-                                <div className="absolute top-full left-0 w-full h-4 bg-transparent border-none"></div>
-                                <div className="absolute top-[calc(100%+0.5rem)] left-0 w-56 bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 flex flex-col py-2 z-50 overflow-hidden transform origin-top-left scale-95 group-hover:scale-100">
+                                <div className="absolute top-full left-0 w-56 h-4 bg-transparent border-none"></div>
+                                <div className="absolute top-[calc(100%+0.5rem)] left-0 w-56 bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] border-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 flex flex-col py-2 z-50 overflow-hidden transform origin-top-left scale-95 group-hover:scale-100">
                                     {categoryList.length > 0 ? (
                                         categoryList.map((cat, idx) => (
-                                            <a key={idx} href={`/category/${generateSeoSlug(cat)}`} className="px-4 py-2.5 text-[13px] font-bold text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-[#106EBE] hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors flex items-center gap-2 outline-none border-none">
+                                            <a key={idx} href={`/category/${generateSeoSlug(cat)}`} className="px-4 py-2.5 text-[13px] font-bold text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-[#106EBE] hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors flex items-center gap-2 outline-none border-none cursor-pointer">
                                                 <div className="w-1.5 h-1.5 rounded-full bg-[#106EBE] border-none"></div> {cat}
                                             </a>
                                         ))
@@ -328,7 +340,7 @@ export default function Navbar({ isScrolled, supabase }) {
                                 </div>
                             </div>
 
-                            <a href="/ai" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ml-2 ${pathname === '/ai' ? 'text-indigo-500' : 'text-zinc-600 dark:text-zinc-400 hover:text-indigo-500'}`}>
+                            <a href="/ai" className={`flex items-center gap-1.5 group transition-colors outline-none border-none ml-2 cursor-pointer ${pathname === '/ai' ? 'text-indigo-500' : 'text-zinc-600 dark:text-zinc-400 hover:text-indigo-500'}`}>
                                 <Bot className="w-4 h-4 border-none" /> 
                                 <span className="font-bold border-none">AI Shorts</span>
                             </a>
@@ -356,52 +368,85 @@ export default function Navbar({ isScrolled, supabase }) {
                                 )}
                             </button>
 
-                            {/* Dropdown Notifikasi - Lebar Responsif dan Scrollbar Lembut (Soft) */}
+                            {/* Dropdown Notifikasi */}
                             {isNotificationOpen && (
-                                <div className="absolute top-[calc(100%+0.5rem)] right-[-3rem] sm:right-0 w-[90vw] max-w-[320px] md:max-w-[420px] md:w-[420px] bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.8)] border border-zinc-100 dark:border-zinc-800 overflow-hidden z-[110] flex flex-col">
-                                    <div className="px-5 py-4 bg-zinc-50/80 dark:bg-zinc-800/80 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center shrink-0">
+                                <div className="absolute top-[calc(100%+0.5rem)] right-[-3rem] sm:right-0 w-[90vw] max-w-[320px] md:max-w-[420px] md:w-[420px] bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] border-none overflow-hidden z-[110] flex flex-col">
+                                    <div className="px-5 py-4 bg-zinc-50/80 dark:bg-zinc-800/40 border-none flex justify-between items-center shrink-0">
                                         <h3 className="text-[15px] font-black text-zinc-900 dark:text-white">Notifikasi</h3>
                                         {unreadCount > 0 && <span className="text-[11px] bg-[#106EBE] text-white px-2.5 py-1 rounded-md font-bold shadow-sm">{unreadCount} Baru</span>}
                                     </div>
                                     
-                                    {/* Area Scroll dengan Scrollbar yang Lembut & Modern */}
-                                    <div className="max-h-[400px] overflow-y-auto overflow-x-hidden flex flex-col scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-800 scrollbar-track-transparent hover:scrollbar-thumb-zinc-300 dark:hover:scrollbar-thumb-zinc-700">
-                                        {displayNotifications.length > 0 ? displayNotifications.map((notif, index) => (
-                                            <div key={notif.id || index} className={`p-4 md:p-5 border-b border-zinc-50 dark:border-zinc-800/50 transition-colors cursor-default ${notif.isServerStatus ? (pcServerStatus === 'online' ? 'bg-emerald-500/5 hover:bg-emerald-500/10' : 'bg-red-500/5 hover:bg-red-500/10') : 'hover:bg-zinc-50 dark:hover:bg-white/5'}`}>
-                                                <div className="flex gap-3.5 items-start">
-                                                    
-                                                    {/* Ikon Dinamis Profesional */}
-                                                    <div className="mt-0.5 shrink-0">
-                                                        {notif.isServerStatus ? (
-                                                            <Activity className={`w-5 h-5 ${pcServerStatus === 'online' ? 'text-emerald-500' : 'text-red-500'}`} />
-                                                        ) : (
-                                                            <div className="w-8 h-8 rounded-full bg-[#106EBE]/10 flex items-center justify-center">
-                                                                <MessageSquare className="w-4 h-4 text-[#106EBE]" />
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                    {/* 1. STATUS SERVER */}
+                                    <div className={`px-4 py-3 border-none flex items-center gap-3 ${pcServerStatus === 'online' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'bg-red-500/10 text-red-700 dark:text-red-400'}`}>
+                                        <Activity className="w-5 h-5 shrink-0" />
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="text-[13px] font-bold">
+                                                {pcServerStatus === 'online' ? 'Original Server Online' : 'Original Server Offline'}
+                                            </h4>
+                                            <p className="text-[12px] opacity-90 truncate">
+                                                {pcServerStatus === 'online' ? 'Server Utama sedang aktif & stabil.' : 'Server Utama sedang offline.'}
+                                            </p>
+                                        </div>
+                                    </div>
 
-                                                    <div className="flex-1 min-w-0">
-                                                        <h4 className={`text-[14px] font-bold mb-1 leading-snug truncate ${notif.isServerStatus ? (pcServerStatus === 'online' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400') : 'text-zinc-900 dark:text-white'}`}>
-                                                            {notif.title}
-                                                        </h4>
-                                                        <p className="text-[13px] text-zinc-600 dark:text-zinc-400 leading-relaxed break-words whitespace-pre-wrap">
-                                                            {notif.message}
-                                                        </p>
-                                                        {!notif.isServerStatus && (
-                                                            <span className="text-[11px] text-zinc-400 dark:text-zinc-500 font-medium mt-2.5 block">
-                                                                {new Date(notif.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                    {/* 2. AREA PINNED: NOTIFIKASI GLOBAL / SISTEM */}
+                                    {globalNotifs.length > 0 && (
+                                        <div className="bg-sky-50/80 dark:bg-sky-950/30 border-none flex flex-col gap-1">
+                                            <div className="px-4 py-1.5 bg-sky-100/50 dark:bg-sky-900/30 text-[10px] font-bold text-sky-700 dark:text-sky-300 uppercase tracking-wider flex items-center gap-1 border-none">
+                                                <Pin className="w-3 h-3 text-sky-600 dark:text-sky-400" /> Pinned System / Global Notification
+                                            </div>
+                                            {globalNotifs.map((notif, index) => (
+                                                <div key={notif.id || index} onClick={() => handleNotificationClick(notif)} className="p-4 transition-colors border-none cursor-pointer hover:bg-sky-100/50 dark:hover:bg-sky-900/40">
+                                                    <div className="flex gap-3.5 items-start">
+                                                        <div className="w-8 h-8 rounded-full bg-sky-500/10 flex items-center justify-center shrink-0 mt-0.5 border-none">
+                                                            <Bell className="w-4 h-4 text-sky-600 dark:text-sky-400 border-none" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0 border-none">
+                                                            <h4 className="text-[14px] font-bold text-sky-950 dark:text-sky-200 mb-1 leading-snug truncate border-none">
+                                                                {notif.title || 'Pengumuman Sistem'}
+                                                            </h4>
+                                                            <p className="text-[13px] text-sky-900/80 dark:text-sky-300/80 leading-relaxed break-words whitespace-pre-wrap border-none">
+                                                                {notif.message || notif.text}
+                                                            </p>
+                                                            <span className="text-[11px] text-sky-600/70 dark:text-sky-400/70 font-medium mt-2.5 block border-none">
+                                                                {new Date(notif.created_at || Date.now()).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                                             </span>
-                                                        )}
+                                                        </div>
                                                     </div>
                                                 </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* 3. AREA SCROLLABLE: NOTIFIKASI USER */}
+                                    <div className="max-h-[280px] overflow-y-auto overflow-x-hidden flex flex-col scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-800 scrollbar-track-transparent border-none">
+                                        {userNotifs.length > 0 ? (
+                                            userNotifs.map((notif, index) => (
+                                                <div key={notif.id || index} onClick={() => handleNotificationClick(notif)} className="p-4 md:p-5 border-none hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors cursor-pointer">
+                                                    <div className="flex gap-3.5 items-start border-none">
+                                                        <div className="w-8 h-8 rounded-full bg-[#106EBE]/10 flex items-center justify-center shrink-0 mt-0.5 border-none">
+                                                            <MessageSquare className="w-4 h-4 text-[#106EBE] border-none" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0 border-none">
+                                                            <h4 className="text-[14px] font-bold text-zinc-900 dark:text-white mb-1 leading-snug truncate border-none">
+                                                                {notif.title || 'Pesan Baru'}
+                                                            </h4>
+                                                            <p className="text-[13px] text-zinc-600 dark:text-zinc-400 leading-relaxed break-words whitespace-pre-wrap border-none">
+                                                                {notif.message || notif.text}
+                                                            </p>
+                                                            <span className="text-[11px] text-zinc-400 dark:text-zinc-500 font-medium mt-2.5 block border-none">
+                                                                {new Date(notif.created_at || Date.now()).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : globalNotifs.length === 0 ? (
+                                            <div className="p-10 text-center flex flex-col items-center justify-center border-none">
+                                                <Bell className="w-10 h-10 text-zinc-300 dark:text-zinc-700 mb-3 border-none" />
+                                                <span className="text-zinc-500 dark:text-zinc-400 text-[13px] font-medium border-none">Belum ada aktivitas terbaru</span>
                                             </div>
-                                        )) : (
-                                            <div className="p-10 text-center flex flex-col items-center justify-center">
-                                                <Bell className="w-10 h-10 text-zinc-300 dark:text-zinc-700 mb-3" />
-                                                <span className="text-zinc-500 dark:text-zinc-400 text-[13px] font-medium">Belum ada aktivitas terbaru</span>
-                                            </div>
-                                        )}
+                                        ) : null}
                                     </div>
                                 </div>
                             )}
@@ -426,26 +471,26 @@ export default function Navbar({ isScrolled, supabase }) {
                                     </button>
 
                                     {isProfileDropdownOpen && (
-                                        <div className="absolute top-[calc(100%+0.5rem)] right-0 w-56 bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-none overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
-                                            <div className="px-5 py-4 bg-zinc-50 dark:bg-zinc-800/50 border-none border-b border-zinc-100 dark:border-zinc-800">
+                                        <div className="absolute top-[calc(100%+0.5rem)] right-0 w-56 bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] border-none overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
+                                            <div className="px-5 py-4 bg-zinc-50/50 dark:bg-zinc-800/30 border-none">
                                                 <p className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1 border-none">Masuk Sebagai</p>
                                                 <p className="text-[13px] font-bold text-zinc-900 dark:text-white truncate border-none">{session?.user?.email}</p>
                                                 {profile?.is_premium && <span className="inline-block mt-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] px-2 py-0.5 rounded-[4px] uppercase tracking-wider font-bold border-none">Premium VIP</span>}
                                             </div>
 
                                             <div className="flex flex-col p-2 border-none">
-                                                <a href="/profile" className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-bold text-zinc-600 dark:text-white hover:bg-zinc-50 dark:hover:bg-white/10 rounded-xl transition-colors outline-none border-none cursor-pointer">
+                                                <a href="/profile" onClick={() => setIsProfileDropdownOpen(false)} className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-bold text-zinc-600 dark:text-white hover:bg-zinc-50 dark:hover:bg-white/5 rounded-xl transition-colors outline-none border-none cursor-pointer">
                                                     <Settings className="w-4 h-4 border-none" /> Pengaturan Profil
                                                 </a>
 
-                                                <button onClick={toggleTheme} className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-bold text-zinc-600 dark:text-white hover:bg-zinc-50 dark:hover:bg-white/10 rounded-xl transition-colors outline-none border-none cursor-pointer text-left">
+                                                <button onClick={toggleTheme} className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-bold text-zinc-600 dark:text-white hover:bg-zinc-50 dark:hover:bg-white/5 rounded-xl transition-colors outline-none border-none cursor-pointer text-left">
                                                     {theme === 'dark' ? <Sun className="w-4 h-4 border-none" /> : <Moon className="w-4 h-4 border-none" />}
                                                     <span className="border-none">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
                                                 </button>
 
-                                                <div className="h-px bg-zinc-100 dark:bg-zinc-800 my-1 border-none"></div>
+                                                <div className="h-px bg-black/5 dark:bg-white/5 my-1 border-none"></div>
 
-                                                <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-bold text-red-500 dark:text-white hover:bg-red-50 dark:hover:bg-white/10 rounded-xl transition-colors outline-none border-none cursor-pointer text-left">
+                                                <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-bold text-red-500 dark:text-white hover:bg-red-50 dark:hover:bg-white/5 rounded-xl transition-colors outline-none border-none cursor-pointer text-left">
                                                     <LogOut className="w-4 h-4 border-none" /> Logout
                                                 </button>
                                             </div>
@@ -471,6 +516,7 @@ export default function Navbar({ isScrolled, supabase }) {
                 </div>
             </nav>
 
+            {/* Mobile Drawer */}
             <div className={`md:hidden fixed inset-0 z-[100] transition-all duration-300 ${isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
                 <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
 
@@ -489,14 +535,14 @@ export default function Navbar({ isScrolled, supabase }) {
                                     </div>
                                 </div>
                                 <div className={`flex flex-col overflow-hidden transition-all duration-300 border-none ${isMobileProfileDropdownOpen ? 'max-h-[160px] mt-3 opacity-100' : 'max-h-0 opacity-0 mt-0'}`}>
-                                    <a href="/profile" className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-white/10 text-zinc-600 dark:text-white font-bold transition-colors text-[12px] border-none outline-none">
+                                    <a href="/profile" onClick={() => { setIsMobileMenuOpen(false); setIsMobileProfileDropdownOpen(false); }} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-white/10 text-zinc-600 dark:text-white font-bold transition-colors text-[12px] border-none outline-none cursor-pointer">
                                         <Settings className="w-3.5 h-3.5 border-none" /> Pengaturan Profil
                                     </a>
-                                    <button onClick={toggleTheme} className="flex items-center gap-3 px-3 py-2 mt-0.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-white/10 text-zinc-600 dark:text-white font-bold transition-colors text-[12px] border-none outline-none text-left">
+                                    <button onClick={toggleTheme} className="flex items-center gap-3 px-3 py-2 mt-0.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-white/10 text-zinc-600 dark:text-white font-bold transition-colors text-[12px] border-none outline-none text-left cursor-pointer">
                                         {theme === 'dark' ? <Sun className="w-3.5 h-3.5 border-none" /> : <Moon className="w-3.5 h-3.5 border-none" />}
                                         <span className="border-none">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
                                     </button>
-                                    <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2 mt-0.5 rounded-xl hover:bg-red-50 dark:hover:bg-white/10 text-red-500 font-bold transition-colors text-[12px] border-none outline-none text-left">
+                                    <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2 mt-0.5 rounded-xl hover:bg-red-50 dark:hover:bg-white/10 text-red-500 font-bold transition-colors text-[12px] border-none outline-none text-left cursor-pointer">
                                         <LogOut className="w-3.5 h-3.5 border-none" /> Keluar
                                     </button>
                                 </div>
@@ -506,7 +552,7 @@ export default function Navbar({ isScrolled, supabase }) {
                                 <User className="w-4 h-4 border-none" /> Sign In
                             </button>
                         )}
-                        <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 shrink-0 bg-zinc-100 dark:bg-zinc-900 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] transition-colors outline-none border-none">
+                        <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 shrink-0 bg-zinc-100 dark:bg-zinc-900 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] transition-colors outline-none border-none cursor-pointer">
                             <X className="w-5 h-5" />
                         </button>
                     </div>
@@ -519,37 +565,37 @@ export default function Navbar({ isScrolled, supabase }) {
                             <Search className="w-4 h-4 text-[#106EBE]" /> Search videos...
                         </button>
 
-                        <a href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors">
+                        <a href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors cursor-pointer">
                             <Home className="w-4 h-4 text-[#106EBE]" /> Home
                         </a>
-                        <a href="/jelajahi" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors">
+                        <a href="/jelajahi" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors cursor-pointer">
                             <Compass className="w-4 h-4 text-[#106EBE]" /> Explore
                         </a>
-                        <a href="/populer" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors">
+                        <a href="/populer" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors cursor-pointer">
                             <Flame className="w-4 h-4 text-[#106EBE]" /> Trending
                         </a>
-                        <a href="/koleksi" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors">
+                        <a href="/koleksi" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors cursor-pointer">
                             <FolderOpen className="w-4 h-4 text-[#106EBE]" /> Library
                         </a>
 
                         <div className="flex flex-col gap-1 mt-1">
-                            <button onClick={() => setIsMobilePremiumOpen(!isMobilePremiumOpen)} className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold w-full text-left group">
+                            <button onClick={() => setIsMobilePremiumOpen(!isMobilePremiumOpen)} className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold w-full text-left group cursor-pointer">
                                 <div className="flex items-center gap-3"><Crown className="w-4 h-4 text-zinc-500 dark:text-zinc-400 group-hover:text-[#106EBE]" /> Profesional Site</div>
                                 <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isMobilePremiumOpen ? 'rotate-180 text-[#106EBE]' : ''}`} />
                             </button>
-                            <div className={`flex flex-col ml-8 overflow-hidden transition-all duration-300 ${isMobilePremiumOpen ? 'max-h-[400px] opacity-150 mt-1' : 'max-h-0 opacity-0'}`}>
+                            <div className={`flex flex-col ml-8 overflow-hidden transition-all duration-300 ${isMobilePremiumOpen ? 'max-h-[400px] opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
                                 {categoryList.map((cat, idx) => (
-                                    <a key={idx} href={`/category/${generateSeoSlug(cat)}`} className="py-2 px-3 text-[13px] font-bold text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] transition-colors">{cat}</a>
+                                    <a key={idx} href={`/category/${generateSeoSlug(cat)}`} onClick={() => setIsMobileMenuOpen(false)} className="py-2 px-3 text-[13px] font-bold text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] transition-colors cursor-pointer">{cat}</a>
                                 ))}
                             </div>
                         </div>
 
-                        <a href="/ai" className={`flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors mt-1 ${pathname === '/ai' ? 'text-indigo-500 font-bold' : 'text-zinc-900 dark:text-white font-bold hover:text-indigo-500'}`}>
+                        <a href="/ai" onClick={() => setIsMobileMenuOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors mt-1 cursor-pointer ${pathname === '/ai' ? 'text-indigo-500 font-bold' : 'text-zinc-900 dark:text-white font-bold hover:text-indigo-500'}`}>
                             <Bot className="w-4 h-4" /> 
                             <span>AI Shorts</span>
                         </a>
 
-                        <a href="https://trakteer.id/shadowclips" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-3 transition-colors mt-1 text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 font-bold group bg-transparent">
+                        <a href="https://trakteer.id/shadowclips" target="_blank" rel="noopener noreferrer" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 transition-colors mt-1 text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 font-bold group bg-transparent cursor-pointer">
                             <Coffee className="w-4 h-4 group-hover:animate-bounce" /> 
                             <span>Traktir Support</span>
                         </a>
@@ -557,6 +603,7 @@ export default function Navbar({ isScrolled, supabase }) {
                 </div>
             </div>
 
+            {/* Modal Pencarian */}
             {showSearchModal && (
                 <div className="fixed inset-0 z-[100] bg-white/95 dark:bg-zinc-950/95 backdrop-blur-3xl overflow-y-auto custom-scrollbar animate-in fade-in duration-300 border-none">
                     <div className="min-h-screen px-4 sm:px-8 py-10 md:py-16 flex flex-col items-center border-none">

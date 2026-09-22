@@ -98,7 +98,9 @@ export default function Streaming({ supabase }) {
     }, [activeServer, isPlaying, isOriginalOnline, secureUrls.original]);
 
     const checkVipAccess = useCallback(async (videoId, vidData, forceCommented = null, forceLiked = null) => {
-        if (!supabase || !vidData) return;
+        if (!supabase || !vidData || !videoId || videoId === 'Unknown') return;
+
+        const safeVideoId = String(videoId);
 
         const categoryStr = String(vidData.category || '').toLowerCase().trim();
         const titleStr = String(vidData.title || '').toLowerCase().trim();
@@ -134,7 +136,7 @@ export default function Streaming({ supabase }) {
             isLiked = forceLiked;
         } else {
             try {
-                const { data: likeData } = await supabase.from('user_likes').select('id').eq('video_id', videoId).eq('device_id', activeDeviceId).maybeSingle();
+                const { data: likeData } = await supabase.from('user_likes').select('id').eq('video_id', safeVideoId).eq('device_id', activeDeviceId).maybeSingle();
                 if (likeData) isLiked = true;
             } catch (error) { }
         }
@@ -145,7 +147,7 @@ export default function Streaming({ supabase }) {
             isCommented = forceCommented;
         } else if (userEmail) {
             try {
-                const { data: commentData } = await supabase.from('comments').select('id').eq('video_id', String(videoId)).eq('email', userEmail).limit(1);
+                const { data: commentData } = await supabase.from('comments').select('id').eq('video_id', safeVideoId).eq('email', userEmail).limit(1);
                 if (commentData && commentData.length > 0) isCommented = true;
             } catch (error) { }
         }
@@ -154,7 +156,7 @@ export default function Streaming({ supabase }) {
         let isBookmarked = false;
         if (userEmail) {
             try {
-                const { data: bookmarkData } = await supabase.from('user_bookmarks').select('id').eq('video_id', String(videoId)).eq('user_id', activeDeviceId).maybeSingle();
+                const { data: bookmarkData } = await supabase.from('user_bookmarks').select('id').eq('video_id', safeVideoId).eq('user_id', activeDeviceId).maybeSingle();
                 if (bookmarkData) isBookmarked = true;
             } catch (error) { }
         }
@@ -183,7 +185,7 @@ export default function Streaming({ supabase }) {
         }
 
         try {
-            const { data: currentVideo } = await supabase.from('videos').select('likes').eq('id', videoId).single();
+            const { data: currentVideo } = await supabase.from('videos').select('likes').eq('id', safeVideoId).single();
             if (currentVideo) setLikes(currentVideo.likes || 0);
         } catch (e) { }
 
@@ -262,7 +264,7 @@ export default function Streaming({ supabase }) {
     }, [isDownloadModalOpen, modalStatus]);
 
     const handleLike = async () => {
-        if (!supabase || !video) return;
+        if (!supabase || !video || !video.id || video.id === 'Unknown') return;
         const newHasLiked = !hasLiked;
 
         setHasLiked(newHasLiked);
@@ -288,7 +290,7 @@ export default function Streaming({ supabase }) {
     };
 
     const handleBookmark = async () => {
-        if (!supabase || !video) return;
+        if (!supabase || !video || !video.id || video.id === 'Unknown') return;
 
         try {
             const { data: { session }, error: sessionError } = await supabase.auth.getSession();
