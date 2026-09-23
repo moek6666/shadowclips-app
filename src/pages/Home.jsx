@@ -124,7 +124,7 @@ export default function Home({ supabase }) {
                     {currentPage === 1 ? (
                         <h1 className="text-zinc-600 dark:text-zinc-400 text-sm md:text-base leading-relaxed transition-colors">
                             <strong className="text-zinc-900 dark:text-white font-black text-lg md:text-xl tracking-tight mr-2 transition-colors">Shadow<span className="text-[#106EBE]">Clips</span></strong>
-                            Selamat Datang! Shadowclips.asia Situs Streaming Video Bokep HD Global , Dan Tentunya Watermark Friendly, Selamat Bergabung Di Komunitas.
+                            Selamat Datang! Shadowclips.asia Situs Streaming Video Bokep HD Global , Dan Tentunya Watermark Friendly, Selamat Bergabung Di Komunitas ColCol.
                         </h1>
                     ) : (
                         <h1 className="text-zinc-600 dark:text-zinc-400 text-sm md:text-base leading-relaxed transition-colors">
