@@ -189,7 +189,7 @@ function ModalLogin({ isOpen, onClose, supabase }) {
                 >
                     <div className="absolute inset-0 z-0 pointer-events-none">
                         <img
-                            src="https://simp6.cuckcapital.cr/images4/a5ca0486-30d5-4908-8acf-51b61dfb9743.jpg"
+                            src="https://simp6.cuckcapital.cr/images4/156c1cfb-ffea-4960-a0c7-c42524636007.jpg"
                             alt="Background Modal"
                             className="w-full h-full object-cover"
                         />
