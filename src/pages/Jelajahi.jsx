@@ -1,24 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import useSWR from 'swr';
-import { FolderOpen, Loader2, ArrowUpRight } from 'lucide-react';
+import { FolderOpen, Loader2 } from 'lucide-react';
 
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 const getImageUrl = (imgString) => imgString ? imgString.split(',')[0].trim() : '';
 
-// Palet warna Pastel Soft & Muted dengan kontras teks tajam
-const cardThemes = [
-    { bg: 'bg-[#A8C3DA]', text: 'text-[#0F2338]', subtext: 'text-[#1E3A58]', btn: 'text-[#0F2338]' }, // Soft Steel Blue
-    { bg: 'bg-[#A2E8DD]', text: 'text-[#044E3B]', subtext: 'text-[#067857]', btn: 'text-[#044E3B]' }, // Soft Mint
-    { bg: 'bg-[#FAD7A0]', text: 'text-[#68320F]', subtext: 'text-[#884214]', btn: 'text-[#68320F]' }, // Soft Peach
-    { bg: 'bg-[#D8B4F8]', text: 'text-[#3B0764]', subtext: 'text-[#581C87]', btn: 'text-[#3B0764]' }, // Soft Lavender
-    { bg: 'bg-[#F8C4B4]', text: 'text-[#7C1235]', subtext: 'text-[#9F1239]', btn: 'text-[#7C1235]' }, // Soft Coral / Rose
-    { bg: 'bg-[#C5E1A5]', text: 'text-[#14532D]', subtext: 'text-[#15803D]', btn: 'text-[#14532D]' }, // Soft Sage Green
-];
-
 export default function Jelajahi({ supabase }) {
-    const [visibleCategories, setVisibleCategories] = useState(6);
+    const [visibleCategories, setVisibleCategories] = useState(9);
 
     useEffect(() => {
         document.title = "Explore Categories | ShadowClips";
@@ -57,71 +47,73 @@ export default function Jelajahi({ supabase }) {
     );
 
     const handleLoadMore = () => {
-        setVisibleCategories(prev => prev + 6);
+        setVisibleCategories(prev => prev + 9);
     };
 
     const displayedCategories = kategoriData.slice(0, visibleCategories);
     const hasMore = visibleCategories < kategoriData.length;
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-[#0E1116] transition-colors duration-300">
+        <div className="min-h-screen bg-[#090C10] text-zinc-200 transition-colors duration-300">
             <Navbar isScrolled={true} supabase={supabase} />
 
-            <main className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-24 overflow-hidden">
+            <main className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-24">
+                
                 {loading ? (
                     <div className="flex justify-center items-center py-32">
-                        <div className="w-12 h-12 border-4 border-zinc-200 dark:border-zinc-800 border-t-[#106EBE] rounded-full animate-spin"></div>
+                        <Loader2 className="w-10 h-10 text-[#106EBE] animate-spin" />
                     </div>
                 ) : displayedCategories.length > 0 ? (
                     <div className="flex flex-col gap-10">
                         
-                        {/* Bento Grid Layout */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                            {displayedCategories.map(([kategori, videos], index) => {
+                        {/* Grid 16:9 Editorial/Database Tanpa Border */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+                            {displayedCategories.map(([kategori, videos]) => {
                                 const heroVideo = videos[0];
-                                const theme = cardThemes[index % cardThemes.length];
+                                const imgUrl = getImageUrl(heroVideo?.img);
 
                                 return (
                                     <a
                                         key={kategori}
                                         href={`/category/${encodeURIComponent(kategori)}`}
-                                        className={`relative flex flex-col justify-between w-full min-h-[200px] md:min-h-[220px] rounded-[24px] lg:rounded-[28px] overflow-hidden group shadow-sm hover:shadow-xl transition-all duration-300 ${theme.bg} border-0 outline-none`}
+                                        className="relative group block w-full aspect-video rounded-md overflow-hidden bg-[#12161F] cursor-pointer outline-none border-0 shadow-md hover:shadow-xl transition-all duration-300"
                                     >
-                                        {/* Container Gambar Kanan dengan Smooth Fade Masking */}
-                                        {heroVideo && (
-                                            <div className="absolute top-0 right-0 w-[65%] md:w-[60%] h-full z-0 pointer-events-none">
-                                                <div 
-                                                    className="w-full h-full"
-                                                    style={{ 
-                                                        WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 45%)',
-                                                        maskImage: 'linear-gradient(to right, transparent 0%, black 45%)'
-                                                    }}
-                                                >
-                                                    <img
-                                                        src={getImageUrl(heroVideo.img)}
-                                                        alt={kategori}
-                                                        className="w-full h-full object-cover object-center transform transition-transform duration-700 group-hover:scale-105"
-                                                        loading="lazy"
-                                                    />
-                                                </div>
+                                        {/* Background Thumbnail 16:9 */}
+                                        {imgUrl ? (
+                                            <img
+                                                src={imgUrl}
+                                                alt={kategori}
+                                                className="absolute inset-0 w-full h-full object-cover opacity-75 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500 ease-out"
+                                                loading="lazy"
+                                            />
+                                        ) : (
+                                            <div className="absolute inset-0 bg-[#161B26] flex items-center justify-center text-zinc-600">
+                                                <FolderOpen className="w-10 h-10" />
                                             </div>
                                         )}
 
-                                        {/* Container Teks Kiri - Kontras Tinggi Agar Jelas */}
-                                        <div className="relative z-10 flex flex-col justify-between h-full p-6 md:p-8 w-[60%] md:w-[55%]">
-                                            <div>
-                                                <h2 className={`text-2xl md:text-[28px] font-extrabold leading-tight break-words line-clamp-2 ${theme.text}`}>
-                                                    {kategori}
-                                                </h2>
-                                                <p className={`text-xs md:text-sm font-bold mt-2 tracking-wide ${theme.subtext}`}>
-                                                    {videos.length} KONTEN
-                                                </p>
-                                            </div>
+                                        {/* Gradient Dark Overlay */}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-transparent opacity-90 transition-opacity duration-300" />
 
-                                            <div className={`flex items-center gap-2 text-[11px] md:text-xs font-black tracking-[0.2em] uppercase mt-6 ${theme.btn} group-hover:translate-x-1.5 transition-all duration-300`}>
-                                                <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5 stroke-[2.5]" />
-                                                EXPLORE
-                                            </div>
+                                        {/* Detail Info Kategori */}
+                                        <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 z-10 flex flex-col justify-end">
+                                            
+                                            {/* Jumlah Konten */}
+                                            <p className="text-[11px] font-bold text-[#38BDF8] uppercase tracking-[0.15em] mb-1">
+                                                {videos.length} Konten
+                                            </p>
+
+                                            {/* Nama Kategori */}
+                                            <h2 className="text-xl sm:text-2xl font-bold text-white leading-tight group-hover:text-[#38BDF8] transition-colors duration-300">
+                                                {kategori}
+                                            </h2>
+
+                                            {/* Info Judul Konten Terbaru */}
+                                            {heroVideo && (
+                                                <p className="mt-1.5 text-xs text-zinc-400 line-clamp-1 font-normal">
+                                                    <span className="text-zinc-500">Terbaru:</span> {heroVideo.title || "Koleksi diperbarui"}
+                                                </p>
+                                            )}
                                         </div>
                                     </a>
                                 );
@@ -130,21 +122,21 @@ export default function Jelajahi({ supabase }) {
 
                         {/* Tombol Load More */}
                         {hasMore && (
-                            <div className="flex justify-center mt-6">
+                            <div className="flex justify-center mt-8">
                                 <button
                                     onClick={handleLoadMore}
-                                    className="flex items-center gap-2 px-8 py-3.5 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800/80 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-bold rounded-full transition-colors outline-none border-0 cursor-pointer"
+                                    className="group flex items-center gap-3 px-10 py-3.5 bg-[#161B26] hover:bg-[#1E2536] text-zinc-300 hover:text-white font-semibold rounded-md transition-all cursor-pointer outline-none border-0"
                                 >
-                                    <Loader2 className="w-4 h-4 animate-spin text-zinc-500 hidden" />
+                                    <Loader2 className="w-4 h-4 animate-spin text-[#106EBE] hidden group-hover:block" />
                                     Tampilkan Lebih Banyak
                                 </button>
                             </div>
                         )}
                     </div>
                 ) : (
-                    <div className="text-center text-zinc-500 py-32 bg-zinc-100 dark:bg-zinc-900/40 rounded-[28px] mx-4 transition-colors">
-                        <FolderOpen className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                        <p className="text-lg font-medium">Belum ada kategori tersedia.</p>
+                    <div className="text-center text-zinc-600 py-32 bg-[#12161F] rounded-md mx-2 border-0">
+                        <FolderOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                        <p className="text-base font-medium">Belum ada kategori tersedia.</p>
                     </div>
                 )}
             </main>
