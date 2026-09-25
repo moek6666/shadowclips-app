@@ -72,10 +72,14 @@ export default function Jelajahi({ supabase }) {
                                 const heroVideo = videos[0];
                                 const imgUrl = getImageUrl(heroVideo?.img);
 
+                                // Logika Navigasi Khusus Kategori AI
+                                const isAiCategory = kategori.toLowerCase() === 'ai';
+                                const categoryHref = isAiCategory ? '/ai' : `/category/${encodeURIComponent(kategori)}`;
+
                                 return (
                                     <a
                                         key={kategori}
-                                        href={`/category/${encodeURIComponent(kategori)}`}
+                                        href={categoryHref}
                                         className="relative group block w-full aspect-video rounded-md overflow-hidden bg-[#12161F] cursor-pointer outline-none border-0 shadow-md hover:shadow-xl transition-all duration-300"
                                     >
                                         {/* Background Thumbnail 16:9 */}
