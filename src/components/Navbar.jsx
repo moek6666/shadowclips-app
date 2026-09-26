@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import useSWR from 'swr';
-import { Search, Menu, X, Home, Compass, Flame, FolderOpen, Crown, ChevronDown, Sun, Moon, LogIn, LogOut, User, Settings, Download, Bell, Activity, Bot, Coffee, MessageSquare, Pin } from 'lucide-react';
+// Menambahkan ikon Zap untuk menu Action
+import { Search, Menu, X, Home, Compass, Flame, FolderOpen, Crown, ChevronDown, Sun, Moon, LogIn, LogOut, User, Settings, Download, Bell, Activity, Bot, Coffee, MessageSquare, Pin, Zap } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
 import ModalLogin from './ModalLogin';
 import Avatar from './Avatar';
@@ -9,7 +10,7 @@ import DOMPurify from 'dompurify';
 const generateSeoSlug = (categoryName) => categoryName ? categoryName.toLowerCase().trim().replace(/\s+/g, '-') : '';
 
 // ==========================================
-// 🔥 DATABASE EMOJI 3D UNTUK NOTIFIKASI 🔥
+// 🚀 DATABASE EMOJI 3D UNTUK NOTIFIKASI 🚀
 // ==========================================
 const animatedEmojis = {
     ':love:': 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Smiling%20Face%20with%20Heart-Eyes.png',
@@ -43,6 +44,8 @@ export default function Navbar({ isScrolled, supabase }) {
     const [localSearch, setLocalSearch] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [isMobilePremiumOpen, setIsMobilePremiumOpen] = useState(false);
+    // Tambahan state untuk dropdown Action di mobile
+    const [isMobileActionOpen, setIsMobileActionOpen] = useState(false);
 
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const [session, setSession] = useState(null);
@@ -117,7 +120,7 @@ export default function Navbar({ isScrolled, supabase }) {
         };
     }, [supabase]);
 
-    // 🔥 LISTENER GLOBAL & PERSONAL NOTIFICATIONS 🔥
+    // 🚀 LISTENER GLOBAL & PERSONAL NOTIFICATIONS 🚀
     useEffect(() => {
         if (!supabase) return;
 
@@ -338,15 +341,25 @@ export default function Navbar({ isScrolled, supabase }) {
                             <a href="/" className={`flex items-center gap-1.5 group transition-colors outline-none border-none cursor-pointer ${pathname === '/' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                 <Home className="w-4 h-4 border-none" /> Home
                             </a>
-                            <a href="/jelajahi" className={`flex items-center gap-1.5 group transition-colors outline-none border-none cursor-pointer ${pathname === '/jelajahi' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
-                                <Compass className="w-4 h-4 border-none" /> Explore
-                            </a>
-                            <a href="/populer" className={`flex items-center gap-1.5 group transition-colors outline-none border-none cursor-pointer ${pathname === '/populer' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
-                                <Flame className="w-4 h-4 border-none" /> Trending
-                            </a>
-                            <a href="/koleksi" className={`flex items-center gap-1.5 group transition-colors outline-none border-none cursor-pointer ${pathname === '/koleksi' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
-                                <FolderOpen className="w-4 h-4 border-none" /> Library
-                            </a>
+                            
+                            {/* Action Dropdown (Menggantikan Explore, Trending, Library) */}
+                            <div className="relative group cursor-pointer py-2 border-none">
+                                <div className={`flex items-center gap-1.5 whitespace-nowrap transition-colors outline-none border-none ${['/jelajahi', '/populer', '/koleksi'].includes(pathname) ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
+                                    <Zap className="w-4 h-4 transition-colors border-none" /> Action <ChevronDown className="w-3 h-3 group-hover:rotate-180 transition-transform duration-300 border-none" />
+                                </div>
+                                <div className="absolute top-full left-0 w-48 h-4 bg-transparent border-none"></div>
+                                <div className="absolute top-[calc(100%+0.5rem)] left-0 w-48 bg-white dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] border-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 flex flex-col py-2 z-50 overflow-hidden transform origin-top-left scale-95 group-hover:scale-100">
+                                    <a href="/jelajahi" className={`px-4 py-2.5 text-[13px] font-bold transition-colors flex items-center gap-2 outline-none border-none cursor-pointer ${pathname === '/jelajahi' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-[#106EBE] hover:bg-zinc-50 dark:hover:bg-zinc-800/30'}`}>
+                                        <Compass className="w-4 h-4 border-none" /> Explore
+                                    </a>
+                                    <a href="/populer" className={`px-4 py-2.5 text-[13px] font-bold transition-colors flex items-center gap-2 outline-none border-none cursor-pointer ${pathname === '/populer' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-[#106EBE] hover:bg-zinc-50 dark:hover:bg-zinc-800/30'}`}>
+                                        <Flame className="w-4 h-4 border-none" /> Trending
+                                    </a>
+                                    <a href="/koleksi" className={`px-4 py-2.5 text-[13px] font-bold transition-colors flex items-center gap-2 outline-none border-none cursor-pointer ${pathname === '/koleksi' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-[#106EBE] hover:bg-zinc-50 dark:hover:bg-zinc-800/30'}`}>
+                                        <FolderOpen className="w-4 h-4 border-none" /> Library
+                                    </a>
+                                </div>
+                            </div>
                             
                             <div className="relative group cursor-pointer py-2 ml-2 border-none">
                                 <div className={`flex items-center gap-1.5 whitespace-nowrap transition-colors outline-none border-none ${pathname.startsWith('/category') ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
@@ -596,15 +609,25 @@ export default function Navbar({ isScrolled, supabase }) {
                         <a href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors cursor-pointer">
                             <Home className="w-4 h-4 text-[#106EBE]" /> Home
                         </a>
-                        <a href="/jelajahi" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors cursor-pointer">
-                            <Compass className="w-4 h-4 text-[#106EBE]" /> Explore
-                        </a>
-                        <a href="/populer" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors cursor-pointer">
-                            <Flame className="w-4 h-4 text-[#106EBE]" /> Trending
-                        </a>
-                        <a href="/koleksi" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold transition-colors cursor-pointer">
-                            <FolderOpen className="w-4 h-4 text-[#106EBE]" /> Library
-                        </a>
+
+                        {/* Dropdown Action untuk Mobile */}
+                        <div className="flex flex-col gap-1 mt-1">
+                            <button onClick={() => setIsMobileActionOpen(!isMobileActionOpen)} className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold w-full text-left group cursor-pointer">
+                                <div className="flex items-center gap-3"><Zap className="w-4 h-4 text-zinc-500 dark:text-zinc-400 group-hover:text-[#106EBE]" /> Action</div>
+                                <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isMobileActionOpen ? 'rotate-180 text-[#106EBE]' : ''}`} />
+                            </button>
+                            <div className={`flex flex-col ml-8 overflow-hidden transition-all duration-300 ${isMobileActionOpen ? 'max-h-[200px] opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
+                                <a href="/jelajahi" onClick={() => setIsMobileMenuOpen(false)} className="py-2 px-3 flex items-center gap-2 text-[13px] font-bold text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] transition-colors cursor-pointer">
+                                    <Compass className="w-4 h-4" /> Explore
+                                </a>
+                                <a href="/populer" onClick={() => setIsMobileMenuOpen(false)} className="py-2 px-3 flex items-center gap-2 text-[13px] font-bold text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] transition-colors cursor-pointer">
+                                    <Flame className="w-4 h-4" /> Trending
+                                </a>
+                                <a href="/koleksi" onClick={() => setIsMobileMenuOpen(false)} className="py-2 px-3 flex items-center gap-2 text-[13px] font-bold text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] transition-colors cursor-pointer">
+                                    <FolderOpen className="w-4 h-4" /> Library
+                                </a>
+                            </div>
+                        </div>
 
                         <div className="flex flex-col gap-1 mt-1">
                             <button onClick={() => setIsMobilePremiumOpen(!isMobilePremiumOpen)} className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-900 dark:text-white font-bold w-full text-left group cursor-pointer">
