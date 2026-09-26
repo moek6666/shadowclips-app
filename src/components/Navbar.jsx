@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import useSWR from 'swr';
-// Menambahkan ikon Zap untuk menu Action
-import { Search, Menu, X, Home, Compass, Flame, FolderOpen, Crown, ChevronDown, Sun, Moon, LogIn, LogOut, User, Settings, Download, Bell, Activity, Bot, Coffee, MessageSquare, Pin, Zap } from 'lucide-react';
+// Menambahkan ikon Images untuk menu Gallery
+import { Search, Menu, X, Home, Compass, Flame, FolderOpen, Crown, ChevronDown, Sun, Moon, LogIn, LogOut, User, Settings, Download, Bell, Activity, Bot, Coffee, MessageSquare, Pin, Zap, Images } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
 import ModalLogin from './ModalLogin';
 import Avatar from './Avatar';
@@ -344,7 +344,7 @@ export default function Navbar({ isScrolled, supabase }) {
                             
                             {/* Action Dropdown (Menggantikan Explore, Trending, Library) */}
                             <div className="relative group cursor-pointer py-2 border-none">
-                                <div className={`flex items-center gap-1.5 whitespace-nowrap transition-colors outline-none border-none ${['/jelajahi', '/populer', '/koleksi'].includes(pathname) ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
+                                <div className={`flex items-center gap-1.5 whitespace-nowrap transition-colors outline-none border-none ${['/jelajahi', '/populer', '/koleksi'].includes(pathname) || pathname.startsWith('/gallery') ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-400 hover:text-[#106EBE] dark:hover:text-[#106EBE]'}`}>
                                     <Zap className="w-4 h-4 transition-colors border-none" /> Action <ChevronDown className="w-3 h-3 group-hover:rotate-180 transition-transform duration-300 border-none" />
                                 </div>
                                 <div className="absolute top-full left-0 w-48 h-4 bg-transparent border-none"></div>
@@ -357,6 +357,10 @@ export default function Navbar({ isScrolled, supabase }) {
                                     </a>
                                     <a href="/koleksi" className={`px-4 py-2.5 text-[13px] font-bold transition-colors flex items-center gap-2 outline-none border-none cursor-pointer ${pathname === '/koleksi' ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-[#106EBE] hover:bg-zinc-50 dark:hover:bg-zinc-800/30'}`}>
                                         <FolderOpen className="w-4 h-4 border-none" /> Library
+                                    </a>
+                                    {/* MENU GALLERY */}
+                                    <a href="/gallery" className={`px-4 py-2.5 text-[13px] font-bold transition-colors flex items-center gap-2 outline-none border-none cursor-pointer ${pathname === '/gallery' || pathname.startsWith('/gallery/') ? 'text-[#106EBE]' : 'text-zinc-600 dark:text-zinc-300 hover:text-[#106EBE] dark:hover:text-[#106EBE] hover:bg-zinc-50 dark:hover:bg-zinc-800/30'}`}>
+                                        <Images className="w-4 h-4 border-none" /> Gallery
                                     </a>
                                 </div>
                             </div>
@@ -625,6 +629,10 @@ export default function Navbar({ isScrolled, supabase }) {
                                 </a>
                                 <a href="/koleksi" onClick={() => setIsMobileMenuOpen(false)} className="py-2 px-3 flex items-center gap-2 text-[13px] font-bold text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] transition-colors cursor-pointer">
                                     <FolderOpen className="w-4 h-4" /> Library
+                                </a>
+                                {/* MENU GALLERY MOBILE */}
+                                <a href="/gallery" onClick={() => setIsMobileMenuOpen(false)} className="py-2 px-3 flex items-center gap-2 text-[13px] font-bold text-zinc-500 dark:text-zinc-400 hover:text-[#106EBE] transition-colors cursor-pointer">
+                                    <Images className="w-4 h-4" /> Gallery
                                 </a>
                             </div>
                         </div>

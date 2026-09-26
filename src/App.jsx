@@ -20,9 +20,11 @@ const VerifiedSuccess = lazy(() => import('./pages/VerifiedSuccess'));
 const UpdatePassword = lazy(() => import('./pages/UpdatePassword'));
 const DownloadApk = lazy(() => import('./pages/DownloadApk'));
 
-// ROUTING FOLDER CATEGORY & KOLEKSI
+// ROUTING FOLDER CATEGORY, KOLEKSI & GALLERY
 const DetailCategory = lazy(() => import('./pages/Category/DetailCategory'));
 const DetailKoleksi = lazy(() => import('./pages/colection/DetailKoleksi'));
+const Gallery = lazy(() => import('./pages/Gallery'));
+const DetailGallery = lazy(() => import('./pages/gallery/DetailGallery'));
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -85,6 +87,10 @@ export default function App() {
                     <DetailKoleksi supabase={supabase} />
                 ) : pathname.startsWith('/category/') ? (
                     <DetailCategory supabase={supabase} />
+                ) : pathname === '/gallery' ? (
+                    <Gallery supabase={supabase} />
+                ) : pathname.startsWith('/gallery/') ? (
+                    <DetailGallery supabase={supabase} />
                 ) : pathname === '/jelajahi' ? (
                     <Jelajahi supabase={supabase} />
                 ) : pathname === '/ai' ? (                     
