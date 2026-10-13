@@ -5,15 +5,9 @@ export default function App() {
 
     return (
         <div className="min-h-screen bg-zinc-900 text-zinc-300 flex flex-col justify-center items-center p-6 sm:p-12 font-sans selection:bg-zinc-700 selection:text-zinc-100">
-            {/* Main Content Area (Tanpa Container / Box & Tanpa Header) */}
+            {/* Main Content Area */}
             <main className="w-full max-w-xl text-center flex flex-col items-center">
                 
-                {/* Badge Lembut */}
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-800/80 border border-zinc-700/60 text-zinc-400 text-xs tracking-wide font-medium mb-8">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/80"></span>
-                    Domain Pembaruan
-                </div>
-
                 {/* Judul Utama */}
                 <h1 className="text-3xl sm:text-4xl font-light text-zinc-100 tracking-tight leading-relaxed mb-6">
                     Shadowclips Kini Berpindah ke <br className="hidden sm:inline" />
